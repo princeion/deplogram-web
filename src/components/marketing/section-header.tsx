@@ -1,0 +1,48 @@
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+import { Eyebrow } from "@/components/shared/eyebrow"
+import { FadeInUp } from "@/components/shared/motion/fade-in-up"
+
+const sectionHeaderVariants = cva("flex flex-col", {
+  variants: {
+    align: {
+      left: "items-start text-left",
+      center: "items-center text-center",
+    },
+  },
+  defaultVariants: { align: "left" },
+})
+
+type SectionHeaderProps = VariantProps<typeof sectionHeaderVariants> & {
+  eyebrow?: string
+  title: string
+  description?: string
+  className?: string
+  /** Heading level — h2 for sections, h1 only when the header is the page's title. */
+  as?: "h1" | "h2"
+  children?: React.ReactNode
+}
+
+/** Eyebrow + heading + description. The single section-header recipe for every page. */
+export function SectionHeader({
+  eyebrow,
+  title,
+  description,
+  align,
+  className,
+  as: Heading = "h2",
+  children,
+}: SectionHeaderProps) {
+  return (
+    <FadeInUp className={cn(sectionHeaderVariants({ align }), className)}>
+      {eyebrow && <Eyebrow className="mb-4">{eyebrow}</Eyebrow>}
+      <Heading className="max-w-3xl font-heading text-heading font-semibold text-balance">{title}</Heading>
+      {description && (
+        <p className="mt-4 max-w-2xl text-lead text-pretty text-muted-foreground">{description}</p>
+      )}
+      {children && <div className="mt-8">{children}</div>}
+    </FadeInUp>
+  )
+}
