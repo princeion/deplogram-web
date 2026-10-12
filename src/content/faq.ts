@@ -3,45 +3,35 @@ export type FaqItem = {
   answer: string
 }
 
-// TODO: confirm answers with the team before launch — especially anything about billing.
-export const pricingFaq: readonly FaqItem[] = [
+// TODO: confirm answers with the team before launch.
+export const faq: readonly FaqItem[] = [
   {
-    question: "Is Deplogram really free to start?",
+    question: "Can I use Deplogram today?",
     answer:
-      "Yes. Freebies includes the core APIs with a monthly quota, every developer utility, limited test deployments on myapp.dpl.app, a small storage allowance, API keys and a usage dashboard.",
-  },
-  {
-    question: "What happens when I go past my API quota?",
-    answer:
-      "The API keeps working and additional usage is billed per 1,000 requests. Rates are tied to what each service costs to run — SMS, for example, depends on carrier costs — and are shown per API in your dashboard.",
-  },
-  {
-    question: "What's the difference between a test deployment and a persistent one?",
-    answer:
-      "Test deployments are for trying your app on a myapp.dpl.app address with basic logs. Plus adds longer-running and private deployments; Pro adds persistent, production-oriented deployments with larger resources, background jobs, cron and advanced logs.",
-  },
-  {
-    question: "Is Deplogram a web host?",
-    answer:
-      "Not in the traditional sense — there's no cPanel, WordPress or email hosting. Deplogram is a developer platform: APIs, utilities, storage, domains and app deployments from one account.",
-  },
-  {
-    question: "Is my stored data safe when I redeploy?",
-    answer:
-      "Yes. Storage is a separate product that lives apart from your app's containers, so restarts and redeploys never touch your files, assets or backups.",
-  },
-  {
-    question: "Can I buy a domain through Deplogram?",
-    answer:
-      "Yes — search, buy and manage domains from the dashboard and connect them to any deployment. Domains are billed separately from your plan, and your free myapp.dpl.app address stays.",
+      "Not yet. Deplogram is in active development and will open in waves. Join the waitlist and we'll email you when your invite is ready.",
   },
   {
     question: "What can I deploy?",
     answer:
-      "Eight runtimes: Node.js, Next.js, Vite (React, Vue, Svelte), Python (FastAPI, Flask), PHP (Laravel), Go, static sites and Docker. If it runs in a container, it runs on Deplogram.",
+      "Eight runtimes: Vite, Next.js, Node.js, Python, PHP, Go, Static Sites and Docker. Our focus is making these eight reliable before adding more — and Docker covers anything that runs in a container.",
   },
   {
-    question: "Are prices in naira?",
-    answer: "Yes. Plans are priced in naira (₦), and Deplogram is built with Nigerian and African developers in mind.",
+    question: "What do I configure when I deploy?",
+    answer:
+      "Only what a deployment needs: project name, runtime version, build command, start command, port and environment variables. Builds, containers, routing, logs and health checks are handled by the platform.",
+  },
+  {
+    question: "How will I know if a deployment fails?",
+    answer:
+      "Every deployment reports explicit states. A build problem shows as BUILD_FAILED, a rollout problem as DEPLOY_FAILED, and a running app that stops as CRASHED — each with the relevant logs.",
+  },
+  {
+    question: "Is Deplogram a web host?",
+    answer:
+      "Not in the traditional sense. There's no cPanel or WordPress hosting. Deplogram is a developer cloud built around deployment, with a workspace, an editor, storage, utilities and APIs around it.",
+  },
+  {
+    question: "Can I connect a custom domain?",
+    answer: "Custom domains aren't part of the first release. Every deployment gets a Deplogram deployment URL.",
   },
 ]

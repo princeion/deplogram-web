@@ -15,9 +15,8 @@ import { HeroMark } from "@/components/marketing/hero-mark";
 
 type HeroProps = {
   announcement: { label: string; cta: string; href: string };
-  /** "\n" forces the line break. */
+  /** "\n" forces the line break; `*word*` renders in the brand ink. */
   headline: string;
-  highlight?: readonly string[];
   description: string;
   /** Short statements in the right-hand column. */
   points: readonly string[];
@@ -28,10 +27,8 @@ type HeroProps = {
 /**
  * Full-viewport hero on a three-column stage: headline + CTAs left, the logo mark centre-stage,
  * short statements right, and a row pinned to the bottom of the first screen.
- * The headline column takes the free space so each "\n" line of the headline (widest: "Store. Connect.",
- * 6.5em) fits on one line from ~360px up — keep the mark/points columns `auto` if you change this.
  */
-export function Hero({ announcement, headline, highlight, description, points, footer }: HeroProps) {
+export function Hero({ announcement, headline, description, points, footer }: HeroProps) {
   return (
     <section className="relative overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-grid opacity-50 mask-fade-edges" />
@@ -39,10 +36,10 @@ export function Hero({ announcement, headline, highlight, description, points, f
         <FadeInUp className="flex justify-center">
           <Link
             href={announcement.href}
-            className="group inline-flex items-center gap-3 rounded-full px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="group inline-flex items-center gap-3 rounded-full px-4 py-1.5 text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <NodeDot lit />
-            {announcement.label}
+            <span className="hidden sm:inline">{announcement.label}</span>
             <span className="inline-flex items-center gap-1 font-medium text-foreground">
               {announcement.cta}
               <Icon
@@ -56,28 +53,22 @@ export function Hero({ announcement, headline, highlight, description, points, f
 
         <div className="grid flex-1 items-center gap-12 py-14 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:gap-10 lg:py-10">
           <div className="flex flex-col items-start">
-            <TextReveal
-              as="h1"
-              text={headline}
-              highlight={highlight}
-              delay={0.1}
-              className="font-heading text-display font-semibold"
-            />
+            <TextReveal as="h1" text={headline} delay={0.1} immediate className="font-heading text-display font-semibold" />
             <FadeInUp delay={0.4}>
-              <p className="mt-6 max-w-sm text-lead text-pretty text-muted-foreground">{description}</p>
+              <p className="mt-6 max-w-md text-lead text-pretty text-muted-foreground">{description}</p>
             </FadeInUp>
             <FadeInUp delay={0.5} className="mt-8 flex flex-wrap items-center gap-3">
               <Magnetic>
-                <Link href={siteConfig.appUrl} className={cn(buttonVariants({ size: "lg" }), "group")}>
-                  Start for free
+                <Link href={siteConfig.waitlistUrl} className={cn(buttonVariants({ size: "lg" }), "group")}>
+                  Join the waitlist
                   <Icon
                     name="arrow-right"
                     className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5"
                   />
                 </Link>
               </Magnetic>
-              <Link href="/docs" className={buttonVariants({ variant: "outline", size: "lg" })}>
-                View docs
+              <Link href="/deploy" className={buttonVariants({ variant: "outline", size: "lg" })}>
+                See how it deploys
               </Link>
             </FadeInUp>
           </div>

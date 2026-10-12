@@ -2,6 +2,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { AccentText } from "@/components/shared/accent-text"
 import { Eyebrow } from "@/components/shared/eyebrow"
 import { FadeInUp } from "@/components/shared/motion/fade-in-up"
 
@@ -17,6 +18,7 @@ const sectionHeaderVariants = cva("flex flex-col", {
 
 type SectionHeaderProps = VariantProps<typeof sectionHeaderVariants> & {
   eyebrow?: string
+  /** `*word*` renders in the brand ink. */
   title: string
   description?: string
   className?: string
@@ -38,7 +40,9 @@ export function SectionHeader({
   return (
     <FadeInUp className={cn(sectionHeaderVariants({ align }), className)}>
       {eyebrow && <Eyebrow className="mb-4">{eyebrow}</Eyebrow>}
-      <Heading className="max-w-3xl font-heading text-heading font-semibold text-balance">{title}</Heading>
+      <Heading className="max-w-3xl font-heading text-heading font-semibold text-balance">
+        <AccentText text={title} />
+      </Heading>
       {description && (
         <p className="mt-4 max-w-2xl text-lead text-pretty text-muted-foreground">{description}</p>
       )}

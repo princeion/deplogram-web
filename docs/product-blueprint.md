@@ -1,68 +1,56 @@
-# Deplogram — Product & Pricing Blueprint (summary)
+# Deplogram — Product & Technical Brief (summary)
 
-Source of truth for marketing copy, pricing and site structure. Summarised from the product
-manager's *Deplogram Product & Pricing Blueprint* (received 2026-09-28). When copy in
-`src/content/` disagrees with this file, this file wins — update the copy, or update this file if
-the PM has changed direction.
+Source of truth for marketing copy and site structure. Summarised from the *Deplogram Product &
+Technical Alignment Brief* (received 2026-10). When copy in `src/content/` disagrees with this file,
+this file wins — update the copy, or update this file if the product direction has changed.
 
 ## Definition
 
-Deplogram is a developer platform **operated under REKTINA** that gives developers APIs, developer
-utilities, storage, domains and application deployment infrastructure from one account. It is
-**not** a conventional website host. It starts with free experimentation and expands into paid
-resources, usage-based services and premium developer infrastructure.
+A **lightweight developer cloud** focused on deployment, development utilities, APIs, storage and a
+clean developer workspace. Operated by REKTINA. Not positioned as a giant cloud provider, and not a
+general-purpose website host — deployment is the core.
 
-- Positioning line: **Developer infrastructure, APIs & utilities.**
-- Tagline: **Build. Deploy. Store. Connect.**
-- Free deployment address: `myapp.dpl.app`
+## MVP surface
 
-## Five product pillars
-
-| Pillar | Scope |
+| Area | Scope |
 |---|---|
-| APIs | OTP, notifications, SMS/email, image/file processing, URL utilities, QR generation, validation, more |
-| Developer utilities | JSON tools, JWT decoding, UUID, Base64, hashing, regex, URL encoding, timestamps, cron helpers, webhook testing |
-| Deployments | Free/limited test deployments on dpl.app → paid persistent deployments |
-| Storage | Files, assets, backups, app data. Separate from ephemeral containers so restarts never destroy data |
-| Domains | Search, purchase, management; connect to deployments (registrar/reseller integration) |
+| Deployment | Core product. Flow: source → runtime → configure → deploy → live |
+| Runtimes (8) | Vite, Next.js, Node.js, Python, PHP, Go, Static Sites, Docker — make these reliable before adding more |
+| Galley | The workspace ("Your Galley"): Projects, Deployments, CodePad, Storage, Utilities, APIs, Settings |
+| CodePad | In-browser editor, open-source editor foundation (likely Monaco). Run, Save, Deploy, Preview |
+| Storage | Simple file/object storage: usage, folders, upload, new folder, search, sort, delete |
+| Utilities | 6 (exact list to confirm — see TODO in `src/content/tools.ts`) |
+| APIs | 4 (exact list to confirm) |
 
-Workflow Deplogram should own: **discover utility → use API → deploy → store → connect domain → scale usage.**
+**Removed from MVP:** domains, the former 12-utility / 8-API scope.
 
-## Not at launch
+## Deployment lifecycle
 
-No cPanel/WordPress hosting, email hosting, VPS reselling or generic website packages.
+`QUEUED → BUILDING → BUILT → DEPLOYING → RUNNING`, with explicit failures `BUILD_FAILED`,
+`DEPLOY_FAILED`, `CRASHED`. A successful build is not a running deployment. Runtime configuration
+exposes only: runtime version, build command, start command, port, environment variables.
 
-## Plans
+## Brand & tone
 
-| Plan | Position | Monthly | Core access |
-|---|---|---|---|
-| Freebies | Explore Deplogram | ₦0 | Core APIs + utilities; limited free deployments; small storage; API keys; usage dashboard |
-| Plus | Individual developer | ₦2,500–₦3,500 | Higher API limits; more storage; longer deployments; private deployments; expanded utilities |
-| Pro | Developer / startup | ₦7,500–₦12,500 | Higher limits; persistent deployments; larger storage; background jobs; cron; advanced logs (source table is cut off after this) |
-| Enterprise | Organizations | Custom | Custom infrastructure, limits, storage, networking; SLA; SSO; audit logs; dedicated support |
+Brand lines (brief §2), used **only** as these headers:
 
-**Open decision:** Plus and Pro are given as ranges. The site shows the lower bound (₦2,500 / ₦7,500)
-until final prices are confirmed — see the TODO in `src/content/pricing.ts`.
-
-## Deployment model
-
-| Stage | Experience |
+| Area | Line |
 |---|---|
-| Free | Deploy, receive a dpl.app address, test, inspect basic logs |
-| Plus | Longer-running deployments, better resource limits, private deployments |
-| Pro | Persistent production-oriented apps, larger resources, background jobs, cron, advanced logs |
-| Enterprise | Dedicated/custom infrastructure and operational requirements |
+| Hero | Cuisine a masterpiece with ease |
+| Deploy | Serve and test your work seamlessly. |
+| Galley | Your Galley (workspace name only) |
+| CodePad | Your exquisite code utensil for your craftsmanship. |
+| Storage | Finished your craft? Now refrigerate. |
+| Utilities & APIs | The right condiments for your code recipe. |
 
-## Monetisation
+Everything else on the site is plain, serious, technical language — no further food/cooking
+metaphors in body copy, labels, statuses, sample data or UI.
 
-Free access creates adoption; usage creates revenue; subscriptions create predictable recurring
-revenue. APIs stay available on Freebies with an included monthly quota, then charge per additional
-1,000 requests — rates tied to real upstream cost (not yet set; don't publish figures). Metered:
-API calls, image/file processing, SMS/email delivery, storage capacity, bandwidth. Other revenue:
-storage add-ons, premium deployment resources, domain sales/renewals, enterprise.
+## Site status (Oct 2026)
+
+The product is an MVP in development. The site collects a **waitlist** and shows an honest
+**roadmap**. **No pricing is published** — plans and prices are not shown until the team decides to.
 
 ## Infrastructure (internal — not marketed)
 
-Hetzner Cloud (compute), Linux, Docker (isolation), reverse proxy/gateway (routing + HTTPS),
-PostgreSQL (platform metadata), object storage (files, artifacts, backups). The infrastructure sits
-underneath Deplogram and is not exposed to customers, so the site doesn't name vendors.
+Infrastructure is being aligned with a partner arrangement; costs and vendors are not named on the site.

@@ -83,7 +83,7 @@ export function OgCard({ title, eyebrow }: { title: string; eyebrow: string }) {
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 26, color: themeColors.mutedForeground }}>
         <span>deplogram.app</span>
-        <span>APIs · Utilities · Deployments · Storage · Domains</span>
+        <span>Deploy · CodePad · Storage · Utilities · APIs</span>
       </div>
     </div>
   )

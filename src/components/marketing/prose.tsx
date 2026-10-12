@@ -60,7 +60,7 @@ export function ContentBlocks({ blocks }: { blocks: readonly ContentBlock[] }) {
             return <CodePreview key={i} title={block.title ?? "code"} code={block.code} className="my-2" />
           case "callout":
             return (
-              <aside key={i} className="flex gap-3 rounded-2xl elevation-control p-4 text-sm">
+              <aside key={i} className="flex gap-3 border border-border/70 bg-card p-4 text-sm">
                 <Icon name="sparkles" className="mt-0.5 text-brand-ink" />
                 <div className="flex flex-col gap-1">
                   {block.title && <p className="font-medium text-foreground">{block.title}</p>}

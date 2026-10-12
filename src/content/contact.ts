@@ -3,11 +3,9 @@ import type { IconName } from "@/content/types"
 
 export const contactTopics = [
   { value: "general", label: "General question" },
-  { value: "sales", label: "Sales" },
+  { value: "early-access", label: "Early access" },
   { value: "enterprise", label: "Enterprise" },
-  { value: "domains", label: "Domains" },
-  { value: "support", label: "Support" },
-  { value: "careers", label: "Careers" },
+  { value: "partnership", label: "Partnership" },
   { value: "press", label: "Press" },
 ] as const
 
@@ -19,21 +17,15 @@ export function isContactTopic(value: unknown): value is ContactTopic {
 
 export const contactChannels: readonly { title: string; description: string; email: string; icon: IconName }[] = [
   {
-    title: "Sales & partnerships",
-    description: "Enterprise plans, partnerships and custom infrastructure.",
+    title: "Hello",
+    description: "Questions about Deplogram or early access.",
+    email: siteConfig.emails.hello,
+    icon: "mail",
+  },
+  {
+    title: "Enterprise & partnerships",
+    description: "Custom resources, limits and infrastructure.",
     email: siteConfig.emails.sales,
     icon: "handshake",
-  },
-  {
-    title: "Support",
-    description: "Help with the APIs, deployments, storage or domains.",
-    email: siteConfig.emails.support,
-    icon: "heart-pulse",
-  },
-  {
-    title: "Careers",
-    description: "Questions about a role or working with us.",
-    email: siteConfig.emails.careers,
-    icon: "users",
   },
 ]

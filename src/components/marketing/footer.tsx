@@ -20,11 +20,11 @@ export function Footer() {
             {siteConfig.positioning} {siteConfig.tagline}
           </p>
           <Link
-            href="/status"
+            href="/roadmap"
             className="inline-flex w-fit items-center gap-2 rounded-full elevation-control px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             <NodeDot lit />
-            All systems operational
+            In development — early access soon
           </Link>
         </div>
 

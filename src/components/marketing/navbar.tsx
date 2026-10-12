@@ -119,22 +119,22 @@ export function Navbar() {
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
           <Link
-            href={siteConfig.appUrl}
+            href="/contact"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
-              "hidden text-muted-foreground sm:inline-flex",
+              "hidden text-muted-foreground lg:inline-flex",
             )}
           >
-            Sign in
+            Contact
           </Link>
           <Link
-            href={siteConfig.appUrl}
+            href={siteConfig.waitlistUrl}
             className={cn(
               buttonVariants({ variant: "inverted", size: "sm" }),
               "hidden sm:inline-flex",
             )}
           >
-            Start for free
+            Join the waitlist
           </Link>
 
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -199,24 +199,24 @@ export function Navbar() {
                 </div>
                 <div className="mt-auto grid gap-2">
                   <Link
-                    href={siteConfig.appUrl}
+                    href={siteConfig.waitlistUrl}
                     onClick={() => setMobileOpen(false)}
                     className={buttonVariants({
                       variant: "inverted",
                       size: "lg",
                     })}
                   >
-                    Start for free
+                    Join the waitlist
                   </Link>
                   <Link
-                    href={siteConfig.appUrl}
+                    href="/contact"
                     onClick={() => setMobileOpen(false)}
                     className={buttonVariants({
                       variant: "outline",
                       size: "lg",
                     })}
                   >
-                    Sign in
+                    Contact
                   </Link>
                 </div>
               </nav>

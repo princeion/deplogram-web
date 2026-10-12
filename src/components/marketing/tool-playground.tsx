@@ -1,22 +1,23 @@
 "use client"
 
 import * as React from "react"
-import { motion, useReducedMotion } from "motion/react"
 
-import { DURATION, EASE_OUT } from "@/lib/motion"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { TerminalWindow } from "@/components/shared/terminal-window"
+import { ProductWindow } from "@/components/marketing/product-window"
 
-type ToolId = "json" | "base64" | "url"
-type Mode = "encode" | "decode"
+type ToolId = "json" | "base64" | "jwt"
 
-const toolTabs: readonly { id: ToolId; label: string; sample: string }[] = [
-  { id: "json", label: "JSON formatter", sample: '{"project":"myapp","domain":"myapp.dpl.app","runtimes":["node","go"]}' },
-  { id: "base64", label: "Base64", sample: "Build. Deploy. Store. Connect." },
-  { id: "url", label: "URL encoder", sample: "https://myapp.dpl.app/search?q=naira & kobo" },
+const tools: readonly { id: ToolId; label: string; sample: string }[] = [
+  { id: "json", label: "JSON formatter", sample: '{"project":"orders-api","runtime":"node","state":"RUNNING","port":8080}' },
+  { id: "base64", label: "Base64", sample: "Deploy across eight runtimes." },
+  {
+    id: "jwt",
+    label: "JWT decoder",
+    sample:
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZGEiLCJwcm9qZWN0IjoibWVudS1hcGkiLCJleHAiOjE5MjQ5OTIwMDB9.c2lnbmF0dXJl",
+  },
 ]
 
 function toBase64(value: string) {
@@ -27,105 +28,119 @@ function toBase64(value: string) {
 }
 
 function fromBase64(value: string) {
-  const binary = atob(value.trim())
+  const normalised = value.trim().replace(/-/g, "+").replace(/_/g, "/")
+  const padded = normalised + "=".repeat((4 - (normalised.length % 4)) % 4)
+  const binary = atob(padded)
   return new TextDecoder().decode(Uint8Array.from(binary, (c) => c.charCodeAt(0)))
 }
 
-function run(tool: ToolId, mode: Mode, input: string): { output: string; error?: string } {
+function run(tool: ToolId, reverse: boolean, input: string): { output: string; error?: string } {
   if (!input.trim()) return { output: "" }
   try {
     if (tool === "json") {
       const parsed: unknown = JSON.parse(input)
-      return { output: mode === "encode" ? JSON.stringify(parsed, null, 2) : JSON.stringify(parsed) }
+      return { output: reverse ? JSON.stringify(parsed) : JSON.stringify(parsed, null, 2) }
     }
-    if (tool === "base64") return { output: mode === "encode" ? toBase64(input) : fromBase64(input) }
-    return { output: mode === "encode" ? encodeURIComponent(input) : decodeURIComponent(input) }
+    if (tool === "base64") return { output: reverse ? fromBase64(input) : toBase64(input) }
+    const [header, payload] = input.trim().split(".")
+    if (!header || !payload) throw new Error("A JWT has three dot-separated parts.")
+    const pretty = (part: string) => JSON.stringify(JSON.parse(fromBase64(part)), null, 2)
+    return { output: `// header\n${pretty(header)}\n\n// payload\n${pretty(payload)}` }
   } catch (error) {
     return { output: "", error: error instanceof Error ? error.message : "Invalid input" }
   }
 }
 
-/** A real, working slice of the toolbelt — runs entirely in the browser. */
+const modes: Record<ToolId, readonly [string, string] | null> = {
+  json: ["Format", "Minify"],
+  base64: ["Encode", "Decode"],
+  jwt: null,
+}
+
+/** A real, working slice of the utilities — runs entirely in the browser. */
 export function ToolPlayground() {
-  const reduceMotion = useReducedMotion()
   const [tool, setTool] = React.useState<ToolId>("json")
-  const [mode, setMode] = React.useState<Mode>("encode")
-  const [inputs, setInputs] = React.useState<Record<ToolId, string>>(() =>
-    Object.fromEntries(toolTabs.map((t) => [t.id, t.sample])) as Record<ToolId, string>
+  const [reverse, setReverse] = React.useState(false)
+  const [inputs, setInputs] = React.useState<Record<ToolId, string>>(
+    () => Object.fromEntries(tools.map((t) => [t.id, t.sample])) as Record<ToolId, string>
   )
-  const result = run(tool, mode, inputs[tool])
-  const modeLabels = tool === "json" ? (["Format", "Minify"] as const) : (["Encode", "Decode"] as const)
+  const id = React.useId()
+  const result = run(tool, reverse, inputs[tool])
+  const current = tools.find((t) => t.id === tool)!
+  const modeLabels = modes[tool]
 
   return (
-    <Tabs
-      value={tool}
-      onValueChange={(value) => {
-        setTool(value as ToolId)
-        setMode("encode")
-      }}
-      className="gap-4"
+    <ProductWindow
+      title={`utilities / ${current.label.toLowerCase()}`}
+      actions={<span className="font-mono text-[0.625rem] text-muted-foreground">runs in your browser</span>}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <TabsList className="h-10 rounded-full elevation-control p-1">
-          {toolTabs.map((t) => (
-            <TabsTrigger key={t.id} value={t.id} className="rounded-full px-3.5">
-              {t.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        <div className="flex gap-1 rounded-full elevation-control p-1" role="group" aria-label="Mode">
-          {(["encode", "decode"] as const).map((m, i) => (
-            <Button
-              key={m}
-              size="sm"
-              variant={mode === m ? "secondary" : "ghost"}
-              aria-pressed={mode === m}
-              onClick={() => setMode(m)}
-              className="h-8"
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 p-3">
+        <div role="group" aria-label="Utility" className="flex flex-wrap gap-1 rounded-full elevation-control p-1">
+          {tools.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              aria-pressed={tool === t.id}
+              onClick={() => {
+                setTool(t.id)
+                setReverse(false)
+              }}
+              className={cn(
+                "h-8 rounded-full px-3.5 text-sm whitespace-nowrap transition-colors",
+                tool === t.id ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+              )}
             >
-              {modeLabels[i]}
-            </Button>
+              {t.label}
+            </button>
           ))}
         </div>
+        {modeLabels && (
+          <div role="group" aria-label="Mode" className="flex gap-1 rounded-full elevation-control p-1">
+            {modeLabels.map((label, i) => (
+              <button
+                key={label}
+                type="button"
+                aria-pressed={reverse === (i === 1)}
+                onClick={() => setReverse(i === 1)}
+                className={cn(
+                  "h-8 rounded-full px-3.5 text-sm transition-colors",
+                  reverse === (i === 1) ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-
-      {toolTabs.map((t) => (
-        <TabsContent key={t.id} value={t.id}>
-          <motion.div
-            className="grid gap-3 md:grid-cols-2"
-            initial={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: DURATION.fast, ease: EASE_OUT }}
+      <div className="grid md:grid-cols-2">
+        <div className="grid gap-2 border-b border-border/70 p-4 md:border-r md:border-b-0">
+          <Label htmlFor={`${id}-input`} className="font-mono text-xs tracking-eyebrow text-muted-foreground uppercase">
+            Input
+          </Label>
+          <Textarea
+            id={`${id}-input`}
+            value={inputs[tool]}
+            onChange={(e) => setInputs((prev) => ({ ...prev, [tool]: e.target.value }))}
+            spellCheck={false}
+            className="min-h-48 resize-none bg-background font-mono text-xs"
+            data-lenis-prevent
+          />
+        </div>
+        <div className="grid content-start gap-2 bg-background/60 p-4">
+          <span id={`${id}-output`} className="font-mono text-xs tracking-eyebrow text-muted-foreground uppercase">
+            Output
+          </span>
+          <output
+            aria-labelledby={`${id}-output`}
+            aria-live="polite"
+            className="block max-h-56 min-h-48 overflow-auto font-mono text-xs break-all whitespace-pre-wrap"
+            data-lenis-prevent
           >
-            <div className="grid gap-2">
-              <Label htmlFor={`tool-${t.id}-input`}>Input</Label>
-              <Textarea
-                id={`tool-${t.id}-input`}
-                value={inputs[t.id]}
-                onChange={(e) => setInputs((prev) => ({ ...prev, [t.id]: e.target.value }))}
-                spellCheck={false}
-                className="min-h-40 resize-none font-mono text-xs"
-                data-lenis-prevent
-              />
-            </div>
-            <div className="grid gap-2">
-              <span className="text-sm font-medium" id={`tool-${t.id}-output`}>
-                Output
-              </span>
-              <TerminalWindow title={`${t.label.toLowerCase()} · ${mode}`} className="rounded-xl">
-                <output
-                  aria-labelledby={`tool-${t.id}-output`}
-                  aria-live="polite"
-                  className="block max-h-40 min-h-24 overflow-auto text-xs break-all whitespace-pre-wrap"
-                  data-lenis-prevent
-                >
-                  {result.error ? <span className="text-destructive">{result.error}</span> : result.output}
-                </output>
-              </TerminalWindow>
-            </div>
-          </motion.div>
-        </TabsContent>
-      ))}
-    </Tabs>
+            {result.error ? <span className="text-destructive">{result.error}</span> : result.output}
+          </output>
+        </div>
+      </div>
+    </ProductWindow>
   )
 }

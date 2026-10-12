@@ -2,41 +2,45 @@ import type { NavGroup, NavLink } from "@/content/types"
 
 export const productMenu: readonly NavLink[] = [
   {
-    label: "APIs",
-    href: "/#apis",
-    description: "OTP, notifications, SMS, email, images, QR codes and validation.",
-    icon: "plug",
+    label: "Deploy",
+    href: "/deploy",
+    description: "Source → runtime → configure → deploy → live.",
+    icon: "rocket",
   },
   {
-    label: "Developer utilities",
-    href: "/#tools",
-    description: "JSON, JWT, regex, cron and webhook tools — no install.",
-    icon: "wrench",
+    label: "Runtimes",
+    href: "/runtimes",
+    description: "Vite, Next.js, Node.js, Python, PHP, Go, Static Sites, Docker.",
+    icon: "layers",
   },
   {
-    label: "Deployments",
-    href: "/#deploy",
-    description: "Test on myapp.dpl.app, then keep it running with persistent deploys.",
-    icon: "git-branch",
+    label: "Your Galley",
+    href: "/#galley",
+    description: "One workspace for projects and deployments.",
+    icon: "layout",
+  },
+  {
+    label: "CodePad",
+    href: "/codepad",
+    description: "A familiar editor. Run, save, preview, deploy.",
+    icon: "code",
   },
   {
     label: "Storage",
-    href: "/#storage",
-    description: "Files, assets and backups that survive every redeploy.",
+    href: "/storage",
+    description: "Files and folders, right beside your projects.",
     icon: "database",
   },
   {
-    label: "Domains",
-    href: "/#domains",
-    description: "Search, buy and connect domains to any deployment.",
-    icon: "globe",
+    label: "Utilities & APIs",
+    href: "/tools",
+    description: "Six utilities and four APIs, one key.",
+    icon: "wrench",
   },
 ]
 
 export const mainNav: readonly NavLink[] = [
-  { label: "Docs", href: "/docs" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "Changelog", href: "/changelog" },
+  { label: "Roadmap", href: "/roadmap" },
   { label: "Blog", href: "/blog" },
 ]
 
@@ -44,22 +48,18 @@ export const footerNav: readonly NavGroup[] = [
   {
     title: "Product",
     links: [
-      { label: "APIs", href: "/#apis" },
-      { label: "Developer utilities", href: "/#tools" },
-      { label: "Deployments", href: "/#deploy" },
-      { label: "Storage", href: "/#storage" },
-      { label: "Domains", href: "/#domains" },
-      { label: "Pricing", href: "/pricing" },
+      { label: "Deploy", href: "/deploy" },
+      { label: "Runtimes", href: "/runtimes" },
+      { label: "CodePad", href: "/codepad" },
+      { label: "Storage", href: "/storage" },
+      { label: "Utilities & APIs", href: "/tools" },
     ],
   },
   {
-    title: "Developers",
+    title: "Early access",
     links: [
-      { label: "Documentation", href: "/docs" },
-      { label: "Getting started", href: "/docs/getting-started" },
-      { label: "Deploy your first project", href: "/docs/deploying-your-first-project" },
-      { label: "Changelog", href: "/changelog" },
-      { label: "Status", href: "/status" },
+      { label: "Join the waitlist", href: "/waitlist" },
+      { label: "Roadmap", href: "/roadmap" },
     ],
   },
   {
@@ -67,7 +67,6 @@ export const footerNav: readonly NavGroup[] = [
     links: [
       { label: "About", href: "/about" },
       { label: "Blog", href: "/blog" },
-      { label: "Careers", href: "/careers" },
       { label: "Contact", href: "/contact" },
     ],
   },

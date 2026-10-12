@@ -21,8 +21,8 @@ export default function NotFound() {
         <Link href="/" className={buttonVariants({ variant: "inverted", size: "lg" })}>
           Back to home
         </Link>
-        <Link href="/docs" className={buttonVariants({ variant: "outline", size: "lg" })}>
-          Browse the docs
+        <Link href="/waitlist" className={buttonVariants({ variant: "outline", size: "lg" })}>
+          Join the waitlist
         </Link>
       </StatusMessage>
     </MarketingShell>

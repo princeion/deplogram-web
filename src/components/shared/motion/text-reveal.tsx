@@ -5,49 +5,68 @@ import { motion, useReducedMotion, type Variants } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { DURATION, EASE_OUT, STAGGER, VIEWPORT } from "@/lib/motion"
+import { accentClass } from "@/components/shared/accent-text"
 
 type TextRevealProps = {
+  /** Headline markup: `*words*` render as the serif-italic accent, "\n" forces a line break. */
   text: string
   as?: "h1" | "h2" | "p"
   className?: string
-  /** Words (exact match, incl. punctuation) rendered in the brand ink. */
-  highlight?: readonly string[]
   delay?: number
+  /** Animate on mount instead of when scrolled into view (above-the-fold heroes). */
+  immediate?: boolean
+}
+
+type Word = { text: string; accent: boolean }
+
+function parse(text: string): Word[][] {
+  let accent = false
+  return text.split("\n").map((line) =>
+    line
+      .split(" ")
+      .filter(Boolean)
+      .map((raw) => {
+        const opens = raw.startsWith("*")
+        const closes = raw.endsWith("*") && (raw.length > 1 || !opens)
+        if (opens) accent = true
+        const word = { text: raw.replaceAll("*", ""), accent }
+        if (closes) accent = false
+        return word
+      })
+  )
 }
 
 /**
  * Word-by-word headline reveal: each word rises out of its own clipping line.
- * A "\n" in `text` forces a line break (each line renders as a block).
+ * Reduced motion → a plain fade.
  */
-export function TextReveal({ text, as = "h1", className, highlight = [], delay = 0 }: TextRevealProps) {
+export function TextReveal({ text, as = "h1", className, delay = 0, immediate = false }: TextRevealProps) {
   const reduceMotion = useReducedMotion()
-  const lines = text.split("\n").map((line) => line.split(" "))
+  const lines = parse(text)
 
   const container: Variants = {
     hidden: {},
-    show: { transition: { staggerChildren: STAGGER * 1.4, delayChildren: delay } },
+    show: { transition: { staggerChildren: STAGGER * 1.2, delayChildren: delay } },
   }
   const word: Variants = reduceMotion
     ? { hidden: { opacity: 0 }, show: { opacity: 1, transition: { duration: DURATION.base } } }
     : {
-        hidden: { y: "105%", opacity: 0 },
-        show: { y: "0%", opacity: 1, transition: { duration: DURATION.slow + 0.2, ease: EASE_OUT } },
+        hidden: { y: "110%" },
+        show: { y: "0%", transition: { duration: DURATION.slow + 0.3, ease: EASE_OUT } },
       }
 
   const Tag = motion[as]
+  const trigger = immediate ? { animate: "show" } : { whileInView: "show", viewport: VIEWPORT }
 
   return (
-    <Tag className={className} variants={container} initial="hidden" whileInView="show" viewport={VIEWPORT}>
+    <Tag className={className} variants={container} initial="hidden" {...trigger}>
       {lines.map((words, lineIndex) => (
-        <span key={lineIndex} className={lines.length > 1 ? "block" : undefined}>
+        <span key={lineIndex} className="block">
           {words.map((w, i) => (
-            <React.Fragment key={`${w}-${i}`}>
-              <span className="inline-flex overflow-hidden pb-[0.08em] align-bottom">
-                <motion.span
-                  variants={word}
-                  className={cn("inline-block", highlight.includes(w) && "text-brand-ink")}
-                >
-                  {w}
+            <React.Fragment key={`${w.text}-${i}`}>
+              <span className="inline-flex overflow-hidden pb-[0.1em] align-bottom">
+                <motion.span variants={word} className={cn("inline-block", w.accent && accentClass)}>
+                  {w.text}
                 </motion.span>
               </span>
               {i < words.length - 1 && " "}

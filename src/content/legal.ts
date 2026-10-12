@@ -18,9 +18,14 @@ const placeholderNotice: ContentBlock = {
 export const privacyPolicy: LegalDocument = {
   title: "Privacy policy",
   description: "How Deplogram collects, uses and protects information about you and your projects.",
-  updated: "2026-09-01",
+  updated: "2026-10-12",
   blocks: [
     placeholderNotice,
+    { type: "h2", text: "The waitlist" },
+    {
+      type: "p",
+      text: "If you join the waitlist we keep your email address and any optional details you give us (such as your name, role and the runtimes you use), and use them only to send your early-access invite and to understand who Deplogram is for. Ask us and we will remove you.",
+    },
     { type: "h2", text: "Information we collect" },
     {
       type: "p",
@@ -57,8 +62,8 @@ export const privacyPolicy: LegalDocument = {
 
 export const termsOfService: LegalDocument = {
   title: "Terms of service",
-  description: "The rules for using Deplogram's APIs, developer utilities, storage, domains and deployments.",
-  updated: "2026-09-01",
+  description: "The rules for using Deplogram's deployments, workspace, CodePad, storage, utilities and APIs.",
+  updated: "2026-10-12",
   blocks: [
     placeholderNotice,
     { type: "h2", text: "Using Deplogram" },
@@ -71,7 +76,7 @@ export const termsOfService: LegalDocument = {
       type: "ul",
       items: [
         "Don't deploy content or services that are illegal, harmful or infringe others' rights.",
-        "Don't use the service to send unsolicited messages, including through the Email and SMS APIs.",
+        "Don't use the service to send unsolicited messages, including through the Email and OTP APIs.",
         "Don't attempt to disrupt, probe or overload the platform or other customers' deployments.",
       ],
     },
@@ -80,10 +85,10 @@ export const termsOfService: LegalDocument = {
       type: "p",
       text: "You keep all rights to the code and content you deploy. You grant us the limited permissions needed to host, build and serve it on your behalf.",
     },
-    { type: "h2", text: "Plans and billing" },
+    { type: "h2", text: "Early access and billing" },
     {
       type: "p",
-      text: "The Freebies plan is provided as-is. Paid plans are billed monthly in naira, and usage beyond a plan's included quota is billed as you go. Full billing terms will be published before paid plans become available.",
+      text: "Early access is provided as-is while the platform is in development. Any billing terms will be published before they apply to your account.",
     },
     { type: "h2", text: "Termination" },
     {

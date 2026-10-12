@@ -1,34 +1,53 @@
-// TODO: the story copy is a placeholder draft — replace with the founders' own words.
+import type { FeatureItem } from "@/content/types"
+
+// TODO: the story copy is a draft — replace with the founders' own words.
 export const aboutCopy = {
-  header: {
-    eyebrow: "About",
-    title: "We're building the platform we kept wishing existed.",
+  hero: {
+    title: "About *Deplogram.*",
     description:
-      "Deplogram is a developer platform operated by REKTINA. It exists so developers can build, test, deploy, store and connect without assembling five vendors first.",
+      "Deplogram is a lightweight developer cloud operated by REKTINA, built for developers who want to go from code to a working deployment without unnecessary complexity.",
   },
   story: {
-    eyebrow: "Our story",
-    title: "The infrastructure you keep rebuilding, in one place.",
+    title: "A focused developer cloud.",
     paragraphs: [
-      "Shipping a modern app usually means a hosting provider, an auth service, an email vendor, an SMS gateway, a cron runner and a pile of glue code — each with its own dashboard, keys and bill. For developers in Nigeria and across Africa, add payment friction and SMS delivery that works everywhere except where your users are.",
-      "Deplogram puts APIs, developer utilities, storage, domains and app deployments behind one account. Send an OTP, decode a JWT, test your app on myapp.dpl.app, keep its files safe and connect a domain — without a new vendor for each.",
-      "We're deliberately not a traditional web host: no cPanel, WordPress or email hosting. We'd rather own the developer workflow — discover a utility, use an API, deploy, store, connect a domain and scale usage — and do it well.",
+      "Getting a project into production often means learning a large cloud platform first — consoles, configuration and a catalogue of services most projects never use.",
+      "Deplogram takes a narrower approach. Deployment is the core product: connect a repository, choose one of eight supported runtimes, configure only what the deployment needs and watch it go live. Around it sits a compact set of tools — a workspace, an editor, storage, six utilities and four APIs.",
+      "The platform is in active development and will open to the waitlist in waves, so each group of users starts on stable infrastructure.",
     ],
-    mission:
-      "Our mission: make shipping software from Africa as easy as it is from anywhere — then make it easier.",
   },
-  values: {
-    eyebrow: "What we value",
-    title: "How we build",
-    description: "The principles behind the product, and behind how we work.",
-  },
-  team: {
-    eyebrow: "Team",
-    title: "The people behind Deplogram",
-    description: "A small team of engineers who have shipped, broken and fixed a lot of production systems.",
-  },
-  cta: {
-    title: "Want to build this with us?",
-    description: "We're hiring engineers who care about developer experience as much as uptime.",
-  },
+  quote: "A simple experience on the surface, backed by reliable deployment infrastructure underneath.",
 } as const
+
+/** Product principles (brief §7), written for the public. */
+export const principles: readonly FeatureItem[] = [
+  {
+    title: "Lightweight over bloated",
+    description: "A few dependable products instead of a long catalogue of cloud services.",
+    icon: "feather",
+  },
+  {
+    title: "Developer clarity",
+    description: "Technical controls use familiar, conventional language.",
+    icon: "terminal",
+  },
+  {
+    title: "Eight reliable runtimes",
+    description: "The supported runtimes are made dependable before coverage is expanded.",
+    icon: "layers",
+  },
+  {
+    title: "Complexity stays underneath",
+    description: "Builds, containers, routing, logs and health checks are handled by the platform.",
+    icon: "server",
+  },
+  {
+    title: "Explicit states",
+    description: "A successful build is not reported as a successful deployment. Failures say where they happened.",
+    icon: "activity",
+  },
+  {
+    title: "Isolated deployments",
+    description: "Every deployment is kept separate and controlled at the infrastructure level.",
+    icon: "container",
+  },
+]

@@ -3,20 +3,20 @@ export const siteConfig = {
   name: "Deplogram",
   /** The company Deplogram operates under. */
   operator: "REKTINA",
-  tagline: "Build. Deploy. Store. Connect.",
-  positioning: "Developer infrastructure, APIs & utilities.",
+  /** Hero line — the brand personality (see docs/product-blueprint.md "Brand"). */
+  tagline: "Cuisine a masterpiece with ease.",
+  positioning: "The lightweight developer cloud.",
   description:
-    "Deplogram is a developer platform: APIs, developer utilities, storage, domains and app deployments from one account. Start free, test on myapp.dpl.app, and pay for what you use as you grow.",
+    "Deplogram is a lightweight developer cloud: deploy across eight runtimes, write code in CodePad, keep files in storage and reach for six utilities and four APIs — all from one workspace. Early access opens soon.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://deplogram.app",
-  /** Free subdomain every deploy gets, e.g. myapp.dpl.app */
+  /** Example deployment address shown in product mocks, e.g. myapp.dpl.app. */
   deployDomain: "dpl.app",
-  // TODO: point at https://app.deplogram.app once the app's home (separate project vs. (app) group) is decided.
-  appUrl: "/dashboard",
+  /** Every "get started" CTA goes here until the product opens. */
+  waitlistUrl: "/waitlist",
   // TODO: replace with real inboxes before launch.
   emails: {
     hello: "hello@deplogram.app",
     sales: "sales@deplogram.app",
     support: "support@deplogram.app",
-    careers: "careers@deplogram.app",
   },
 } as const
