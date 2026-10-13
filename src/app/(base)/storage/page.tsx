@@ -15,7 +15,7 @@ import { SectionHeader } from "@/components/marketing/section-header"
 import { StorageMock } from "@/components/marketing/storage-mock"
 
 export const metadata = createMetadata({
-  title: "Storage",
+  title: "File storage for developers",
   description: "Simple, developer-oriented file and object storage beside your Deplogram projects: usage, folders, upload, search, sort and delete.",
   path: "/storage",
 })

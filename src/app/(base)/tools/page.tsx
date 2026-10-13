@@ -15,7 +15,7 @@ import { ToolPlayground } from "@/components/marketing/tool-playground"
 import { UtilitiesGrid } from "@/components/marketing/utilities-grid"
 
 export const metadata = createMetadata({
-  title: "Utilities & APIs",
+  title: "Developer utilities and APIs",
   description: "Six developer utilities and four APIs — OTP, email, image transform and QR codes — that sit next to your Deplogram projects.",
   path: "/tools",
 })

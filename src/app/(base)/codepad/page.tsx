@@ -16,7 +16,7 @@ import { ProductStage } from "@/components/marketing/product-cards"
 import { SectionHeader } from "@/components/marketing/section-header"
 
 export const metadata = createMetadata({
-  title: "CodePad",
+  title: "CodePad — online code editor with run and deploy",
   description: "CodePad is Deplogram's in-browser editor: a familiar, serious coding environment where you can run, save, preview and deploy.",
   path: "/codepad",
 })

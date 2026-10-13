@@ -15,7 +15,7 @@ import { SectionHeader } from "@/components/marketing/section-header"
 import { SpecRows } from "@/components/marketing/spec-rows"
 
 export const metadata = createMetadata({
-  title: "Runtimes",
+  title: "Runtimes: Next.js, Node.js, Python, PHP, Go, Docker",
   description:
     "Vite, Next.js, Node.js, Python, PHP, Go, Static Sites and Docker — how each of Deplogram's eight runtimes builds and runs.",
   path: "/runtimes",

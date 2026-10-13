@@ -13,7 +13,7 @@ import { RoadmapList } from "@/components/marketing/roadmap-list"
 import { SectionHeader } from "@/components/marketing/section-header"
 
 export const metadata = createMetadata({
-  title: "Roadmap",
+  title: "Product roadmap",
   description: "Where Deplogram is right now: what's done, what's being built, and what comes with early access and launch.",
   path: "/roadmap",
 })

@@ -52,13 +52,16 @@ export function DeployIllustration({ className }: { className?: string }) {
   return (
     <div ref={ref} className="flex w-full justify-center">
       <Panel className={className}>
-        <PanelBar title="orders-api · main" right={<span className={running ? "text-emerald-400" : "text-orange-300"}>{running ? "Live" : "Deploying"}</span>} />
-        <ol className="grid gap-1 p-3">
+        <PanelBar
+          title={running ? `orders-api.${siteConfig.deployDomain}` : "orders-api · main"}
+          right={<span className={running ? "text-emerald-400" : "text-orange-300"}>{running ? "Live" : "Deploying"}</span>}
+        />
+        <ol className="grid gap-0.5 p-2">
           {lifecycle.map((step, i) => {
             const done = i < current || running
             const active = i === current && !running
             return (
-              <li key={step.state} className={cn("flex items-center justify-between rounded-lg px-3 py-2 font-mono text-xs transition-colors", active && "bg-white/10")}>
+              <li key={step.state} className={cn("flex items-center justify-between rounded-lg px-3 py-1.5 font-mono text-[0.6875rem] transition-colors", active && "bg-white/10")}>
                 <span className={cn(done || active ? "text-white" : "text-white/35")}>{step.state}</span>
                 {done ? (
                   <Icon name="check" size="xs" className={step.state === "RUNNING" ? "text-emerald-400" : "text-white/70"} />
@@ -69,15 +72,6 @@ export function DeployIllustration({ className }: { className?: string }) {
             )
           })}
         </ol>
-        <div className="border-t border-white/10 px-4 py-3">
-          <motion.div
-            animate={{ opacity: running ? 1 : 0.35 }}
-            className="flex items-center gap-2 font-mono text-xs"
-          >
-            <span className={cn("size-1.5 rounded-full", running ? "bg-emerald-400" : "bg-white/40")} />
-            <span className="truncate">orders-api.{siteConfig.deployDomain}</span>
-          </motion.div>
-        </div>
       </Panel>
     </div>
   )

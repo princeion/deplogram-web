@@ -7,7 +7,25 @@ export const siteConfig = {
   tagline: "Cuisine a masterpiece with ease.",
   positioning: "The lightweight developer cloud.",
   description:
-    "Deplogram is a lightweight developer cloud: deploy across eight runtimes, write code in CodePad, keep files in storage and reach for six utilities and four APIs — all from one workspace. Early access opens soon.",
+    "Build, deploy and run your apps on one lightweight developer cloud. Connect a GitHub repository, pick one of eight runtimes and get a live URL — with a code editor, storage, utilities and APIs in one workspace. Early access opens soon.",
+  /** Search terms the site is written around — used for the keywords meta tag. */
+  keywords: [
+    "developer cloud",
+    "deploy web apps",
+    "app hosting",
+    "deploy from GitHub",
+    "Next.js hosting",
+    "Node.js hosting",
+    "Python hosting",
+    "PHP hosting",
+    "Go hosting",
+    "Docker deployment",
+    "static site hosting",
+    "online code editor",
+    "developer APIs",
+    "platform as a service",
+    "PaaS Africa",
+  ],
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://deplogram.app",
   /** Example deployment address shown in product mocks, e.g. myapp.dpl.app. */
   deployDomain: "dpl.app",

@@ -17,9 +17,9 @@ import { SectionHeader } from "@/components/marketing/section-header"
 import { SpecRows } from "@/components/marketing/spec-rows"
 
 export const metadata = createMetadata({
-  title: "Deploy",
+  title: "Deploy apps from GitHub in minutes",
   description:
-    "Source, runtime, configure, deploy, live. Deplogram's deploy flow takes a GitHub repository to a running deployment across eight runtimes.",
+    "Deploy a GitHub repository to a live URL in five steps: source, runtime, configure, deploy, live. Clear build progress, logs and deployment states across eight runtimes.",
   path: "/deploy",
 })
 

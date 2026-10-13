@@ -10,7 +10,7 @@ import { SectionHeader } from "@/components/marketing/section-header"
 import { StoryBlock } from "@/components/marketing/story-block"
 
 export const metadata = createMetadata({
-  title: "About",
+  title: "About Deplogram",
   description: "Deplogram is a lightweight developer cloud, operated by REKTINA — deployment at the core, a compact kit around it.",
   path: "/about",
 })
