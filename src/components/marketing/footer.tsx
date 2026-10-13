@@ -15,7 +15,7 @@ export function Footer() {
       <NodeTexture className="-top-10 -right-24 w-144" />
       <Container className="relative grid gap-12 py-16 lg:grid-cols-[1.2fr_2fr] lg:gap-16">
         <div className="flex flex-col gap-5">
-          <Logo />
+          <Logo size="lg" />
           <p className="max-w-xs text-sm text-pretty text-muted-foreground">
             {siteConfig.positioning} {siteConfig.tagline}
           </p>
