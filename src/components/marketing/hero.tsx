@@ -27,13 +27,23 @@ type HeroProps = {
  * Homepage hero, OpenAI-style: centred announcement, headline, description and CTAs, then the
  * live product on a gradient stage.
  */
-export function Hero({ announcement, headline, description, points, visual, footer }: HeroProps) {
+export function Hero({
+  announcement,
+  headline,
+  description,
+  points,
+  visual,
+  footer,
+}: HeroProps) {
   return (
     <section className="relative overflow-hidden">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-[44rem]"
-        style={{ background: "radial-gradient(60% 50% at 50% 0%, color-mix(in oklab, var(--brand) 16%, transparent), transparent 70%)" }}
+        style={{
+          background:
+            "radial-gradient(60% 50% at 50% 0%, color-mix(in oklab, var(--brand) 16%, transparent), transparent 70%)",
+        }}
       />
       <Container className="relative flex flex-col items-center pt-32 pb-12 text-center sm:pt-40">
         <FadeInUp>
@@ -41,10 +51,18 @@ export function Hero({ announcement, headline, description, points, visual, foot
             href={announcement.href}
             className="group inline-flex items-center gap-2.5 rounded-full border border-border/70 bg-card/60 py-1 pr-3 pl-1 text-sm text-muted-foreground backdrop-blur transition-colors hover:border-border hover:text-foreground"
           >
-            <span className="rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium text-background">Early access</span>
+            <span className="rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium text-background">
+              Early access
+            </span>
             <span className="hidden sm:inline">{announcement.label}</span>
-            <span className="inline-flex items-center gap-1 font-medium text-foreground sm:hidden">{announcement.cta}</span>
-            <Icon name="chevron-right" size="xs" className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5" />
+            <span className="inline-flex items-center gap-1 font-medium text-foreground sm:hidden">
+              {announcement.cta}
+            </span>
+            <Icon
+              name="chevron-right"
+              size="xs"
+              className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5"
+            />
           </Link>
         </FadeInUp>
 
@@ -53,19 +71,39 @@ export function Hero({ announcement, headline, description, points, visual, foot
           text={headline.replace(/\*/g, "")}
           delay={0.1}
           immediate
-          className="mt-8 max-w-4xl font-heading text-display font-medium text-balance"
+          className="mt-8 max-w-6xl font-heading text-[clamp(2.5rem,1.5rem+3.2vw,4.25rem)] leading-[1.04] font-medium tracking-[-0.035em] text-balance"
         />
 
         <FadeInUp delay={0.35}>
-          <p className="mx-auto mt-6 max-w-2xl text-lead text-pretty text-muted-foreground">{description}</p>
+          <p className="font-heading mx-auto mt-6 max-w-4xl text-lead text-pretty text-muted-foreground">
+            {description}
+          </p>
         </FadeInUp>
 
-        <FadeInUp delay={0.45} className="mt-9 flex flex-wrap items-center justify-center gap-3">
-          <Link href={siteConfig.waitlistUrl} className={cn(buttonVariants({ variant: "inverted", size: "lg" }), "group h-12 px-6 text-base")}>
+        <FadeInUp
+          delay={0.45}
+          className="mt-9 flex flex-wrap items-center justify-center gap-3"
+        >
+          <Link
+            href={siteConfig.waitlistUrl}
+            className={cn(
+              buttonVariants({ variant: "inverted", size: "lg" }),
+              "group h-12 px-6 text-base",
+            )}
+          >
             Join the waitlist
-            <Icon name="arrow-up-right" className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            <Icon
+              name="arrow-up-right"
+              className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            />
           </Link>
-          <Link href="/deploy" className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "h-12 px-6 text-base")}>
+          <Link
+            href="/deploy"
+            className={cn(
+              buttonVariants({ variant: "secondary", size: "lg" }),
+              "h-12 px-6 text-base",
+            )}
+          >
             See how it deploys
           </Link>
         </FadeInUp>
@@ -83,7 +121,10 @@ export function Hero({ announcement, headline, description, points, visual, foot
 
         {visual && (
           <FadeInUp delay={0.6} distance={40} className="mt-16 w-full sm:mt-20">
-            <GradientStage source="flow" className="px-3 pt-8 pb-3 sm:px-10 sm:pt-14 sm:pb-10 lg:px-16 lg:pt-16 lg:pb-14">
+            <GradientStage
+              source="flow"
+              className="px-3 pt-8 pb-3 sm:px-10 sm:pt-14 sm:pb-10 lg:px-16 lg:pt-16 lg:pb-14"
+            >
               <div className="mx-auto max-w-5xl text-left">{visual}</div>
             </GradientStage>
           </FadeInUp>

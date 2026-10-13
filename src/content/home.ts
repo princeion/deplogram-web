@@ -11,9 +11,9 @@ export const homeCopy = {
       cta: "Join the waitlist",
       href: "/waitlist",
     },
-    headline: "Cuisine a masterpiece\n*with ease.*",
+    headline: "Build, deploy and run your apps on one lightweight developer cloud.",
     description:
-      "Deplogram is a lightweight developer cloud. Connect a repository, pick a runtime and get a running deployment — with a workspace, an editor, storage, utilities and APIs in one place.",
+      "Connect a GitHub repository, choose from eight runtimes and get a live URL in minutes — with a workspace, code editor, storage, utilities and APIs in the same place.",
     points: ["8 runtimes", "One workspace", "Early access"],
   },
   runtimes: {
