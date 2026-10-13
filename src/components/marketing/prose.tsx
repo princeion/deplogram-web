@@ -13,8 +13,8 @@ export function Prose({ className, children }: { className?: string; children: R
     <div
       className={cn(
         "flex flex-col gap-5 text-base leading-relaxed text-pretty text-muted-foreground",
-        "[&_h2]:mt-8 [&_h2]:scroll-mt-28 [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-foreground",
-        "[&_h3]:mt-4 [&_h3]:font-heading [&_h3]:text-subheading [&_h3]:font-semibold [&_h3]:text-foreground",
+        "[&_h2]:mt-8 [&_h2]:scroll-mt-28 [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:font-medium [&_h2]:text-foreground",
+        "[&_h3]:mt-4 [&_h3]:font-heading [&_h3]:text-subheading [&_h3]:font-medium [&_h3]:text-foreground",
         "[&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5 [&_li]:marker:text-brand-ink",
         className
       )}

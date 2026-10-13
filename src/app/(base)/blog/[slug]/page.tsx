@@ -51,7 +51,7 @@ export default async function BlogPostPage(props: PageProps<"/blog/[slug]">) {
               <span aria-hidden>·</span>
               <span>{post.readingTime}</span>
             </div>
-            <h1 className="mt-5 font-heading text-title font-semibold text-balance">{post.title}</h1>
+            <h1 className="mt-5 font-heading text-title font-medium text-balance">{post.title}</h1>
             <p className="mt-5 text-lead text-pretty text-muted-foreground">{post.excerpt}</p>
             <p className="mt-6 text-sm text-foreground">{post.author}</p>
           </FadeInUp>
@@ -67,7 +67,7 @@ export default async function BlogPostPage(props: PageProps<"/blog/[slug]">) {
       {more.length > 0 && (
         <SectionWrapper>
           <Container>
-            <h2 className="font-heading text-2xl font-semibold">Keep reading</h2>
+            <h2 className="font-heading text-2xl font-medium">Keep reading</h2>
             <ul className="mt-8 grid gap-4 md:grid-cols-2">
               {more.map((p) => (
                 <li key={p.slug}>

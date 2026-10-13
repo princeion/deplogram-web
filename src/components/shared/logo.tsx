@@ -21,7 +21,7 @@ export function Logo({ className, wordmark = true }: LogoProps) {
       )}
     >
       <NodeGraph layout="mark" size="mark" state="live" className="size-6" />
-      {wordmark && <span className="font-heading text-lg font-semibold tracking-tight">deplogram</span>}
+      {wordmark && <span className="font-heading text-lg font-medium tracking-tight">deplogram</span>}
     </Link>
   )
 }

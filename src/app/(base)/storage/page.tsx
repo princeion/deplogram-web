@@ -1,20 +1,16 @@
-import Link from "next/link"
 
-import { cn } from "@/lib/utils"
-import { siteConfig } from "@/lib/site"
 import { createMetadata } from "@/lib/metadata"
 import { homeCopy } from "@/content/home"
 import { storageActions, storageFeatures } from "@/content/workspace"
 import type { FeatureItem } from "@/content/types"
-import { buttonVariants } from "@/components/ui/button"
 import { Container } from "@/components/shared/container"
-import { Icon } from "@/components/shared/icon"
 import { FadeInUp } from "@/components/shared/motion/fade-in-up"
 import { SectionWrapper } from "@/components/shared/section-wrapper"
 import { CtaBand } from "@/components/marketing/cta-band"
 import { FeatureGrid } from "@/components/marketing/feature-grid"
 import { FeatureStack } from "@/components/marketing/feature-stack"
-import { PageHeader } from "@/components/marketing/page-header"
+import { SimpleHero } from "@/components/marketing/simple-hero"
+import { ProductStage } from "@/components/marketing/product-cards"
 import { SectionHeader } from "@/components/marketing/section-header"
 import { StorageMock } from "@/components/marketing/storage-mock"
 
@@ -40,21 +36,14 @@ const mechanics: readonly FeatureItem[] = [
 export default function StoragePage() {
   return (
     <>
-      <PageHeader
-        eyebrow="Storage"
-        title={homeCopy.storage.title}
-        description="Simple file and object storage beside your projects. The tagline carries the personality; the mechanics stay exactly as you'd expect."
-      >
-        <Link href={siteConfig.waitlistUrl} className={cn(buttonVariants({ size: "lg" }), "group")}>
-          Join the waitlist
-          <Icon name="arrow-right" className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5" />
-        </Link>
-      </PageHeader>
+      <SimpleHero title={homeCopy.storage.title} primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "How deployment works", href: "/deploy" }} />
 
       <SectionWrapper spacing="compact">
         <Container className="grid items-center gap-12 lg:grid-cols-[1.5fr_1fr] lg:gap-16">
           <FadeInUp distance={28} className="min-w-0">
-            <StorageMock />
+            <ProductStage variant="b" source="lime" className="py-8 sm:py-12 lg:px-10 lg:py-12">
+              <StorageMock />
+            </ProductStage>
           </FadeInUp>
           <FeatureStack items={storageFeatures} />
         </Container>

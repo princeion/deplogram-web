@@ -24,7 +24,7 @@ export function StoryBlock({ eyebrow, title, paragraphs, mission }: StoryBlockPr
         </FadeInUp>
         {mission && (
           <FadeInUp className="border-t border-border/70 pt-10 lg:col-span-2">
-            <p className="max-w-4xl font-heading text-heading font-semibold text-balance">
+            <p className="max-w-4xl font-heading text-heading font-medium text-balance">
               <span className="text-brand-ink">“</span>
               {mission}
               <span className="text-brand-ink">”</span>

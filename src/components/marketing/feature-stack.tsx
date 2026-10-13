@@ -16,7 +16,7 @@ export function FeatureStack({ items, className }: { items: readonly FeatureItem
             <Icon name={item.icon} size="md" />
           </span>
           <div className="grid gap-1">
-            <p className="font-heading text-subheading font-semibold">{item.title}</p>
+            <p className="font-heading text-subheading font-medium">{item.title}</p>
             <p className="text-sm text-pretty text-muted-foreground">{item.description}</p>
           </div>
         </StaggerItem>

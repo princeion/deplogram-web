@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const containerVariants = cva("mx-auto w-full px-4 sm:px-6 lg:px-8", {
   variants: {
     size: {
-      default: "max-w-7xl",
+      default: "max-w-[1340px]",
       narrow: "max-w-3xl",
     },
   },

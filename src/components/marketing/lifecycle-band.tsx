@@ -66,7 +66,7 @@ export function LifecycleBand({ eyebrow, title, description, showBuildVsRun = tr
             {[buildVsRun.build, buildVsRun.run].map((side, i) => (
               <FadeInUp key={side.title} delay={i * 0.08} className="flex flex-col gap-5 rounded-3xl elevation-surface p-6 sm:p-8">
                 <p className="font-mono text-xs tracking-eyebrow text-brand-ink uppercase">{side.title}</p>
-                <p className="font-heading text-subheading font-semibold text-balance">{side.description}</p>
+                <p className="font-heading text-subheading font-medium text-balance">{side.description}</p>
                 <ul className="grid gap-3 text-sm sm:grid-cols-2">
                   {side.points.map((point) => (
                     <li key={point} className="flex gap-3">

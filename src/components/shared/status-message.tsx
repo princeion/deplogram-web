@@ -24,7 +24,7 @@ export function StatusMessage({ eyebrow, title, description, graphState = "idle"
         <FadeInUp className="flex flex-col items-center">
           <NodeGraph layout="pipeline" state={graphState} className="mb-10 w-full max-w-md" />
           <Eyebrow className="mb-4">{eyebrow}</Eyebrow>
-          <h1 className="max-w-2xl font-heading text-title font-semibold text-balance">{title}</h1>
+          <h1 className="max-w-2xl font-heading text-title font-medium text-balance">{title}</h1>
           <p className="mt-5 max-w-xl text-lead text-pretty text-muted-foreground">{description}</p>
           {children && <div className="mt-10 flex flex-col gap-3 sm:flex-row">{children}</div>}
         </FadeInUp>

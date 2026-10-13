@@ -1,18 +1,15 @@
-import Link from "next/link"
 
-import { cn } from "@/lib/utils"
-import { siteConfig } from "@/lib/site"
 import { createMetadata } from "@/lib/metadata"
 import { homeCopy } from "@/content/home"
 import { apis } from "@/content/tools"
-import { buttonVariants } from "@/components/ui/button"
 import { Container } from "@/components/shared/container"
-import { Icon } from "@/components/shared/icon"
 import { FadeInUp } from "@/components/shared/motion/fade-in-up"
 import { SectionWrapper } from "@/components/shared/section-wrapper"
 import { ApiExplorer } from "@/components/marketing/api-explorer"
 import { CtaBand } from "@/components/marketing/cta-band"
-import { PageHeader } from "@/components/marketing/page-header"
+import { ApiIllustration } from "@/components/marketing/product-illustrations"
+import { SimpleHero } from "@/components/marketing/simple-hero"
+import { ProductStage } from "@/components/marketing/product-cards"
 import { SectionHeader } from "@/components/marketing/section-header"
 import { ToolPlayground } from "@/components/marketing/tool-playground"
 import { UtilitiesGrid } from "@/components/marketing/utilities-grid"
@@ -26,16 +23,17 @@ export const metadata = createMetadata({
 export default function ToolsPage() {
   return (
     <>
-      <PageHeader
-        eyebrow="Utilities & APIs"
-        title={homeCopy.tools.title}
-        description="A small set of supporting tools, chosen carefully. The metaphor stops here — endpoints, requests and responses stay technical."
-      >
-        <Link href={siteConfig.waitlistUrl} className={cn(buttonVariants({ size: "lg" }), "group")}>
-          Join the waitlist
-          <Icon name="arrow-right" className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5" />
-        </Link>
-      </PageHeader>
+      <SimpleHero title={homeCopy.tools.title} primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "Try the utilities", href: "#utilities" }} />
+
+      <SectionWrapper spacing="compact" className="pt-0">
+        <Container>
+          <FadeInUp distance={28}>
+            <ProductStage variant="a" source="lime">
+              <ApiIllustration className="max-w-md" />
+            </ProductStage>
+          </FadeInUp>
+        </Container>
+      </SectionWrapper>
 
       <SectionWrapper id="utilities" spacing="compact">
         <Container>

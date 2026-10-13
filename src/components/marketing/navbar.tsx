@@ -46,21 +46,19 @@ export function Navbar() {
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 8));
 
   return (
-    <header
-      className={cn(
-        "fixed inset-x-0 top-0 z-40 border-b transition-colors duration-300 font-heading",
-        scrolled
-          ? "border-border/70 bg-background/75 backdrop-blur-xl"
-          : "border-transparent bg-transparent",
-      )}
-    >
-      <Container className="flex h-16 items-center gap-6">
+    <header className="fixed inset-x-0 top-0 z-40 px-3 pt-3 font-heading sm:pt-4">
+      <Container
+        className={cn(
+          "glass-bevel flex h-14 max-w-[1300px] items-center gap-6 rounded-full pr-2 pl-4 transition-[background-color,box-shadow] duration-300 ",
+          scrolled ? "bg-background/55" : "bg-background/30",
+        )}
+      >
         <Logo />
 
         <NavigationMenu className="hidden md:flex" aria-label="Main">
           <NavigationMenuList className="gap-1">
             <NavigationMenuItem>
-              <NavigationMenuTrigger className="bg-transparent px-3 text-muted-foreground hover:bg-transparent hover:text-foreground data-popup-open:bg-transparent data-popup-open:text-foreground">
+              <NavigationMenuTrigger className="bg-transparent px-3  hover:bg-transparent hover:text-foreground data-popup-open:bg-transparent data-popup-open:text-foreground">
                 Product
               </NavigationMenuTrigger>
               <NavigationMenuContent>
@@ -80,7 +78,7 @@ export function Navbar() {
                           <span className="font-medium text-foreground">
                             {item.label}
                           </span>
-                          <span className="text-xs leading-snug text-muted-foreground">
+                          <span className="text-xs leading-snug ">
                             {item.description}
                           </span>
                         </span>
@@ -99,7 +97,7 @@ export function Navbar() {
                     render={<Link href={item.href} />}
                     active={active}
                     aria-current={active ? "page" : undefined}
-                    className="relative rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-transparent hover:text-foreground focus:bg-transparent aria-[current=page]:text-foreground data-[active=true]:bg-transparent"
+                    className="relative rounded-md px-3 py-2 text-sm  transition-colors hover:bg-transparent hover:text-foreground focus:bg-transparent aria-[current=page]:text-foreground data-[active=true]:bg-transparent"
                   >
                     {item.label}
                     {active && (
@@ -122,7 +120,7 @@ export function Navbar() {
             href="/contact"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
-              "hidden text-muted-foreground lg:inline-flex",
+              "hidden  lg:inline-flex",
             )}
           >
             Contact
@@ -164,7 +162,7 @@ export function Navbar() {
                 className="flex flex-col gap-6 overflow-y-auto px-4 pb-6"
               >
                 <div className="grid gap-1">
-                  <p className="px-3 pb-1 font-mono text-xs tracking-eyebrow text-muted-foreground uppercase">
+                  <p className="px-3 pb-1 font-mono text-xs tracking-eyebrow  uppercase">
                     Product
                   </p>
                   {productMenu.map((item) => (
@@ -190,7 +188,7 @@ export function Navbar() {
                         href={item.href}
                         aria-current={active ? "page" : undefined}
                         onClick={() => setMobileOpen(false)}
-                        className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:text-foreground aria-[current=page]:underline aria-[current=page]:decoration-brand-ink aria-[current=page]:underline-offset-4"
+                        className="rounded-lg px-3 py-2.5 text-sm  hover:bg-muted hover:text-foreground aria-[current=page]:text-foreground aria-[current=page]:underline aria-[current=page]:decoration-brand-ink aria-[current=page]:underline-offset-4"
                       >
                         {item.label}
                       </Link>

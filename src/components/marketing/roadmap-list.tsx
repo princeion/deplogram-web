@@ -41,7 +41,7 @@ export function RoadmapList({ phases, detailed = false }: { phases: readonly Roa
             <RoadmapStatusChip status={phase.status} />
           </div>
           <div className="grid gap-2">
-            <p className={cn("font-heading text-subheading font-semibold", phase.status === "later" && "text-muted-foreground")}>{phase.title}</p>
+            <p className={cn("font-heading text-subheading font-medium", phase.status === "later" && "text-muted-foreground")}>{phase.title}</p>
             {detailed ? (
               <p className="text-pretty text-muted-foreground">{phase.description}</p>
             ) : (

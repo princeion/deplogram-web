@@ -5,7 +5,7 @@ import { Container } from "@/components/shared/container"
 import { SectionWrapper } from "@/components/shared/section-wrapper"
 import { CtaBand } from "@/components/marketing/cta-band"
 import { FeatureGrid } from "@/components/marketing/feature-grid"
-import { PageHeader } from "@/components/marketing/page-header"
+import { SimpleHero } from "@/components/marketing/simple-hero"
 import { SectionHeader } from "@/components/marketing/section-header"
 import { StoryBlock } from "@/components/marketing/story-block"
 
@@ -19,7 +19,7 @@ export default function AboutPage() {
   const { hero, story, quote } = aboutCopy
   return (
     <>
-      <PageHeader eyebrow="About" title={hero.title} description={hero.description} />
+      <SimpleHero title={hero.title} primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "Contact us", href: "/contact" }} />
       <StoryBlock eyebrow="Our story" title={story.title} paragraphs={story.paragraphs} mission={quote} />
       <SectionWrapper>
         <Container>

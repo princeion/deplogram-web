@@ -33,7 +33,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
           </div>
           <h2
             className={cn(
-              "font-heading font-semibold text-balance",
+              "font-heading font-medium text-balance",
               featured ? "text-heading" : "text-subheading"
             )}
           >
