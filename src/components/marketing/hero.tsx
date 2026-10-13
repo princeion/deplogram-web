@@ -53,7 +53,7 @@ export function Hero({ announcement, headline, description, points, footer }: He
 
         <div className="grid flex-1 items-center gap-12 py-14 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:gap-10 lg:py-10">
           <div className="flex flex-col items-start">
-            <TextReveal as="h1" text={headline} delay={0.1} immediate className="font-heading text-display font-semibold" />
+            <TextReveal as="h1" text={headline} delay={0.1} immediate className="font-heading text-display font-medium" />
             <FadeInUp delay={0.4}>
               <p className="mt-6 max-w-md text-lead text-pretty text-muted-foreground">{description}</p>
             </FadeInUp>

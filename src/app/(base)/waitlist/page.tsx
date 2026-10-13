@@ -8,6 +8,10 @@ import { SectionWrapper } from "@/components/shared/section-wrapper"
 import { Faq } from "@/components/marketing/faq"
 import { PageHeader } from "@/components/marketing/page-header"
 import { WaitlistForm } from "@/components/marketing/waitlist-form"
+import { FeatureGrid } from "@/components/marketing/feature-grid"
+import { ProductStage } from "@/components/marketing/product-cards"
+import { SectionHeader } from "@/components/marketing/section-header"
+import type { FeatureItem } from "@/content/types"
 
 export const metadata = createMetadata({
   title: "Join the waitlist",
@@ -15,10 +19,10 @@ export const metadata = createMetadata({
   path: "/waitlist",
 })
 
-const steps = [
-  { title: "You join", description: "Leave your email. The rest is optional, but it helps." },
-  { title: "We open in waves", description: "Each group starts on a stable platform before the next is invited." },
-  { title: "Your invite lands", description: "One email with access to your workspace." },
+const steps: readonly FeatureItem[] = [
+  { title: "You join", description: "Leave your email. The rest is optional, but it helps.", icon: "mail" },
+  { title: "We open in waves", description: "Each group starts on a stable platform before the next is invited.", icon: "layers" },
+  { title: "Your invite lands", description: "One email with access to your workspace.", icon: "rocket" },
 ]
 
 const waitlistFaq = faq.filter((item) => /today|deploy\?|web host/.test(item.question))
@@ -33,35 +37,32 @@ export default function WaitlistPage() {
       />
 
       <SectionWrapper spacing="compact" className="pb-20 sm:pb-24">
-        <Container className="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
-          <FadeInUp>
-            <WaitlistForm />
+        <Container>
+          <FadeInUp distance={28}>
+            <ProductStage variant="b" source="flow" className="lg:py-16">
+              <div className="mx-auto grid max-w-5xl items-start gap-4 lg:grid-cols-[1.5fr_1fr]">
+                <WaitlistForm />
+                <StaggerGroup as="ul" className="flex flex-col gap-3">
+                  {waitlistPerks.map((perk, i) => (
+                    <StaggerItem as="li" key={perk.title} className="glass flex gap-4 rounded-2xl p-5">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white font-mono text-xs text-neutral-950">{i + 1}</span>
+                      <span className="grid gap-1">
+                        <span className="font-medium">{perk.title}</span>
+                        <span className="text-sm text-white/65">{perk.description}</span>
+                      </span>
+                    </StaggerItem>
+                  ))}
+                </StaggerGroup>
+              </div>
+            </ProductStage>
           </FadeInUp>
-          <StaggerGroup as="ul" className="flex flex-col gap-4">
-            {waitlistPerks.map((perk, i) => (
-              <StaggerItem as="li" key={perk.title} className="flex gap-4 rounded-2xl elevation-surface p-5">
-                <span className="font-mono text-xs text-brand-ink">{String(i + 1).padStart(2, "0")}</span>
-                <span className="grid gap-1">
-                  <span className="font-medium">{perk.title}</span>
-                  <span className="text-sm text-muted-foreground">{perk.description}</span>
-                </span>
-              </StaggerItem>
-            ))}
-          </StaggerGroup>
         </Container>
       </SectionWrapper>
 
       <SectionWrapper spacing="compact">
         <Container>
-          <ol className="grid gap-4 sm:grid-cols-3">
-            {steps.map((step, i) => (
-              <li key={step.title} className="flex flex-col gap-3 rounded-2xl elevation-surface p-6">
-                <span className="flex size-8 items-center justify-center rounded-full bg-brand font-mono text-xs text-brand-foreground">{i + 1}</span>
-                <span className="font-heading text-subheading font-semibold">{step.title}</span>
-                <span className="text-sm text-pretty text-muted-foreground">{step.description}</span>
-              </li>
-            ))}
-          </ol>
+          <SectionHeader eyebrow="How it works" title="From waitlist to *workspace.*" align="center" />
+          <FeatureGrid items={steps} columns={3} className="mt-12 sm:mt-16" />
         </Container>
       </SectionWrapper>
 

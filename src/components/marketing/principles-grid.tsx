@@ -13,7 +13,7 @@ export function PrinciplesGrid({ items }: { items: readonly FeatureItem[] }) {
             <Icon name={item.icon} className="text-muted-foreground" />
           </div>
           <div className="grid gap-2">
-            <p className="font-heading text-2xl font-semibold tracking-tight text-balance">{item.title}</p>
+            <p className="font-heading text-2xl font-medium tracking-tight text-balance">{item.title}</p>
             <p className="text-sm text-pretty text-muted-foreground">{item.description}</p>
           </div>
         </StaggerItem>

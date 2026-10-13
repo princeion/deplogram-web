@@ -1,13 +1,15 @@
 import { createMetadata } from "@/lib/metadata"
 import { homeCopy } from "@/content/home"
-import { notYet, roadmap, roadmapStatusLabel, type RoadmapStatus } from "@/content/roadmap"
+import { notYet, roadmap } from "@/content/roadmap"
 import { Container } from "@/components/shared/container"
 import { Icon } from "@/components/shared/icon"
 import { FadeInUp } from "@/components/shared/motion/fade-in-up"
 import { SectionWrapper } from "@/components/shared/section-wrapper"
 import { CtaBand } from "@/components/marketing/cta-band"
-import { PageHeader } from "@/components/marketing/page-header"
-import { RoadmapList, RoadmapStatusChip } from "@/components/marketing/roadmap-list"
+import { SimpleHero } from "@/components/marketing/simple-hero"
+import { ProductStage } from "@/components/marketing/product-cards"
+import { RoadmapIllustration } from "@/components/marketing/product-illustrations"
+import { RoadmapList } from "@/components/marketing/roadmap-list"
 import { SectionHeader } from "@/components/marketing/section-header"
 
 export const metadata = createMetadata({
@@ -16,24 +18,21 @@ export const metadata = createMetadata({
   path: "/roadmap",
 })
 
-const legend = Object.keys(roadmapStatusLabel) as RoadmapStatus[]
 
 export default function RoadmapPage() {
   return (
     <>
-      <PageHeader
-        eyebrow="Roadmap"
-        title={homeCopy.roadmap.title}
-        description="Deplogram is an MVP in progress. This is where it stands — honestly, and without dates we haven't committed to."
-      >
-        <ul className="flex flex-wrap gap-2">
-          {legend.map((status) => (
-            <li key={status}>
-              <RoadmapStatusChip status={status} />
-            </li>
-          ))}
-        </ul>
-      </PageHeader>
+      <SimpleHero title={homeCopy.roadmap.title} primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "Contact us", href: "/contact" }} />
+
+      <SectionWrapper spacing="compact" className="pt-0">
+        <Container>
+          <FadeInUp distance={28}>
+            <ProductStage variant="a" source="flow">
+              <RoadmapIllustration />
+            </ProductStage>
+          </FadeInUp>
+        </Container>
+      </SectionWrapper>
 
       <SectionWrapper spacing="compact">
         <Container>

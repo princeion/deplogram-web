@@ -15,7 +15,7 @@ export function ContactChannels({ channels }: { channels: typeof contactChannels
               <Icon name={channel.icon} size="md" />
             </span>
             <span className="flex flex-col gap-1">
-              <span className="font-heading font-semibold">{channel.title}</span>
+              <span className="font-heading font-medium">{channel.title}</span>
               <span className="text-sm text-muted-foreground">{channel.description}</span>
               <span className="font-mono text-sm text-foreground group-hover:text-brand-ink">{channel.email}</span>
             </span>

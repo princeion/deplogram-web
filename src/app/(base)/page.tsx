@@ -24,7 +24,7 @@ import { GalleyMock } from "@/components/marketing/galley-mock"
 import { Hero } from "@/components/marketing/hero"
 import { JsonLd } from "@/components/marketing/json-ld"
 import { LifecycleBand } from "@/components/marketing/lifecycle-band"
-import { LinkCardGrid } from "@/components/marketing/link-card-grid"
+import { ProductCards, ProductStage, type ProductCardItem } from "@/components/marketing/product-cards"
 import { RoadmapList } from "@/components/marketing/roadmap-list"
 import { RuntimesStrip } from "@/components/marketing/runtimes-strip"
 import { SectionHeader } from "@/components/marketing/section-header"
@@ -37,14 +37,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 }
 
-/** The product family, as link cards. */
-const pillars = [
-  { title: "Deploy", description: "GitHub repo → runtime → live URL, with progress and logs.", icon: "rocket", href: "/deploy" },
-  { title: "Runtimes", description: "Eight runtimes, made dependable before we add a ninth.", icon: "layers", href: "/runtimes" },
-  { title: "CodePad", description: "A familiar editor in your Galley. Run, save, preview, deploy.", icon: "code", href: "/codepad" },
-  { title: "Storage", description: "Files and folders beside your projects. Simple, as it should be.", icon: "database", href: "/storage" },
-  { title: "Utilities & APIs", description: "Six developer utilities and four APIs.", icon: "wrench", href: "/tools" },
-] as const
+/** The product family, as Codex-style cards with animated illustrations. */
+const products: readonly ProductCardItem[] = [
+  { title: "Deploy", href: "/deploy", cta: "Explore Deploy", illustration: "deploy" },
+  { title: "CodePad", href: "/codepad", cta: "Explore CodePad", illustration: "codepad" },
+  { title: "Storage", href: "/storage", cta: "Explore Storage", illustration: "storage" },
+  { title: "Utilities & APIs", href: "/tools", cta: "Explore the toolkit", illustration: "apis" },
+]
 
 export default function HomePage() {
   const c = homeCopy
@@ -56,16 +55,18 @@ export default function HomePage() {
       <SectionWrapper id="console" spacing="compact">
         <Container>
           <SectionHeader {...c.console} align="center" className="mx-auto" />
-          <FadeInUp delay={0.1} distance={28} className="mx-auto mt-12 max-w-5xl sm:mt-16">
-            <DeployConsole />
+          <FadeInUp delay={0.1} distance={28} className="mt-12 sm:mt-16">
+            <ProductStage source="flow">
+              <DeployConsole className="mx-auto max-w-5xl" />
+            </ProductStage>
           </FadeInUp>
         </Container>
       </SectionWrapper>
 
       <SectionWrapper id="platform">
         <Container>
-          <SectionHeader {...c.platform} />
-          <LinkCardGrid items={pillars} columns={5} className="mt-12 sm:mt-16" />
+          <SectionHeader {...c.platform} align="center" className="mx-auto" />
+          <ProductCards items={products} className="mt-12 sm:mt-16" />
         </Container>
       </SectionWrapper>
 
@@ -89,7 +90,9 @@ export default function HomePage() {
         <Container>
           <SectionHeader {...c.galley} />
           <FadeInUp distance={28} className="mt-12 sm:mt-16">
-            <GalleyMock />
+            <ProductStage variant="c" source="lime">
+              <GalleyMock className="mx-auto max-w-5xl" />
+            </ProductStage>
           </FadeInUp>
         </Container>
       </SectionWrapper>

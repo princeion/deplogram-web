@@ -24,7 +24,7 @@ export function PageHeader({ eyebrow, title, description, children }: PageHeader
       <Container className="relative">
         <FadeInUp className="flex max-w-3xl flex-col items-start">
           <Eyebrow className="mb-4">{eyebrow}</Eyebrow>
-          <h1 className="font-heading text-title font-semibold text-balance">
+          <h1 className="font-heading text-title font-medium text-balance">
             <AccentText text={title} />
           </h1>
           {description && <p className="mt-5 max-w-2xl text-lead text-pretty text-muted-foreground">{description}</p>}

@@ -25,7 +25,7 @@ export function ContactForm({ defaultTopic = "general" }: { defaultTopic?: Conta
         <span className="flex size-10 items-center justify-center rounded-full bg-brand text-brand-foreground">
           <Icon name="check" />
         </span>
-        <p className="font-heading text-subheading font-semibold">Message received.</p>
+        <p className="font-heading text-subheading font-medium">Message received.</p>
         <p className="text-muted-foreground">{state.message}</p>
       </div>
     )

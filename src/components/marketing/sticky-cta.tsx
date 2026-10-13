@@ -40,7 +40,7 @@ export function StickyCta() {
           transition={entrance}
           className="fixed right-3 bottom-3 z-40 flex items-center gap-2 sm:right-5 sm:bottom-5"
         >
-          <Link href={siteConfig.waitlistUrl} className={cn(buttonVariants({ size: "lg" }), "shadow-2xl")}>
+          <Link href={siteConfig.waitlistUrl} className={cn(buttonVariants({ size: "lg" }))}>
             Join the waitlist
             <Icon name="arrow-right" />
           </Link>
@@ -48,7 +48,7 @@ export function StickyCta() {
             type="button"
             onClick={toTop}
             aria-label="Back to top"
-            className={cn(buttonVariants({ variant: "outline", size: "icon-lg" }), "shadow-2xl")}
+            className={cn(buttonVariants({ variant: "outline", size: "icon-lg" }))}
           >
             <Icon name="arrow-up" />
           </button>

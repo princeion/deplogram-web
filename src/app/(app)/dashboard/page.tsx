@@ -22,7 +22,7 @@ export default function DashboardPage() {
         <div className="flex h-16 items-center border-b border-border/70 px-5">
           <Logo />
         </div>
-        <p className="px-5 pt-6 pb-3 font-heading text-lg font-semibold tracking-tight">Your Galley</p>
+        <p className="px-5 pt-6 pb-3 font-heading text-lg font-medium tracking-tight">Your Galley</p>
         <nav aria-label="Galley" className="flex flex-col">
           {galleyNav.map((item, i) => (
             <span
@@ -44,7 +44,7 @@ export default function DashboardPage() {
           <span className="md:hidden">
             <Logo />
           </span>
-          <p className="hidden font-heading text-lg font-semibold tracking-tight md:block">Projects</p>
+          <p className="hidden font-heading text-lg font-medium tracking-tight md:block">Projects</p>
           <span className="rounded-full bg-brand px-2.5 py-1 font-mono text-[0.625rem] tracking-eyebrow text-brand-foreground uppercase">Early access</span>
         </div>
         <div className="flex flex-1 items-center justify-center p-5 sm:p-8">

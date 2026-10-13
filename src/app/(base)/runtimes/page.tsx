@@ -1,15 +1,16 @@
 import { createMetadata } from "@/lib/metadata"
 import { homeCopy } from "@/content/home"
 import { runtimeConfigFields, runtimes } from "@/content/runtimes"
-import { BadgePill } from "@/components/shared/badge-pill"
 import { Container } from "@/components/shared/container"
+import { FadeInUp } from "@/components/shared/motion/fade-in-up"
 import { Icon } from "@/components/shared/icon"
-import { HoverScale } from "@/components/shared/motion/hover-scale"
-import { SpotlightCard } from "@/components/shared/motion/spotlight-card"
 import { StaggerGroup, StaggerItem } from "@/components/shared/motion/stagger"
 import { SectionWrapper } from "@/components/shared/section-wrapper"
 import { CtaBand } from "@/components/marketing/cta-band"
-import { PageHeader } from "@/components/marketing/page-header"
+import { GradientStage, gradientFor } from "@/components/marketing/gradient-stage"
+import { RuntimesIllustration } from "@/components/marketing/product-illustrations"
+import { SimpleHero } from "@/components/marketing/simple-hero"
+import { ProductStage } from "@/components/marketing/product-cards"
 import { SectionHeader } from "@/components/marketing/section-header"
 import { SpecRows } from "@/components/marketing/spec-rows"
 
@@ -20,56 +21,46 @@ export const metadata = createMetadata({
   path: "/runtimes",
 })
 
+
 export default function RuntimesPage() {
   return (
     <>
-      <PageHeader
-        eyebrow="Runtimes"
-        title="Your stack, your *choice.*"
-        description="Eight runtimes, and a promise: we'll make these eight dependable before adding a ninth. If it runs in a container, Docker has you covered."
-      >
-        <ul className="flex flex-wrap gap-2">
-          {runtimes.map((runtime) => (
-            <li key={runtime.id}>
-              <a href={`#${runtime.id}`} className="inline-flex">
-                <BadgePill size="md" className="gap-2 text-foreground transition-colors hover:text-brand-ink">
-                  <Icon name={runtime.icon} className="text-brand-ink" />
-                  {runtime.name}
-                </BadgePill>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </PageHeader>
+      <SimpleHero title="Your stack, your choice." primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "How deployment works", href: "/deploy" }} />
+
+      <SectionWrapper spacing="compact" className="pt-0">
+        <Container>
+          <FadeInUp distance={28}>
+            <ProductStage variant="c">
+              <RuntimesIllustration className="max-w-md" />
+            </ProductStage>
+          </FadeInUp>
+        </Container>
+      </SectionWrapper>
 
       <SectionWrapper spacing="compact">
         <Container>
-          <StaggerGroup as="ul" className="grid gap-4 md:grid-cols-2">
-            {runtimes.map((runtime) => (
-              <StaggerItem as="li" key={runtime.id} className="scroll-mt-28" >
-                <HoverScale className="h-full" scale={1.01}>
-                  <SpotlightCard className="h-full">
-                    <article id={runtime.id} className="flex h-full scroll-mt-28 flex-col gap-6 p-6">
-                      <div className="flex items-center gap-4">
-                        <span className="flex size-12 shrink-0 items-center justify-center rounded-lg elevation-control text-brand-ink">
-                          <Icon name={runtime.icon} size="lg" />
-                        </span>
-                        <div>
-                          <h2 className="font-heading text-subheading font-semibold">{runtime.name}</h2>
-                          <p className="text-sm text-muted-foreground">{runtime.detail}</p>
-                        </div>
-                      </div>
-                      <dl className="grid gap-4 border-t border-border/70 pt-5 sm:grid-cols-2">
-                        <Phase label="Build" text={runtime.build} code={runtime.buildCommand} />
-                        <Phase
-                          label="Run"
-                          text={runtime.run}
-                          code={`${runtime.startCommand}${runtime.port !== "—" ? ` · port ${runtime.port}` : ""}`}
-                        />
-                      </dl>
-                    </article>
-                  </SpotlightCard>
-                </HoverScale>
+          <SectionHeader eyebrow="Eight runtimes" title="How each one *builds and runs.*" align="center" />
+          <StaggerGroup as="ul" className="mt-12 grid gap-4 sm:mt-16 sm:grid-cols-2 lg:grid-cols-4">
+            {runtimes.map((runtime, i) => (
+              <StaggerItem as="li" key={runtime.id} className="scroll-mt-28">
+                <article id={runtime.id} className="group flex h-full scroll-mt-28 flex-col rounded-2xl bg-card p-2.5 ring-1 ring-border/60">
+                  <GradientStage {...gradientFor(i)} className="flex aspect-[4/3] flex-col items-center justify-center gap-5 rounded-xl">
+                    <span className="flex size-16 items-center justify-center rounded-2xl bg-white text-neutral-950 shadow-xl shadow-black/15 transition-transform duration-500 ease-out-expo group-hover:scale-105">
+                      <Icon name={runtime.icon} size="lg" className="size-7" />
+                    </span>
+                    <span className="glass rounded-full px-3 py-1 font-mono text-[0.6875rem]">{runtime.buildCommand}</span>
+                  </GradientStage>
+                  <div className="flex flex-1 flex-col gap-4 px-3 pt-5 pb-3">
+                    <div className="grid gap-1">
+                      <h2 className="font-heading text-subheading font-medium">{runtime.name}</h2>
+                      <p className="text-sm text-pretty text-muted-foreground">{runtime.detail}</p>
+                    </div>
+                    <dl className="mt-auto grid gap-3 border-t border-border/70 pt-4 text-xs">
+                      <Phase label="Build" text={runtime.build} />
+                      <Phase label="Run" text={runtime.run} code={`${runtime.startCommand}${runtime.port !== "—" ? ` · :${runtime.port}` : ""}`} />
+                    </dl>
+                  </div>
+                </article>
               </StaggerItem>
             ))}
           </StaggerGroup>
@@ -92,13 +83,13 @@ export default function RuntimesPage() {
   )
 }
 
-function Phase({ label, text, code }: { label: string; text: string; code: string }) {
+function Phase({ label, text, code }: { label: string; text: string; code?: string }) {
   return (
-    <div className="grid content-start gap-2">
-      <dt className="font-mono text-xs tracking-eyebrow text-brand-ink uppercase">{label}</dt>
-      <dd className="grid gap-3">
-        <span className="text-sm text-pretty">{text}</span>
-        <code className="w-fit rounded-md elevation-control px-2 py-1 font-mono text-xs text-muted-foreground">{code}</code>
+    <div className="grid gap-1">
+      <dt className="font-medium">{label}</dt>
+      <dd className="grid gap-2 text-pretty text-muted-foreground">
+        {text}
+        {code && <code className="w-fit rounded-md border border-border/70 bg-background px-2 py-0.5 font-mono text-[0.6875rem] text-foreground/80">{code}</code>}
       </dd>
     </div>
   )

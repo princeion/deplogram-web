@@ -1,19 +1,17 @@
-import Link from "next/link"
 
-import { cn } from "@/lib/utils"
-import { siteConfig } from "@/lib/site"
 import { createMetadata } from "@/lib/metadata"
 import { backendResponsibilities } from "@/content/deploy"
 import { homeCopy } from "@/content/home"
 import { runtimeConfigFields } from "@/content/runtimes"
-import { buttonVariants } from "@/components/ui/button"
 import { Container } from "@/components/shared/container"
-import { Icon } from "@/components/shared/icon"
+import { FadeInUp } from "@/components/shared/motion/fade-in-up"
 import { SectionWrapper } from "@/components/shared/section-wrapper"
 import { CtaBand } from "@/components/marketing/cta-band"
+import { DeployConsole } from "@/components/marketing/deploy-console"
 import { DeployFlow } from "@/components/marketing/deploy-flow"
 import { LifecycleBand } from "@/components/marketing/lifecycle-band"
-import { PageHeader } from "@/components/marketing/page-header"
+import { SimpleHero } from "@/components/marketing/simple-hero"
+import { ProductStage } from "@/components/marketing/product-cards"
 import { PrinciplesGrid } from "@/components/marketing/principles-grid"
 import { SectionHeader } from "@/components/marketing/section-header"
 import { SpecRows } from "@/components/marketing/spec-rows"
@@ -28,21 +26,17 @@ export const metadata = createMetadata({
 export default function DeployPage() {
   return (
     <>
-      <PageHeader
-        eyebrow="Deploy"
-        title="Serve and test your work *seamlessly.*"
-        description="Deployment is the centre of Deplogram. Connect a repository, pick one of eight runtimes, set only what matters, and watch it go live."
-      >
-        <div className="flex flex-wrap gap-3">
-          <Link href={siteConfig.waitlistUrl} className={cn(buttonVariants({ size: "lg" }), "group")}>
-            Join the waitlist
-            <Icon name="arrow-right" className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5" />
-          </Link>
-          <Link href="/runtimes" className={buttonVariants({ variant: "outline", size: "lg" })}>
-            See the runtimes
-          </Link>
-        </div>
-      </PageHeader>
+      <SimpleHero title="Serve and test your work seamlessly." primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "See the runtimes", href: "/runtimes" }} />
+
+      <SectionWrapper spacing="compact" className="pt-0">
+        <Container>
+          <FadeInUp distance={28}>
+            <ProductStage variant="b">
+              <DeployConsole className="mx-auto max-w-5xl" />
+            </ProductStage>
+          </FadeInUp>
+        </Container>
+      </SectionWrapper>
 
       <SectionWrapper spacing="compact">
         <Container>

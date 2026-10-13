@@ -26,10 +26,10 @@ type FeatureGridProps = VariantProps<typeof gridVariants> & {
 export function FeatureGrid({ items, columns, className }: FeatureGridProps) {
   return (
     <StaggerGroup as="ul" className={cn(gridVariants({ columns }), className)}>
-      {items.map((item) => (
+      {items.map((item, i) => (
         <StaggerItem as="li" key={item.title}>
           <HoverScale className="h-full" scale={1.015}>
-            <FeatureCard item={item} />
+            <FeatureCard item={item} index={i} />
           </HoverScale>
         </StaggerItem>
       ))}

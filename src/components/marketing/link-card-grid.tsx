@@ -44,7 +44,7 @@ export function LinkCardGrid({ items, columns, className }: LinkCardGridProps) {
                   <Icon name={item.icon} size="md" />
                 </span>
                 <span className="flex flex-col gap-1.5">
-                  <span className="inline-flex items-center gap-2 font-heading text-subheading font-semibold">
+                  <span className="inline-flex items-center gap-2 font-heading text-subheading font-medium">
                     {item.title}
                     <Icon
                       name="arrow-right"
