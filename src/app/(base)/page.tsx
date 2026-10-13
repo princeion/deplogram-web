@@ -50,19 +50,7 @@ export default function HomePage() {
   return (
     <>
       <JsonLd />
-      <Hero {...c.hero} footer={<RuntimesStrip {...c.runtimes} runtimes={runtimes} />} />
-
-      <SectionWrapper id="console" spacing="compact">
-        <Container>
-          <SectionHeader {...c.console} align="center" className="mx-auto" />
-          <FadeInUp delay={0.1} distance={28} className="mt-12 sm:mt-16">
-            <ProductStage source="flow">
-              <DeployConsole className="mx-auto max-w-5xl" />
-            </ProductStage>
-          </FadeInUp>
-        </Container>
-      </SectionWrapper>
-
+      <Hero {...c.hero} visual={<DeployConsole />} footer={<RuntimesStrip {...c.runtimes} runtimes={runtimes} />} />
       <SectionWrapper id="platform">
         <Container>
           <SectionHeader {...c.platform} align="center" className="mx-auto" />

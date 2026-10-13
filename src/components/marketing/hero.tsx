@@ -7,86 +7,93 @@ import { buttonVariants } from "@/components/ui/button";
 import { Container } from "@/components/shared/container";
 import { Icon } from "@/components/shared/icon";
 import { FadeInUp } from "@/components/shared/motion/fade-in-up";
-import { Magnetic } from "@/components/shared/motion/magnetic";
-import { StaggerGroup, StaggerItem } from "@/components/shared/motion/stagger";
 import { TextReveal } from "@/components/shared/motion/text-reveal";
-import { NodeDot } from "@/components/shared/node-graph";
-import { HeroMark } from "@/components/marketing/hero-mark";
+import { GradientStage } from "@/components/marketing/gradient-stage";
 
 type HeroProps = {
   announcement: { label: string; cta: string; href: string };
-  /** "\n" forces the line break; `*word*` renders in the brand ink. */
+  /** "\n" forces the line break; `*` markers are ignored (the hero is set in plain white). */
   headline: string;
   description: string;
-  /** Short statements in the right-hand column. */
+  /** Short statements shown as a row under the CTAs. */
   points: readonly string[];
-  /** Pinned to the bottom of the first screen (the runtimes row). */
+  /** The product, shown on a gradient stage under the copy. */
+  visual?: React.ReactNode;
+  /** Closes the hero (the runtimes row). */
   footer?: React.ReactNode;
 };
 
 /**
- * Full-viewport hero on a three-column stage: headline + CTAs left, the logo mark centre-stage,
- * short statements right, and a row pinned to the bottom of the first screen.
+ * Homepage hero, OpenAI-style: centred announcement, headline, description and CTAs, then the
+ * live product on a gradient stage.
  */
-export function Hero({ announcement, headline, description, points, footer }: HeroProps) {
+export function Hero({ announcement, headline, description, points, visual, footer }: HeroProps) {
   return (
     <section className="relative overflow-hidden">
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-grid opacity-50 mask-fade-edges" />
-      <Container className="relative flex flex-col pt-24 pb-12 sm:pt-28 lg:min-h-svh">
-        <FadeInUp className="flex justify-center">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[44rem]"
+        style={{ background: "radial-gradient(60% 50% at 50% 0%, color-mix(in oklab, var(--brand) 16%, transparent), transparent 70%)" }}
+      />
+      <Container className="relative flex flex-col items-center pt-32 pb-12 text-center sm:pt-40">
+        <FadeInUp>
           <Link
             href={announcement.href}
-            className="group inline-flex items-center gap-3 rounded-full px-4 py-1.5 text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="group inline-flex items-center gap-2.5 rounded-full border border-border/70 bg-card/60 py-1 pr-3 pl-1 text-sm text-muted-foreground backdrop-blur transition-colors hover:border-border hover:text-foreground"
           >
-            <NodeDot lit />
+            <span className="rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium text-background">Early access</span>
             <span className="hidden sm:inline">{announcement.label}</span>
-            <span className="inline-flex items-center gap-1 font-medium text-foreground">
-              {announcement.cta}
-              <Icon
-                name="chevron-right"
-                size="xs"
-                className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5"
-              />
-            </span>
+            <span className="inline-flex items-center gap-1 font-medium text-foreground sm:hidden">{announcement.cta}</span>
+            <Icon name="chevron-right" size="xs" className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5" />
           </Link>
         </FadeInUp>
 
-        <div className="grid flex-1 items-center gap-12 py-14 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:gap-10 lg:py-10">
-          <div className="flex flex-col items-start">
-            <TextReveal as="h1" text={headline} delay={0.1} immediate className="font-heading text-display font-medium" />
-            <FadeInUp delay={0.4}>
-              <p className="mt-6 max-w-md text-lead text-pretty text-muted-foreground">{description}</p>
-            </FadeInUp>
-            <FadeInUp delay={0.5} className="mt-8 flex flex-wrap items-center gap-3">
-              <Magnetic>
-                <Link href={siteConfig.waitlistUrl} className={cn(buttonVariants({ size: "lg" }), "group")}>
-                  Join the waitlist
-                  <Icon
-                    name="arrow-right"
-                    className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5"
-                  />
-                </Link>
-              </Magnetic>
-              <Link href="/deploy" className={buttonVariants({ variant: "outline", size: "lg" })}>
-                See how it deploys
-              </Link>
-            </FadeInUp>
-          </div>
+        <TextReveal
+          as="h1"
+          text={headline.replace(/\*/g, "")}
+          delay={0.1}
+          immediate
+          className="mt-8 max-w-4xl font-heading text-display font-medium text-balance"
+        />
 
-          <FadeInUp delay={0.2} distance={0} className="justify-self-center">
-            <HeroMark className="w-52 sm:w-64 lg:w-52 xl:w-72" />
-          </FadeInUp>
+        <FadeInUp delay={0.35}>
+          <p className="mx-auto mt-6 max-w-2xl text-lead text-pretty text-muted-foreground">{description}</p>
+        </FadeInUp>
 
-          <StaggerGroup as="ul" className="flex flex-col gap-3 lg:justify-self-end">
+        <FadeInUp delay={0.45} className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <Link href={siteConfig.waitlistUrl} className={cn(buttonVariants({ variant: "inverted", size: "lg" }), "group h-12 px-6 text-base")}>
+            Join the waitlist
+            <Icon name="arrow-up-right" className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </Link>
+          <Link href="/deploy" className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "h-12 px-6 text-base")}>
+            See how it deploys
+          </Link>
+        </FadeInUp>
+
+        <FadeInUp delay={0.55}>
+          <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
             {points.map((point) => (
-              <StaggerItem as="li" key={point} className="text-lg font-medium text-foreground">
+              <li key={point} className="inline-flex items-center gap-2">
+                <Icon name="check" size="xs" className="text-foreground" />
                 {point}
-              </StaggerItem>
+              </li>
             ))}
-          </StaggerGroup>
-        </div>
+          </ul>
+        </FadeInUp>
 
-        {footer && <FadeInUp delay={0.7}>{footer}</FadeInUp>}
+        {visual && (
+          <FadeInUp delay={0.6} distance={40} className="mt-16 w-full sm:mt-20">
+            <GradientStage source="flow" className="px-3 pt-8 pb-3 sm:px-10 sm:pt-14 sm:pb-10 lg:px-16 lg:pt-16 lg:pb-14">
+              <div className="mx-auto max-w-5xl text-left">{visual}</div>
+            </GradientStage>
+          </FadeInUp>
+        )}
+
+        {footer && (
+          <FadeInUp delay={0.2} className="mt-12 w-full sm:mt-16">
+            {footer}
+          </FadeInUp>
+        )}
       </Container>
     </section>
   );
