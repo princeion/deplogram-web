@@ -6,17 +6,17 @@ import { faq } from "@/content/faq"
 import { homeCopy } from "@/content/home"
 import { runtimes } from "@/content/runtimes"
 import { Container } from "@/components/shared/container"
-import { FadeInUp } from "@/components/shared/motion/fade-in-up"
 import { SectionWrapper } from "@/components/shared/section-wrapper"
 import { CtaBand } from "@/components/marketing/cta-band"
 import { DeployConsole } from "@/components/marketing/deploy-console"
 import { Faq } from "@/components/marketing/faq"
-import { GalleyMock } from "@/components/marketing/galley-mock"
 import { Hero } from "@/components/marketing/hero"
 import { JsonLd } from "@/components/marketing/json-ld"
-import { ProductCards, ProductStage, type ProductCardItem } from "@/components/marketing/product-cards"
+import { ProductCards, type ProductCardItem } from "@/components/marketing/product-cards"
+import { DeployIllustration } from "@/components/marketing/product-illustrations"
 import { RuntimesStrip } from "@/components/marketing/runtimes-strip"
 import { SectionHeader } from "@/components/marketing/section-header"
+import { TextPoints } from "@/components/marketing/text-points"
 
 const homeTitle = `${siteConfig.name} — Build, deploy and run apps on a lightweight developer cloud`
 
@@ -44,7 +44,19 @@ export default function HomePage() {
   return (
     <>
       <JsonLd faq={homeFaq} />
-      <Hero {...c.hero} visual={<DeployConsole />} footer={<RuntimesStrip {...c.runtimes} runtimes={runtimes} />} />
+      <Hero
+        {...c.hero}
+        visual={<DeployConsole />}
+        mobileVisual={<DeployIllustration />}
+        footer={<RuntimesStrip {...c.runtimes} runtimes={runtimes} />}
+      />
+
+      <SectionWrapper id="why">
+        <Container>
+          <SectionHeader eyebrow={c.why.eyebrow} title={c.why.title} description={c.why.description} />
+          <TextPoints items={c.why.points} columns={4} className="mt-12 sm:mt-16" />
+        </Container>
+      </SectionWrapper>
 
       <SectionWrapper id="platform">
         <Container>
@@ -55,12 +67,8 @@ export default function HomePage() {
 
       <SectionWrapper id="galley">
         <Container>
-          <SectionHeader {...c.galley} align="center" className="mx-auto" />
-          <FadeInUp distance={28} className="mt-12 sm:mt-16">
-            <ProductStage variant="c" source="lime">
-              <GalleyMock className="mx-auto max-w-5xl" />
-            </ProductStage>
-          </FadeInUp>
+          <SectionHeader {...c.galley} />
+          <TextPoints items={c.workspace} columns={3} className="mt-12 sm:mt-16" />
         </Container>
       </SectionWrapper>
 

@@ -9,6 +9,7 @@ import { Icon } from "@/components/shared/icon";
 import { FadeInUp } from "@/components/shared/motion/fade-in-up";
 import { TextReveal } from "@/components/shared/motion/text-reveal";
 import { GradientStage } from "@/components/marketing/gradient-stage";
+import { ScreenSwitch } from "@/components/shared/screen-switch";
 
 type HeroProps = {
   announcement: { label: string; cta: string; href: string };
@@ -19,6 +20,8 @@ type HeroProps = {
   points: readonly string[];
   /** The product, shown on a gradient stage under the copy. */
   visual?: React.ReactNode;
+  /** A compact stand-in for `visual` below the md breakpoint, where a full mock is unreadable. */
+  mobileVisual?: React.ReactNode;
   /** Closes the hero (the runtimes row). */
   footer?: React.ReactNode;
 };
@@ -33,10 +36,11 @@ export function Hero({
   description,
   points,
   visual,
+  mobileVisual,
   footer,
 }: HeroProps) {
   return (
-    <section className="relative overflow-hidden">
+    <section data-hero className="relative overflow-hidden">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-[44rem]"
@@ -123,9 +127,11 @@ export function Hero({
           <FadeInUp delay={0.6} distance={40} className="mt-16 w-full sm:mt-20">
             <GradientStage
               source="flow"
-              className="px-3 pt-8 pb-3 sm:px-10 sm:pt-14 sm:pb-10 lg:px-16 lg:pt-16 lg:pb-14"
+              className="px-4 py-10 sm:px-10 sm:py-14 lg:px-16 lg:py-16"
             >
-              <div className="mx-auto max-w-5xl text-left">{visual}</div>
+              <div className="mx-auto max-w-5xl text-left">
+                {mobileVisual ? <ScreenSwitch desktop={visual} mobile={mobileVisual} /> : visual}
+              </div>
             </GradientStage>
           </FadeInUp>
         )}

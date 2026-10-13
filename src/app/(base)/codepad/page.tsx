@@ -9,6 +9,8 @@ import { FadeInUp } from "@/components/shared/motion/fade-in-up"
 import { StaggerGroup, StaggerItem } from "@/components/shared/motion/stagger"
 import { SectionWrapper } from "@/components/shared/section-wrapper"
 import { CodePadMock } from "@/components/marketing/codepad-mock"
+import { CodePadIllustration } from "@/components/marketing/product-illustrations"
+import { ScreenSwitch } from "@/components/shared/screen-switch"
 import { CtaBand } from "@/components/marketing/cta-band"
 import { FeatureStack } from "@/components/marketing/feature-stack"
 import { SimpleHero } from "@/components/marketing/simple-hero"
@@ -37,7 +39,7 @@ export default function CodePadPage() {
         <Container>
           <FadeInUp distance={28}>
             <ProductStage variant="d">
-              <CodePadMock className="mx-auto max-w-5xl" />
+              <ScreenSwitch desktop={<CodePadMock className="mx-auto max-w-5xl" />} mobile={<CodePadIllustration />} />
             </ProductStage>
           </FadeInUp>
         </Container>

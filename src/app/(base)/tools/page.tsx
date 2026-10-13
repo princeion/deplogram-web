@@ -6,6 +6,8 @@ import { Container } from "@/components/shared/container"
 import { FadeInUp } from "@/components/shared/motion/fade-in-up"
 import { SectionWrapper } from "@/components/shared/section-wrapper"
 import { ApiExplorer } from "@/components/marketing/api-explorer"
+import { TextPoints } from "@/components/marketing/text-points"
+import { ScreenSwitch } from "@/components/shared/screen-switch"
 import { CtaBand } from "@/components/marketing/cta-band"
 import { ApiIllustration } from "@/components/marketing/product-illustrations"
 import { SimpleHero } from "@/components/marketing/simple-hero"
@@ -55,7 +57,10 @@ export default function ToolsPage() {
             description="Create a key in your Galley and call any of them. Requests and responses below are illustrative — the reference ships with early access."
           />
           <div className="mt-12 sm:mt-16">
-            <ApiExplorer apis={apis} />
+            <ScreenSwitch
+              desktop={<ApiExplorer apis={apis} />}
+              mobile={<TextPoints items={apis.map((api) => ({ title: api.title, description: api.description, icon: api.icon, meta: `${api.method} ${api.endpoint}` }))} columns={2} />}
+            />
           </div>
         </Container>
       </SectionWrapper>

@@ -3,6 +3,7 @@ import * as React from "react"
 import { Footer } from "@/components/marketing/footer"
 import { Navbar } from "@/components/marketing/navbar"
 import { StickyCta } from "@/components/marketing/sticky-cta"
+import { GlobalBottomBlur } from "@/components/shared/global-bottom-blur"
 
 /** Navbar + main + footer. Used by the (base) layout and by the root not-found / error pages. */
 export function MarketingShell({ children }: { children: React.ReactNode }) {
@@ -19,6 +20,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Footer />
+      <GlobalBottomBlur />
       <StickyCta />
     </>
   )

@@ -13,6 +13,8 @@ import { SimpleHero } from "@/components/marketing/simple-hero"
 import { ProductStage } from "@/components/marketing/product-cards"
 import { SectionHeader } from "@/components/marketing/section-header"
 import { StorageMock } from "@/components/marketing/storage-mock"
+import { StorageIllustration } from "@/components/marketing/product-illustrations"
+import { ScreenSwitch } from "@/components/shared/screen-switch"
 
 export const metadata = createMetadata({
   title: "File storage for developers",
@@ -42,7 +44,7 @@ export default function StoragePage() {
         <Container className="grid items-center gap-12 lg:grid-cols-[1.5fr_1fr] lg:gap-16">
           <FadeInUp distance={28} className="min-w-0">
             <ProductStage variant="b" source="lime" className="py-8 sm:py-12 lg:px-10 lg:py-12">
-              <StorageMock />
+              <ScreenSwitch desktop={<StorageMock />} mobile={<StorageIllustration />} />
             </ProductStage>
           </FadeInUp>
           <FeatureStack items={storageFeatures} />

@@ -7,12 +7,12 @@ type LogoProps = {
   className?: string
   /** Render the wordmark next to the mark. */
   wordmark?: boolean
-  /** Wordmark height — the signature is tall (the "D"), so it needs room to stay legible. */
-  size?: "default" | "lg"
+  /** "text" = the typeset wordmark (navbar, app); "signature" = the hand-signed one (footer). */
+  variant?: "text" | "signature"
 }
 
-/** The brand lockup: the NodeGraph mark + the hand-signed "Deplogram" wordmark. */
-export function Logo({ className, wordmark = true, size = "default" }: LogoProps) {
+/** The brand lockup: the NodeGraph mark + the "Deplogram" wordmark (typeset or hand-signed). */
+export function Logo({ className, wordmark = true, variant = "text" }: LogoProps) {
   return (
     <Link
       href="/"
@@ -23,7 +23,12 @@ export function Logo({ className, wordmark = true, size = "default" }: LogoProps
       )}
     >
       <NodeGraph layout="mark" size="mark" state="live" className="size-6" />
-      {wordmark && <SignatureWordmark className={size === "lg" ? "h-16" : "-my-3 h-12"} />}
+      {wordmark &&
+        (variant === "signature" ? (
+          <SignatureWordmark className="h-14" />
+        ) : (
+          <span className="font-heading text-lg font-medium tracking-tight">deplogram</span>
+        ))}
     </Link>
   )
 }

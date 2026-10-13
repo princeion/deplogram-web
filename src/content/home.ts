@@ -26,6 +26,44 @@ export const homeCopy = {
     description:
       "Every deployment moves through explicit states, with build and runtime logs alongside and a deployment URL at the end.",
   },
+  /** The case for Deplogram over a big cloud — DRAFT, to be agreed with product. */
+  why: {
+    eyebrow: "Why Deplogram",
+    title: "A developer cloud that stays *out of your way.*",
+    description:
+      "Big clouds give you everything and ask you to configure all of it. Deplogram does fewer things, and makes each one straightforward.",
+    points: [
+      {
+        title: "Lightweight by design",
+        description: "A focused set of products instead of a catalogue of cloud services. Less to learn, less to configure.",
+        icon: "feather",
+      },
+      {
+        title: "Eight runtimes, made reliable",
+        description: "Vite, Next.js, Node.js, Python, PHP, Go, Static Sites and Docker — dependable before we add a ninth.",
+        icon: "layers",
+      },
+      {
+        title: "Deployments you can read",
+        description: "Every deploy moves through clear states with build and runtime logs, so you know what failed and why.",
+        icon: "activity",
+      },
+      {
+        title: "Everything in one place",
+        description: "Write code, keep files and call APIs next to the projects they belong to — no extra accounts to stitch together.",
+        icon: "layout",
+      },
+    ],
+  },
+  /** Your Galley, explained in words — the areas of the workspace. */
+  workspace: [
+    { title: "Projects", description: "Every project with its runtime, state and live URL at a glance.", icon: "folder" },
+    { title: "Deployments", description: "History, logs and redeploys for each project.", icon: "rocket" },
+    { title: "CodePad", description: "A familiar in-browser editor with Run, Save, Preview and Deploy.", icon: "code" },
+    { title: "Storage", description: "Files and folders with clear usage, beside your projects.", icon: "database" },
+    { title: "Utilities", description: "Six everyday developer tools, no install needed.", icon: "wrench" },
+    { title: "APIs", description: "OTP, email, image transform and QR codes with one key.", icon: "plug" },
+  ],
   platform: {
     eyebrow: "The platform",
     title: "Deployment at the core. *A focused toolkit around it.*",

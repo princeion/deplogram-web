@@ -1,6 +1,6 @@
 
 import { createMetadata } from "@/lib/metadata"
-import { backendResponsibilities } from "@/content/deploy"
+import { backendResponsibilities, deploySteps } from "@/content/deploy"
 import { homeCopy } from "@/content/home"
 import { runtimeConfigFields } from "@/content/runtimes"
 import { Container } from "@/components/shared/container"
@@ -8,7 +8,9 @@ import { FadeInUp } from "@/components/shared/motion/fade-in-up"
 import { SectionWrapper } from "@/components/shared/section-wrapper"
 import { CtaBand } from "@/components/marketing/cta-band"
 import { DeployConsole } from "@/components/marketing/deploy-console"
-import { DeployFlow } from "@/components/marketing/deploy-flow"
+import { DeployIllustration } from "@/components/marketing/product-illustrations"
+import { TextPoints } from "@/components/marketing/text-points"
+import { ScreenSwitch } from "@/components/shared/screen-switch"
 import { LifecycleBand } from "@/components/marketing/lifecycle-band"
 import { SimpleHero } from "@/components/marketing/simple-hero"
 import { ProductStage } from "@/components/marketing/product-cards"
@@ -32,15 +34,25 @@ export default function DeployPage() {
         <Container>
           <FadeInUp distance={28}>
             <ProductStage variant="b">
-              <DeployConsole className="mx-auto max-w-5xl" />
+              <ScreenSwitch desktop={<DeployConsole className="mx-auto max-w-5xl" />} mobile={<DeployIllustration />} />
             </ProductStage>
           </FadeInUp>
         </Container>
       </SectionWrapper>
 
-      <SectionWrapper spacing="compact">
+      <SectionWrapper>
         <Container>
-          <DeployFlow />
+          <SectionHeader
+            eyebrow="How it works"
+            title="Five steps from repository to *live.*"
+            description="The same flow for every runtime. Sensible defaults at each step, so most deploys are a few clicks."
+          />
+          <TextPoints
+            items={deploySteps.map((step) => ({ title: step.title, description: step.detail }))}
+            columns={3}
+            numbered
+            className="mt-12 sm:mt-16"
+          />
         </Container>
       </SectionWrapper>
 
