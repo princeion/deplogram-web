@@ -1,25 +1,33 @@
 "use client"
 
-import { signIn } from "next-auth/react"
 import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+
+import { useSignIn } from "@/features/auth/session"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert } from "@/components/ui/alert"
 
+// TODO (authentication task): design this page; add GitHub sign-in once the backend exposes it.
 export default function SignInPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const signIn = useSignIn()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    try {
-      await signIn("credentials", { email, password, redirect: false })
-    } catch (err) {
-      setError("Invalid email or password")
-    }
+    signIn.mutate(
+      { email, password },
+      {
+        onSuccess: () => router.push(searchParams.get("callbackUrl") ?? "/dashboard"),
+        onError: () => setError("Invalid email or password"),
+      }
+    )
   }
 
   return (
@@ -48,7 +56,7 @@ export default function SignInPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <Button type="submit" disabled={!!error}>
+          <Button type="submit" disabled={signIn.isPending}>
             Sign in
           </Button>
         </form>

@@ -89,7 +89,27 @@
   --animate-breathe: breathe 6s ease-in-out infinite alternate;
   --animate-scan: scan 3.2s var(--ease-out-expo) infinite;
   --animate-pulse-dot: pulse-dot 2s ease-in-out infinite;
+  /* Skeleton loading: a soft highlight drifting across, slowly. */
+  --animate-shimmer: shimmer 2.4s ease-in-out infinite;
+  /* Loader text: a highlight sweeping through the words. */
+  --animate-text-shimmer: text-shimmer 2.6s linear infinite;
 
+  @keyframes shimmer {
+    0% {
+      background-position: -150% 0;
+    }
+    100% {
+      background-position: 250% 0;
+    }
+  }
+  @keyframes text-shimmer {
+    0% {
+      background-position: 100% 0;
+    }
+    100% {
+      background-position: -100% 0;
+    }
+  }
   @keyframes scan {
     0% {
       transform: translateX(-100%);
@@ -302,6 +322,11 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+  }
+  /* The product app (Your Galley) is set in Host Grotesk throughout — portals (menus, tooltips,
+     the mobile sidebar) included, hence on <html> rather than the app wrapper. Code stays mono. */
+  html:has([data-app]) {
+    @apply font-heading;
   }
   ::selection {
     @apply bg-brand text-brand-foreground;
