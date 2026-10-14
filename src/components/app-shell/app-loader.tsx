@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
  */
 export function AppLoader({ message = "Connecting to Your Galley", className }: { message?: string; className?: string }) {
   return (
-    <div role="status" aria-live="polite" className={cn("flex min-h-svh flex-col items-center justify-center gap-6 bg-background", className)}>
+    <div role="status" aria-live="polite" className={cn("flex min-h-svh flex-col items-center justify-center gap-6 bg-app-frame", className)}>
       <span aria-hidden className="relative size-20">
         {/* Faint track. */}
         <span className="absolute inset-0 rounded-full ring-[5px] ring-foreground/10 ring-inset" />

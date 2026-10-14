@@ -60,7 +60,7 @@ function NavEntry({ item }: { item: ResolvedNavItem }) {
         aria-current={item.active ? "page" : undefined}
         aria-disabled={item.soon || undefined}
       >
-        {item.icon && <Icon name={item.icon} filled={item.active} />}
+        {item.icon && <Icon name={item.icon} filled={item.active} className={cn(item.active && "text-brand-ink")} />}
         <span>{item.label}</span>
         {item.external && <Icon name="arrow-up-right" size="xs" className="ml-auto text-muted-foreground" />}
         {!item.soon && !item.external && <PendingIndicator />}

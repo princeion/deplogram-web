@@ -153,11 +153,11 @@ export function FormsPlayground() {
           Back
         </Button>
         {wizard.isLast ? (
-          <Button type="submit" variant="inverted" loading={form.formState.isSubmitting}>
+          <Button type="submit" loading={form.formState.isSubmitting}>
             Deploy
           </Button>
         ) : (
-          <Button type="button" variant="inverted" onClick={() => void wizard.next()}>
+          <Button type="button" onClick={() => void wizard.next()}>
             Continue
           </Button>
         )}

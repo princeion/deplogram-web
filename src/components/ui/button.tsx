@@ -5,6 +5,9 @@ import { cn } from "cn";
 import { Spinner } from "@/components/ui/spinner";
 
 // Deplogram: pill radius, team sizing (px-4.5), `inverted` variant, brand-ink link — see docs/design-system.md "Button".
+// Emphasis rule: `default` (brand orange) is the one action that moves the user forward on a
+// screen — deploy, create, save, continue; at most one per view. `inverted` is strong but neutral
+// (marketing, global error pages). Everything else is `outline` or `ghost`.
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding font-heading text-sm tracking-tight font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {

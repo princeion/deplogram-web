@@ -34,7 +34,7 @@ export function FormActions({
     <div
       className={cn(
         "flex flex-wrap items-center justify-end gap-2",
-        sticky && "sticky bottom-0 -mx-4 border-t border-border/70 bg-background/85 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6",
+        sticky && "sticky bottom-0 -mx-4 border-t border-border/70 bg-app-panel/85 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6",
         className
       )}
     >
@@ -43,7 +43,7 @@ export function FormActions({
           {cancelLabel ?? (onCancel ? "Cancel" : "Discard changes")}
         </Button>
       )}
-      <Button type="submit" variant="inverted" loading={isSubmitting} disabled={requireDirty && !isDirty}>
+      <Button type="submit" loading={isSubmitting} disabled={requireDirty && !isDirty}>
         {submitLabel}
       </Button>
     </div>

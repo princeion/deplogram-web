@@ -13,8 +13,10 @@ export const metadata: Metadata = {
 
 // TODO: projects and recent deployments once the projects API exists. Until then, the empty Galley.
 export default function OverviewPage() {
+  // While the Galley is empty, the empty state's CTA is the brand (primary) action; once projects
+  // exist, "New deployment" takes the brand colour.
   const newDeployment = (
-    <Link href="/dashboard/new" className={cn(buttonVariants({ variant: "inverted" }))}>
+    <Link href="/dashboard/new" className={cn(buttonVariants({ variant: "outline" }))}>
       <Icon name="plus" />
       New deployment
     </Link>
@@ -29,7 +31,7 @@ export default function OverviewPage() {
         title="Nothing on the counter yet."
         description="Connect a GitHub repository, pick a runtime and get a live URL."
         actions={
-          <Link href="/dashboard/new" className={cn(buttonVariants({ variant: "inverted" }))}>
+          <Link href="/dashboard/new" className={cn(buttonVariants())}>
             Deploy your first project
             <Icon name="arrow-right" />
           </Link>

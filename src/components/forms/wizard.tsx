@@ -91,8 +91,8 @@ export function WizardProgress({
             <span
               className={cn(
                 "flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-medium tabular-nums transition-colors",
-                step.state === "complete" && "border-foreground bg-foreground text-background",
-                step.state === "current" && "border-foreground text-foreground",
+                step.state === "complete" && "border-brand bg-brand text-brand-foreground",
+                step.state === "current" && "border-brand text-foreground ring-3 ring-brand/15",
                 step.state === "upcoming" && "border-border text-muted-foreground"
               )}
             >

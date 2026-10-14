@@ -18,7 +18,7 @@ export async function AppShell({ children, sidebarFooter }: { children: ReactNod
   const defaultOpen = (await cookies()).get(SIDEBAR_COOKIE)?.value !== "false"
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
+    <SidebarProvider defaultOpen={defaultOpen} className="bg-app-frame">
       {/* Inside SidebarProvider: palette commands can toggle the sidebar. */}
       <CommandPaletteProvider>
         {/* Reads search params, so it needs its own Suspense boundary. */}
@@ -26,9 +26,10 @@ export async function AppShell({ children, sidebarFooter }: { children: ReactNod
           <NavigationProgress />
         </Suspense>
         <AppSidebar footer={sidebarFooter} />
-        <SidebarInset>
+        <SidebarInset className="bg-app-frame">
           <AppHeader />
-          <div className="flex-1">{children}</div>
+          {/* The raised content panel: the frame (sidebar + header) sits a step darker around it. */}
+          <div className="flex-1 rounded-t-2xl border-t border-border/60 bg-app-panel md:mr-2 md:mb-2 md:rounded-2xl md:border">{children}</div>
         </SidebarInset>
       </CommandPaletteProvider>
     </SidebarProvider>

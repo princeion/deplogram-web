@@ -1,5 +1,7 @@
 import { delay, http, HttpResponse, type HttpHandler } from "msw"
 
+import { deploymentStatusGroups } from "@/features/deployments/deployments"
+import { generateMockDeployments } from "@/mocks/data/deployments"
 import { mockProjects } from "@/mocks/data/projects"
 import { mockViewer } from "@/mocks/data/viewer"
 import { mockWorkspace } from "@/mocks/data/workspace"
@@ -65,6 +67,35 @@ export const handlers: HttpHandler[] = [
   http.get("*/v1/workspace", async () => {
     await delay(200)
     return HttpResponse.json(mockWorkspace)
+  }),
+
+  // Filtering, search, sorting and paging happen "server-side", like the real API will.
+  http.get("*/v1/deployments", async ({ request }) => {
+    await delay(350)
+    const url = new URL(request.url)
+    const list = (key: string) => url.searchParams.get(key)?.split(",").filter(Boolean) ?? []
+    const q = url.searchParams.get("q")?.toLowerCase() ?? ""
+    const statuses = list("status").flatMap((group) => deploymentStatusGroups[group as keyof typeof deploymentStatusGroups] ?? [])
+    const [projects, branches, triggers] = [list("project"), list("branch"), list("trigger")]
+    const sort = url.searchParams.get("sort") ?? "-created"
+    const page = Math.max(1, Number(url.searchParams.get("page")) || 1)
+    const pageSize = Math.min(100, Number(url.searchParams.get("pageSize")) || 20)
+
+    let items = generateMockDeployments().filter(
+      (d) =>
+        (!statuses.length || (statuses as readonly string[]).includes(d.state)) &&
+        (!projects.length || projects.includes(d.projectId)) &&
+        (!branches.length || branches.includes(d.commit.branch)) &&
+        (!triggers.length || triggers.includes(d.trigger)) &&
+        (!q || [d.commit.message, d.commit.sha, d.commit.branch, d.projectName].some((v) => v.toLowerCase().includes(q)))
+    )
+    const desc = sort.startsWith("-")
+    const key = sort.replace(/^-/, "")
+    items = items.sort((a, b) => {
+      const value = key === "duration" ? (a.durationSeconds ?? -1) - (b.durationSeconds ?? -1) : a.createdAt.localeCompare(b.createdAt)
+      return desc ? -value : value
+    })
+    return HttpResponse.json({ items: items.slice((page - 1) * pageSize, page * pageSize), total: items.length, page, pageSize })
   }),
 
   http.get("*/v1/projects", async () => {

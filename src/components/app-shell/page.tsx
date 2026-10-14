@@ -107,7 +107,7 @@ export function PageSection({ title, description, actions, variant = "plain", id
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
       )}
-      {variant === "card" ? <div className="rounded-xl border border-border/70 bg-card/40 p-4 sm:p-6">{children}</div> : children}
+      {variant === "card" ? <div className="rounded-xl border border-border/70 bg-card p-4 sm:p-6">{children}</div> : children}
     </section>
   )
 }

@@ -50,6 +50,9 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  /* Your Galley depth: frame (sidebar + header) → content panel → cards. */
+  --color-app-frame: var(--app-frame);
+  --color-app-panel: var(--app-panel);
 
   /* Radius scale — cards rounded-2xl, panels rounded-3xl, buttons/pills rounded-full */
   --radius-sm: calc(var(--radius) * 0.6);
@@ -89,17 +92,28 @@
   --animate-breathe: breathe 6s ease-in-out infinite alternate;
   --animate-scan: scan 3.2s var(--ease-out-expo) infinite;
   --animate-pulse-dot: pulse-dot 2s ease-in-out infinite;
-  /* Skeleton loading: a soft highlight drifting across, slowly. */
-  --animate-shimmer: shimmer 2.4s ease-in-out infinite;
+  /* Status dots (StatusDot): live sonar, in-progress breath, crash heartbeat, change flash. */
+  --animate-status-ripple: status-ripple 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  --animate-status-breathe: status-breathe 1.6s ease-in-out infinite;
+  --animate-status-wait: status-wait 2.6s ease-in-out infinite;
+  --animate-status-heartbeat: status-heartbeat 1.8s ease-in-out infinite;
+  --animate-status-flash: status-flash 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
   /* Loader text: a highlight sweeping through the words. */
   --animate-text-shimmer: text-shimmer 2.6s linear infinite;
 
-  @keyframes shimmer {
+  /* Skeletons (the `skeleton` utility): one beam crossing the screen, then a beat of rest. */
+  @keyframes skeleton-beam {
     0% {
-      background-position: -150% 0;
+      background-position: 100% 0;
     }
+    65%,
     100% {
-      background-position: 250% 0;
+      background-position: 0% 0;
+    }
+  }
+  @keyframes skeleton-in {
+    from {
+      opacity: 0;
     }
   }
   @keyframes text-shimmer {
@@ -116,6 +130,63 @@
     }
     100% {
       transform: translateX(300%);
+    }
+  }
+  @keyframes status-ripple {
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    70%,
+    100% {
+      transform: scale(3.4);
+      opacity: 0;
+    }
+  }
+  @keyframes status-breathe {
+    0%,
+    100% {
+      transform: scale(0.8);
+      opacity: 0.75;
+    }
+    50% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  @keyframes status-wait {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes status-heartbeat {
+    0%,
+    40%,
+    100% {
+      transform: scale(1);
+    }
+    12% {
+      transform: scale(1.4);
+    }
+    24% {
+      transform: scale(1.05);
+    }
+    32% {
+      transform: scale(1.25);
+    }
+  }
+  @keyframes status-flash {
+    0% {
+      transform: scale(1);
+      opacity: 0.9;
+    }
+    100% {
+      transform: scale(4.5);
+      opacity: 0;
     }
   }
   @keyframes pulse-dot {
@@ -228,6 +299,36 @@
   --sidebar: oklch(0.1 0 0);
 }
 
+/*
+ * Your Galley (the product app) has depth instead of one flat colour. Raised is lighter, contained
+ * is darker:
+ *   frame (sidebar + header)  →  content panel (lightest)  →  cards/tables, set into the panel as
+ *   darker wells (still lighter than the frame)  ·  menus/popovers float lightest of all.
+ * Scoped to the app; the marketing site keeps its own tokens.
+ */
+:root {
+  --app-frame: oklch(0.955 0 0);
+  --app-panel: oklch(1 0 0);
+}
+.dark {
+  --app-frame: oklch(0.15 0 0);
+  --app-panel: oklch(0.225 0 0);
+}
+html:has([data-app]) {
+  --sidebar: var(--app-frame);
+  --card: oklch(0.977 0 0);
+  /* Row hovers and chips must stay visible inside the wells. */
+  --muted: oklch(0.945 0 0);
+  --accent: oklch(0.945 0 0);
+}
+html.dark:has([data-app]) {
+  --card: oklch(0.18 0 0);
+  --popover: oklch(0.27 0 0);
+  --muted: oklch(0.29 0 0);
+  --accent: oklch(0.29 0 0);
+  --secondary: oklch(0.29 0 0);
+}
+
 /* Elevation ladder — Canvas (bg-background) → Surface → Control → Floating */
 @utility elevation-surface {
   @apply border border-border/70 bg-card text-card-foreground;
@@ -311,6 +412,42 @@
 }
 @utility animate-paused {
   animation-play-state: paused;
+}
+
+/*
+ * Skeleton placeholder. The beam's gradient is pinned to the viewport (background-attachment:
+ * fixed), so one diagonal sweep of light crosses the whole screen and lights every skeleton it
+ * passes in turn — the page loads as one scene, not fifty separate shimmers. Skeletons fade in
+ * after a short beat so fast loads never flash. Still under reduced motion.
+ */
+@utility skeleton {
+  background-color: var(--muted);
+  background-image: linear-gradient(
+    105deg,
+    transparent 40%,
+    var(--skeleton-beam-soft) 46.5%,
+    var(--skeleton-beam) 50%,
+    var(--skeleton-beam-soft) 53.5%,
+    transparent 60%
+  );
+  background-size: 250vw 100vh;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  animation:
+    skeleton-beam 2.6s cubic-bezier(0.45, 0, 0.25, 1) infinite,
+    skeleton-in 0.5s ease-out 0.12s both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    background-image: none;
+  }
+}
+:root {
+  --skeleton-beam: oklch(1 0 0 / 55%);
+  --skeleton-beam-soft: oklch(1 0 0 / 20%);
+}
+.dark {
+  --skeleton-beam: oklch(1 0 0 / 17%);
+  --skeleton-beam-soft: oklch(1 0 0 / 6%);
 }
 
 @layer base {

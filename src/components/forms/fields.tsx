@@ -207,7 +207,7 @@ export function RadioCardsField<T extends FieldValues, N extends FieldPath<T>>({
                 )}
               >
                 {option.icon && (
-                  <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/70", selected && "bg-foreground text-background")}>
+                  <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/70", selected && "border-brand bg-brand text-brand-foreground")}>
                     <Icon name={option.icon} filled={selected} />
                   </span>
                 )}

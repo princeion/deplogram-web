@@ -67,7 +67,7 @@ export function AppSidebar({ footer }: { footer?: React.ReactNode }) {
   const direction = useScopeDirection(scope)
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="border-r-0!">
       <SidebarHeader>
         <SidebarBrand />
       </SidebarHeader>

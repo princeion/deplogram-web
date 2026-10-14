@@ -2,26 +2,17 @@
 
 import Link from "next/link"
 
-import { cn } from "@/lib/utils"
 import { useProjects, type ProjectSummary } from "@/features/projects/projects"
+import { deploymentStatusMeta } from "@/features/deployments/components/deployment-status"
 import { Icon } from "@/components/shared/icon"
+import { StatusDot } from "@/components/shared/status-dot"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 
-/** Status dot colour per deployment state: live, in progress, failed, waiting. */
-export const projectStateDot: Record<ProjectSummary["state"], string> = {
-  QUEUED: "bg-muted-foreground",
-  BUILDING: "bg-brand",
-  BUILT: "bg-brand",
-  DEPLOYING: "bg-brand",
-  RUNNING: "bg-success",
-  BUILD_FAILED: "bg-destructive",
-  DEPLOY_FAILED: "bg-destructive",
-  CRASHED: "bg-destructive",
-}
-
+/** The project's current state (its latest deployment), as an animated status dot. */
 export function ProjectStateDot({ state, className }: { state: ProjectSummary["state"]; className?: string }) {
-  return <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", projectStateDot[state], className)} />
+  const { tone, motion } = deploymentStatusMeta(state)
+  return <StatusDot tone={tone} motion={motion} size="sm" className={className} />
 }
 
 /** The user's projects as dropdown items, with loading, error and empty states. */

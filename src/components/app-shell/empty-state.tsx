@@ -25,7 +25,7 @@ export function EmptyState({ icon = "folder", title, description, actions, varia
     <div
       className={cn(
         "flex flex-col items-center gap-4 text-center",
-        variant === "dashed" && "rounded-2xl border border-dashed border-border/70",
+        variant === "dashed" && "rounded-2xl border border-dashed border-border/70 bg-card",
         size === "default" ? "px-6 py-14 sm:py-20" : "px-4 py-8",
         className
       )}
