@@ -47,7 +47,7 @@ const subscribe = (listener: () => void) => {
 }
 
 /** Whether a click on this anchor will trigger a client-side navigation to a different URL. */
-function isNavigationClick(event: MouseEvent, anchor: HTMLAnchorElement) {
+export function isNavigationClick(event: MouseEvent, anchor: HTMLAnchorElement) {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false
   if (anchor.target && anchor.target !== "_self") return false
   if (anchor.hasAttribute("download") || anchor.getAttribute("aria-disabled") === "true") return false

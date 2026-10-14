@@ -7,6 +7,12 @@ import { mockWorkspace } from "@/mocks/data/workspace"
 // Mock session: signed in by default; sign-in / sign-out toggle it for the browser tab.
 let signedIn = true
 
+let accountSettings = {
+  name: mockViewer.name ?? "",
+  email: mockViewer.email,
+  preferences: { defaultRuntime: "node", deploymentEmails: true, productUpdates: false },
+}
+
 /**
  * Mock Deplogram API, used in development while the real backend is being built
  * (NEXT_PUBLIC_API_MOCKING=enabled). Handlers mirror the agreed API contract — when an endpoint
@@ -36,6 +42,24 @@ export const handlers: HttpHandler[] = [
     await delay(150)
     signedIn = false
     return new HttpResponse(null, { status: 204 })
+  }),
+
+  http.get("*/v1/me/settings", async () => {
+    await delay(300)
+    return HttpResponse.json(accountSettings)
+  }),
+
+  http.patch("*/v1/me/settings", async ({ request }) => {
+    await delay(600)
+    const body = (await request.json()) as Partial<typeof accountSettings>
+    const name = body.name?.trim() ?? accountSettings.name
+    // Lets the form demo server-side errors: reserved names are rejected on the field.
+    if (["admin", "root", "deplogram"].includes(name.toLowerCase())) {
+      return HttpResponse.json({ error: { message: "Check the highlighted field.", fields: { name: "That name is reserved." } } }, { status: 422 })
+    }
+    accountSettings = { ...accountSettings, name, preferences: { ...accountSettings.preferences, ...body.preferences } }
+    mockViewer.name = name
+    return HttpResponse.json(accountSettings)
   }),
 
   http.get("*/v1/workspace", async () => {
