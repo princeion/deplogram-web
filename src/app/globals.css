@@ -111,6 +111,22 @@
       background-position: 0% 0;
     }
   }
+  /* Pipeline: a light orbiting a card's border (beam-border), light travelling along a cable. */
+  @keyframes beam {
+    to {
+      --beam-angle: 360deg;
+    }
+  }
+  @keyframes cable-flow {
+    to {
+      background-position: 28px 0;
+    }
+  }
+  @keyframes cable-flow-y {
+    to {
+      background-position: 0 28px;
+    }
+  }
   @keyframes skeleton-in {
     from {
       opacity: 0;
@@ -431,6 +447,38 @@ html.dark:has([data-app]) {
  * passes in turn — the page loads as one scene, not fifty separate shimmers. Skeletons fade in
  * after a short beat so fast loads never flash. Still under reduced motion.
  */
+/*
+ * A light that orbits an element's border — marks the thing that's working right now. Put it on
+ * an empty absolutely-positioned child of a `relative rounded-*` element. Colour: --beam-color.
+ */
+@property --beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@utility beam-border {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0deg 220deg,
+    color-mix(in oklab, var(--beam-color, var(--brand)) 35%, transparent) 290deg,
+    var(--beam-color, var(--brand)) 345deg,
+    transparent 360deg
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: beam 3.2s linear infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 @utility skeleton {
   background-color: var(--muted);
   background-image: linear-gradient(

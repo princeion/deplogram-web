@@ -29,6 +29,18 @@ export const deploymentSchema = z.object({
   /** Seconds from QUEUED to RUNNING or to the failure; null while in progress. */
   durationSeconds: z.number().nullable(),
   url: z.string().nullable(),
+  /**
+   * The runtime configuration this deployment was built and started with (brief: version, build
+   * command, start command, port). A snapshot — later settings changes don't rewrite it.
+   * Proposed contract — to confirm with the backend.
+   */
+  config: z.object({
+    runtimeVersion: z.string(),
+    buildCommand: z.string().nullable(),
+    startCommand: z.string().nullable(),
+    /** null for static sites (served from storage, no container). */
+    port: z.number().nullable(),
+  }),
 })
 
 export type Deployment = z.infer<typeof deploymentSchema>
@@ -122,5 +134,72 @@ export function useRollback() {
   return useMutation({
     mutationFn: (deploymentId: string) => apiFetch(`/v1/deployments/${deploymentId}/rollback`, { method: "POST", schema: rollbackResultSchema }),
     onSuccess: invalidate,
+  })
+}
+
+/** GET /v1/deployments/:id — one deployment. Polls while it's in progress. */
+export const deploymentQuery = (deploymentId: string) =>
+  queryOptions({
+    queryKey: [...deploymentKeys.all, "detail", deploymentId] as const,
+    queryFn: () => apiFetch(`/v1/deployments/${deploymentId}`, { schema: deploymentSchema }),
+    refetchInterval: (query) => (query.state.data && isInProgress(query.state.data.state) ? 2000 : false),
+  })
+
+export function useDeployment(deploymentId: string) {
+  return useQuery(deploymentQuery(deploymentId))
+}
+
+export const logStepIdSchema = z.enum(["clone", "install", "build", "deploy", "runtime"])
+export type LogStepId = z.infer<typeof logStepIdSchema>
+
+export const buildLogLineSchema = z.object({
+  /** 1-based line number, stable for the deployment — used as the cursor (`after`). */
+  n: z.number(),
+  at: z.string(),
+  step: logStepIdSchema,
+  stream: z.enum(["stdout", "stderr"]),
+  /** Raw text; may contain ANSI colour codes. */
+  text: z.string(),
+})
+export type BuildLogLine = z.infer<typeof buildLogLineSchema>
+
+export const buildStepSchema = z.object({
+  id: logStepIdSchema,
+  label: z.string(),
+  state: z.enum(["pending", "running", "succeeded", "failed", "skipped"]),
+  startedAt: z.string().nullable(),
+  endedAt: z.string().nullable(),
+})
+export type BuildStep = z.infer<typeof buildStepSchema>
+
+/**
+ * GET /v1/deployments/:id/logs?after=n — log lines after line n, the steps' current states, and
+ * whether the log is complete. Proposed contract — to confirm with the backend.
+ */
+export const deploymentLogsSchema = z.object({
+  lines: z.array(buildLogLineSchema),
+  steps: z.array(buildStepSchema),
+  done: z.boolean(),
+})
+export type DeploymentLogs = z.infer<typeof deploymentLogsSchema>
+
+/**
+ * The build log, streamed: each fetch asks only for lines after the last one we have and appends
+ * them, polling every second until the log is done.
+ * TODO: switch to the realtime channel (SSE/WebSocket) when the backend has one.
+ */
+export function useDeploymentLogs(deploymentId: string) {
+  const queryClient = useQueryClient()
+  const queryKey = [...deploymentKeys.all, "logs", deploymentId] as const
+  return useQuery({
+    queryKey,
+    queryFn: async (): Promise<DeploymentLogs> => {
+      const previous = queryClient.getQueryData<DeploymentLogs>(queryKey)
+      const after = previous?.lines.at(-1)?.n ?? 0
+      const next = await apiFetch(`/v1/deployments/${deploymentId}/logs?after=${after}`, { schema: deploymentLogsSchema })
+      return { ...next, lines: after ? [...previous!.lines, ...next.lines] : next.lines }
+    },
+    refetchInterval: (query) => (query.state.data?.done ? false : 1000),
+    staleTime: Infinity,
   })
 }

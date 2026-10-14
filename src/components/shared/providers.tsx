@@ -9,11 +9,11 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { getQueryClient } from "@/lib/query-client"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { SmoothScroll } from "@/components/shared/motion/smooth-scroll"
 
 /**
  * App-wide client providers: server data (TanStack Query — including the session, see
- * features/auth), theme, reduced-motion policy, smooth scroll, toasts.
+ * features/auth), theme, reduced-motion policy, toasts. (Smooth scrolling is marketing-only:
+ * see app/(base)/layout.tsx.)
  */
 export function Providers({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient()
@@ -23,7 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
         <MotionConfig reducedMotion="user">
           <TooltipProvider delay={200}>
-            <SmoothScroll>{children}</SmoothScroll>
+            {children}
             <Toaster position="bottom-right" />
           </TooltipProvider>
         </MotionConfig>

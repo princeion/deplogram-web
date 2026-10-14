@@ -38,6 +38,13 @@ const messages: Record<string, string[]> = {
   prj_docs: ["docs: storage guide", "docs: runtime versions table", "fix: broken links in API reference", "docs: API keys page", "docs: getting started rewrite"],
 }
 
+/** Each mock project's runtime settings (what its deployments snapshot). */
+const configFor: Record<string, Deployment["config"]> = {
+  prj_orders: { runtimeVersion: "Node.js 22", buildCommand: "npm run build", startCommand: "node dist/server.js", port: 8080 },
+  prj_admin: { runtimeVersion: "Next.js 16", buildCommand: "next build", startCommand: "next start", port: 3000 },
+  prj_docs: { runtimeVersion: "Static site", buildCommand: "npx docusaurus build", startCommand: null, port: null },
+}
+
 const authors = ["Ada Obi", "Tobi Adeyemi", "Ngozi Eze"]
 const branchesFor: Record<string, string[]> = {
   prj_orders: ["main", "main", "main", "feat/webhooks", "fix/reports"],
@@ -80,6 +87,7 @@ export function generateMockDeployments(now = Date.now()): Deployment[] {
         createdAt: new Date(now - minutesAgo * 60_000).toISOString(),
         durationSeconds: inProgress ? null : failed ? 8 + Math.floor(rand() * 60) : 25 + Math.floor(rand() * 140),
         url: live ? (project.url ?? `${project.name}.dpl.app`) : null,
+        config: { ...configFor[project.id] },
       })
       minutesAgo += 90 + Math.floor(rand() * 600)
     }
@@ -92,7 +100,7 @@ export function generateMockDeployments(now = Date.now()): Deployment[] {
  * QUEUED → BUILDING → BUILT → DEPLOYING → RUNNING over ~15s (polled by the UI), the new one
  * becomes live and the old one steps down. docs-site's builds fail, to show that path too.
  */
-type Simulation = { kind: "build" | "rollback"; startedAt: number; fails: boolean }
+export type Simulation = { kind: "build" | "rollback"; startedAt: number; fails: boolean }
 
 const buildTimeline: [number, Deployment["state"]][] = [
   [0, "QUEUED"],
@@ -108,6 +116,17 @@ const rollbackTimeline: [number, Deployment["state"]][] = [
 
 let store: Deployment[] | null = null
 const simulations = new Map<string, Simulation>()
+/** Every simulated deployment's timeline, kept after it settles (the build log is replayed from it). */
+const timelines = new Map<string, Simulation>()
+
+export function mockDeploymentTimeline(id: string): Simulation | undefined {
+  return timelines.get(id)
+}
+
+function simulate(id: string, sim: Simulation) {
+  simulations.set(id, sim)
+  timelines.set(id, sim)
+}
 let sequence = 1000
 
 function setProjectState(projectId: string, state: Deployment["state"]) {
@@ -152,7 +171,7 @@ export function mockDeploymentStore() {
     store = generateMockDeployments()
     // The seed's in-progress build finishes a few seconds after the app opens.
     for (const d of store.filter((d) => ["QUEUED", "BUILDING", "BUILT", "DEPLOYING"].includes(d.state))) {
-      simulations.set(d.id, { kind: "build", startedAt: Date.now() - 4_000, fails: false })
+      simulate(d.id, { kind: "build", startedAt: Date.now() - 4_000, fails: false })
     }
   }
   return advance(store)
@@ -177,9 +196,10 @@ export function mockRedeploy(sourceId: string): Deployment | null {
     durationSeconds: null,
     url: null,
     commit: { ...source.commit },
+    config: { ...source.config },
   }
   deployments.unshift(deployment)
-  simulations.set(deployment.id, { kind: "build", startedAt: Date.now(), fails: source.projectId === "prj_docs" })
+  simulate(deployment.id, { kind: "build", startedAt: Date.now(), fails: source.projectId === "prj_docs" })
   setProjectState(source.projectId, "QUEUED")
   return deployment
 }
@@ -205,9 +225,10 @@ export function mockRollback(targetId: string): { deployment: Deployment; previo
     durationSeconds: null,
     url: null,
     commit: { ...target.commit },
+    config: { ...target.config },
   }
   deployments.unshift(deployment)
-  simulations.set(deployment.id, { kind: "rollback", startedAt: Date.now(), fails: false })
+  simulate(deployment.id, { kind: "rollback", startedAt: Date.now(), fails: false })
   setProjectState(target.projectId, "DEPLOYING")
   return { deployment, previousLiveId: previousLive?.id ?? null }
 }

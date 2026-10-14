@@ -1,5 +1,6 @@
 "use client"
 
+import { cn } from "@/lib/utils"
 import { useParams } from "next/navigation"
 
 import { resolveHref } from "@/lib/navigation"
@@ -51,10 +52,11 @@ export function AppHeader() {
             </>
           )}
 
+          {/* On phones a project crumb leaves no room for the page; the sidebar has it. */}
           {scope && current && (
             <>
-              <CrumbSeparator />
-              <PageSwitcher scope={scope} current={current} />
+              <CrumbSeparator className={cn(projectId && "max-sm:hidden")} />
+              <PageSwitcher scope={scope} current={current} className={cn(projectId && "max-sm:hidden")} />
             </>
           )}
         </ol>

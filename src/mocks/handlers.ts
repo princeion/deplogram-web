@@ -2,6 +2,7 @@ import { delay, http, HttpResponse, type HttpHandler } from "msw"
 
 import { deploymentStatusGroups } from "@/features/deployments/deployments"
 import { mockDeploymentStore, mockRedeploy, mockRollback } from "@/mocks/data/deployments"
+import { mockDeploymentLogs } from "@/mocks/data/deployment-logs"
 import { mockProjects } from "@/mocks/data/projects"
 import { mockViewer } from "@/mocks/data/viewer"
 import { generateMockUsage } from "@/mocks/data/usage"
@@ -121,6 +122,20 @@ export const handlers: HttpHandler[] = [
     return "error" in result
       ? HttpResponse.json({ error: { message: result.error } }, { status: 409 })
       : HttpResponse.json(result, { status: 201 })
+  }),
+
+  http.get("*/v1/deployments/:id", async ({ params }) => {
+    await delay(250)
+    const deployment = mockDeploymentStore().find((d) => d.id === params.id)
+    return deployment ? HttpResponse.json(deployment) : HttpResponse.json({ error: { message: "That deployment doesn't exist." } }, { status: 404 })
+  }),
+
+  http.get("*/v1/deployments/:id/logs", async ({ params, request }) => {
+    await delay(200)
+    const deployment = mockDeploymentStore().find((d) => d.id === params.id)
+    if (!deployment) return HttpResponse.json({ error: { message: "That deployment doesn't exist." } }, { status: 404 })
+    const after = Number(new URL(request.url).searchParams.get("after")) || 0
+    return HttpResponse.json(mockDeploymentLogs(deployment, after))
   }),
 
   http.get("*/v1/projects", async () => {

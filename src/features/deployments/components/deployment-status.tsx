@@ -109,3 +109,9 @@ export function DeploymentStatus({
     </span>
   )
 }
+
+/** Time since `since`, ticking every second ("1m 12s"). */
+export function ElapsedTime({ since, className }: { since: string; className?: string }) {
+  const seconds = useElapsed(since)
+  return <span className={cn("tabular-nums", className)}>{seconds != null ? formatDuration(seconds) : "…"}</span>
+}
