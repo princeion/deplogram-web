@@ -255,17 +255,3 @@ function Sparkline({ points, className }: { points: number[]; className?: string
     </svg>
   )
 }
-
-/** The empty Galley (brief §3): one line of personality, then a plain action. */
-export function GalleyEmptyState({ className, children }: { className?: string; children?: React.ReactNode }) {
-  return (
-    <div className={cn("flex flex-col items-center gap-4 border border-dashed border-border/70 bg-card/60 px-6 py-12 text-center", className)}>
-      <span className="flex size-12 items-center justify-center rounded-lg elevation-control">
-        <Icon name="rocket" size="md" className="text-brand-ink" />
-      </span>
-      <p className="font-heading text-2xl font-medium tracking-tight">No projects yet.</p>
-      <p className="max-w-sm text-sm text-pretty text-muted-foreground">Projects you deploy will show up here, with their state and deployment URL.</p>
-      {children}
-    </div>
-  )
-}
