@@ -36,3 +36,33 @@ export function formatDuration(seconds: number): string {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`
   return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
 }
+
+const compactFormatter = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 })
+const numberFormatter = new Intl.NumberFormat("en")
+
+/** 4120 → "4.1K", 2_400_000 → "2.4M". For axes, stats and anywhere space is tight. */
+export function formatCompact(value: number): string {
+  return compactFormatter.format(value)
+}
+
+/** 18420 → "18,420". */
+export function formatNumber(value: number): string {
+  return numberFormatter.format(value)
+}
+
+/** Decimal units, as plan limits are written: 8_400_000_000 → "8.4 GB". */
+export function formatBytes(bytes: number, fractionDigits = 1): string {
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  let value = bytes
+  let unit = 0
+  while (value >= 1000 && unit < units.length - 1) {
+    value /= 1000
+    unit++
+  }
+  return `${unit === 0 ? value : Number(value.toFixed(fractionDigits))} ${units[unit]}`
+}
+
+/** 0.0731 → "7.3%". */
+export function formatPercent(ratio: number, fractionDigits = 1): string {
+  return `${Number((ratio * 100).toFixed(fractionDigits))}%`
+}

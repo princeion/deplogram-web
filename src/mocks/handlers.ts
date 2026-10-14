@@ -4,10 +4,13 @@ import { deploymentStatusGroups } from "@/features/deployments/deployments"
 import { generateMockDeployments } from "@/mocks/data/deployments"
 import { mockProjects } from "@/mocks/data/projects"
 import { mockViewer } from "@/mocks/data/viewer"
+import { generateMockUsage } from "@/mocks/data/usage"
 import { mockWorkspace } from "@/mocks/data/workspace"
 
 // Mock session: signed in by default; sign-in / sign-out toggle it for the browser tab.
 let signedIn = true
+
+const mockUsage = generateMockUsage()
 
 let accountSettings = {
   name: mockViewer.name ?? "",
@@ -101,5 +104,10 @@ export const handlers: HttpHandler[] = [
   http.get("*/v1/projects", async () => {
     await delay(300)
     return HttpResponse.json(mockProjects)
+  }),
+
+  http.get("*/v1/usage", async () => {
+    await delay(700)
+    return HttpResponse.json(mockUsage)
   }),
 ]
