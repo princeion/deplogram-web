@@ -28,6 +28,13 @@ export function MswProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = React.useState(!mockingEnabled)
 
   React.useEffect(() => {
+    // NEXT_PUBLIC_* values are baked in at build time: a host (Render, Vercel) must have them set
+    // before it builds, or the app calls its own origin and every /v1 request 404s.
+    if (!mockingEnabled && !process.env.NEXT_PUBLIC_API_URL) {
+      console.warn(
+        "[deplogram] No API configured: requests go to this site's own /v1 and will 404. Set NEXT_PUBLIC_API_URL to the backend, or NEXT_PUBLIC_API_MOCKING=enabled for the mock API — then rebuild."
+      )
+    }
     if (!mockingEnabled) return
     let cancelled = false
     const done = () => !cancelled && setReady(true)
