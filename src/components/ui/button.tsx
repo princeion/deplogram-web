@@ -24,6 +24,8 @@ const buttonVariants = cva(
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-brand-ink underline-offset-4 hover:underline",
         inverted: "bevel bg-foreground text-background hover:bg-foreground/90",
+        // Solid red, for confirming something irreversible (inside a confirm dialog, not on pages).
+        danger: "bevel bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/40",
       },
       size: {
         default:

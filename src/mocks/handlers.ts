@@ -1,7 +1,7 @@
 import { delay, http, HttpResponse, type HttpHandler } from "msw"
 
 import { deploymentStatusGroups } from "@/features/deployments/deployments"
-import { generateMockDeployments } from "@/mocks/data/deployments"
+import { mockDeploymentStore, mockRedeploy, mockRollback } from "@/mocks/data/deployments"
 import { mockProjects } from "@/mocks/data/projects"
 import { mockViewer } from "@/mocks/data/viewer"
 import { generateMockUsage } from "@/mocks/data/usage"
@@ -49,6 +49,12 @@ export const handlers: HttpHandler[] = [
     return new HttpResponse(null, { status: 204 })
   }),
 
+  http.delete("*/v1/me", async () => {
+    await delay(900)
+    signedIn = false
+    return new HttpResponse(null, { status: 204 })
+  }),
+
   http.get("*/v1/me/settings", async () => {
     await delay(300)
     return HttpResponse.json(accountSettings)
@@ -84,7 +90,7 @@ export const handlers: HttpHandler[] = [
     const page = Math.max(1, Number(url.searchParams.get("page")) || 1)
     const pageSize = Math.min(100, Number(url.searchParams.get("pageSize")) || 20)
 
-    let items = generateMockDeployments().filter(
+    let items = mockDeploymentStore().filter(
       (d) =>
         (!statuses.length || (statuses as readonly string[]).includes(d.state)) &&
         (!projects.length || projects.includes(d.projectId)) &&
@@ -101,8 +107,25 @@ export const handlers: HttpHandler[] = [
     return HttpResponse.json({ items: items.slice((page - 1) * pageSize, page * pageSize), total: items.length, page, pageSize })
   }),
 
+  http.post("*/v1/deployments/:id/redeploy", async ({ params }) => {
+    await delay(600)
+    const deployment = mockRedeploy(String(params.id))
+    return deployment
+      ? HttpResponse.json(deployment, { status: 201 })
+      : HttpResponse.json({ error: { message: "That deployment no longer exists." } }, { status: 404 })
+  }),
+
+  http.post("*/v1/deployments/:id/rollback", async ({ params }) => {
+    await delay(600)
+    const result = mockRollback(String(params.id))
+    return "error" in result
+      ? HttpResponse.json({ error: { message: result.error } }, { status: 409 })
+      : HttpResponse.json(result, { status: 201 })
+  }),
+
   http.get("*/v1/projects", async () => {
     await delay(300)
+    mockDeploymentStore() // advance simulated deployments so project states stay in step
     return HttpResponse.json(mockProjects)
   }),
 

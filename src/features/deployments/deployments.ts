@@ -1,8 +1,8 @@
-import { keepPreviousData, queryOptions, useQuery } from "@tanstack/react-query"
+import { keepPreviousData, queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import { apiFetch } from "@/lib/api-client"
-import { deploymentStateSchema } from "@/features/projects/projects"
+import { deploymentStateSchema, projectKeys } from "@/features/projects/projects"
 
 export const deploymentTriggerSchema = z.enum(["git", "manual", "redeploy", "rollback"])
 export type DeploymentTrigger = z.infer<typeof deploymentTriggerSchema>
@@ -80,8 +80,47 @@ export const deploymentsQuery = (params: DeploymentListParams) =>
     queryFn: () => apiFetch(`/v1/deployments?${toSearchParams(params)}`, { schema: deploymentPageSchema }),
     // Keep the current page on screen while a new filter/page loads.
     placeholderData: keepPreviousData,
+    // While anything on screen is building or deploying, keep it moving: poll until it settles.
+    // TODO: replace with the realtime channel (SSE/WebSocket) once the backend has one.
+    refetchInterval: (query) => (query.state.data?.items.some((d) => isInProgress(d.state)) ? 2000 : false),
   })
 
 export function useDeployments(params: DeploymentListParams) {
   return useQuery(deploymentsQuery(params))
+}
+
+const inProgressStates: readonly Deployment["state"][] = deploymentStatusGroups.in_progress
+export const isInProgress = (state: Deployment["state"]) => inProgressStates.includes(state)
+
+/** After a deploy action, refresh lists everywhere (deployments and the projects' states). */
+function useInvalidateDeployments() {
+  const queryClient = useQueryClient()
+  return () => Promise.all([queryClient.invalidateQueries({ queryKey: deploymentKeys.all }), queryClient.invalidateQueries({ queryKey: projectKeys.all })])
+}
+
+/** POST /v1/deployments/:id/redeploy — build the same commit again. Returns the new deployment. */
+export function useRedeploy() {
+  const invalidate = useInvalidateDeployments()
+  return useMutation({
+    mutationFn: (deploymentId: string) => apiFetch(`/v1/deployments/${deploymentId}/redeploy`, { method: "POST", schema: deploymentSchema }),
+    onSuccess: invalidate,
+  })
+}
+
+export const rollbackResultSchema = z.object({
+  deployment: deploymentSchema,
+  /** The deployment that was live before — roll forward to it to undo. */
+  previousLiveId: z.string().nullable(),
+})
+
+/**
+ * POST /v1/deployments/:id/rollback — make an earlier successful deployment live again, reusing
+ * its build (no new build). Proposed contract — to confirm with the backend.
+ */
+export function useRollback() {
+  const invalidate = useInvalidateDeployments()
+  return useMutation({
+    mutationFn: (deploymentId: string) => apiFetch(`/v1/deployments/${deploymentId}/rollback`, { method: "POST", schema: rollbackResultSchema }),
+    onSuccess: invalidate,
+  })
 }

@@ -475,6 +475,16 @@ html.dark:has([data-app]) {
      the mobile sidebar) included, hence on <html> rather than the app wrapper. Code stays mono. */
   html:has([data-app]) {
     @apply font-heading;
+    /* The page scrollbar is drawn by PageScrollbar in the frame's gutter; hide the native one. */
+    scrollbar-width: none;
+  }
+  html:has([data-app])::-webkit-scrollbar {
+    display: none;
+  }
+  /* Everything else that scrolls inside the app (menus, dialogs, wide tables): slim and quiet. */
+  [data-app] * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--foreground) 22%, transparent) transparent;
   }
   ::selection {
     @apply bg-brand text-brand-foreground;

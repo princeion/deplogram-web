@@ -86,3 +86,128 @@ export function generateMockDeployments(now = Date.now()): Deployment[] {
   }
   return deployments
 }
+
+/*
+ * A stateful mock so deploy actions behave like the real thing: new deployments move through
+ * QUEUED → BUILDING → BUILT → DEPLOYING → RUNNING over ~15s (polled by the UI), the new one
+ * becomes live and the old one steps down. docs-site's builds fail, to show that path too.
+ */
+type Simulation = { kind: "build" | "rollback"; startedAt: number; fails: boolean }
+
+const buildTimeline: [number, Deployment["state"]][] = [
+  [0, "QUEUED"],
+  [3_000, "BUILDING"],
+  [10_000, "BUILT"],
+  [12_000, "DEPLOYING"],
+  [16_000, "RUNNING"],
+]
+const rollbackTimeline: [number, Deployment["state"]][] = [
+  [0, "DEPLOYING"],
+  [4_000, "RUNNING"],
+]
+
+let store: Deployment[] | null = null
+const simulations = new Map<string, Simulation>()
+let sequence = 1000
+
+function setProjectState(projectId: string, state: Deployment["state"]) {
+  const project = mockProjects.find((p) => p.id === projectId)
+  if (project) project.state = state
+}
+
+/** Moves every simulated deployment along its timeline. */
+function advance(deployments: Deployment[], now = Date.now()) {
+  for (const deployment of deployments) {
+    const sim = simulations.get(deployment.id)
+    if (!sim) continue
+    const elapsed = now - sim.startedAt
+    const timeline = sim.kind === "build" ? buildTimeline : rollbackTimeline
+    let state = timeline.filter(([at]) => elapsed >= at).at(-1)![1]
+    if (sim.fails && elapsed >= 9_000) state = "BUILD_FAILED"
+    if (state === deployment.state) continue
+
+    deployment.state = state
+    setProjectState(deployment.projectId, state)
+    if (state === "RUNNING" || state === "BUILD_FAILED") {
+      simulations.delete(deployment.id)
+      deployment.durationSeconds = Math.round(elapsed / 1000)
+    }
+    if (state === "RUNNING") {
+      const previous = deployments.find((d) => d.projectId === deployment.projectId && d.live && d.id !== deployment.id)
+      const project = mockProjects.find((p) => p.id === deployment.projectId)
+      if (previous) {
+        previous.live = false
+        previous.url = null
+      }
+      deployment.live = true
+      deployment.url = project?.url ?? `${deployment.projectName}.dpl.app`
+    }
+  }
+  return deployments
+}
+
+/** The mock's deployments, advanced to now. Seeds once per page load. */
+export function mockDeploymentStore() {
+  if (!store) {
+    store = generateMockDeployments()
+    // The seed's in-progress build finishes a few seconds after the app opens.
+    for (const d of store.filter((d) => ["QUEUED", "BUILDING", "BUILT", "DEPLOYING"].includes(d.state))) {
+      simulations.set(d.id, { kind: "build", startedAt: Date.now() - 4_000, fails: false })
+    }
+  }
+  return advance(store)
+}
+
+function nextId(projectId: string) {
+  return `dpl_${projectId.slice(4)}_${sequence++}`
+}
+
+/** POST …/redeploy: the same commit, built again. */
+export function mockRedeploy(sourceId: string): Deployment | null {
+  const deployments = mockDeploymentStore()
+  const source = deployments.find((d) => d.id === sourceId)
+  if (!source) return null
+  const deployment: Deployment = {
+    ...source,
+    id: nextId(source.projectId),
+    state: "QUEUED",
+    live: false,
+    trigger: "redeploy",
+    createdAt: new Date().toISOString(),
+    durationSeconds: null,
+    url: null,
+    commit: { ...source.commit },
+  }
+  deployments.unshift(deployment)
+  simulations.set(deployment.id, { kind: "build", startedAt: Date.now(), fails: source.projectId === "prj_docs" })
+  setProjectState(source.projectId, "QUEUED")
+  return deployment
+}
+
+/** POST …/rollback: an earlier successful deployment, made live again from its existing build. */
+export function mockRollback(targetId: string): { deployment: Deployment; previousLiveId: string | null } | { error: string } {
+  const deployments = mockDeploymentStore()
+  const target = deployments.find((d) => d.id === targetId)
+  if (!target) return { error: "That deployment no longer exists." }
+  if (target.state !== "RUNNING") return { error: "Only a successful deployment can be rolled back to." }
+  if (target.live) return { error: "That deployment is already live." }
+  if (deployments.some((d) => d.projectId === target.projectId && simulations.has(d.id))) {
+    return { error: "This project is already deploying. Wait for it to finish, then try again." }
+  }
+  const previousLive = deployments.find((d) => d.projectId === target.projectId && d.live)
+  const deployment: Deployment = {
+    ...target,
+    id: nextId(target.projectId),
+    state: "DEPLOYING",
+    live: false,
+    trigger: "rollback",
+    createdAt: new Date().toISOString(),
+    durationSeconds: null,
+    url: null,
+    commit: { ...target.commit },
+  }
+  deployments.unshift(deployment)
+  simulations.set(deployment.id, { kind: "rollback", startedAt: Date.now(), fails: false })
+  setProjectState(target.projectId, "DEPLOYING")
+  return { deployment, previousLiveId: previousLive?.id ?? null }
+}

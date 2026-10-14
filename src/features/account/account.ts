@@ -61,3 +61,18 @@ export function useUpdateAccountSettings() {
     },
   })
 }
+
+/**
+ * DELETE /v1/me — permanently delete the signed-in account: projects taken offline, deployments,
+ * storage and keys removed, session ended. Proposed contract — to confirm with the backend.
+ */
+export function useDeleteAccount() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => apiFetch("/v1/me", { method: "DELETE", schema: z.null() }),
+    onSuccess: () => {
+      queryClient.clear()
+      queryClient.setQueryData(sessionKeys.viewer, null)
+    },
+  })
+}

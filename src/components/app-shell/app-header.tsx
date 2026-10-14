@@ -28,7 +28,7 @@ export function AppHeader() {
   const scopeRoot = scope?.title ? resolveHref(scope.match, params) : null
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 bg-app-frame px-3 sm:px-4">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 bg-app-frame px-3 sm:px-4">
       <SidebarTrigger className="shrink-0" />
 
       <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
