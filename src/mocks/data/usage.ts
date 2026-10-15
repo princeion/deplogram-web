@@ -54,7 +54,7 @@ export function generateMockUsage(now = Date.now()): Usage {
   return {
     period: { start: isoDay(monthStart.getTime()), end: isoDay(monthEnd.getTime()) },
     limits: [
-      { id: "active_deployments", label: "Active deployments", used: 3, limit: 3, unit: "count" },
+      { id: "active_deployments", label: "Active deployments", used: 3, limit: 5, unit: "count" },
       { id: "build_minutes", label: "Build minutes", used: 212, limit: 300, unit: "minutes" },
       { id: "bandwidth", label: "Bandwidth", used: 8_420_000_000, limit: 10_000_000_000, unit: "bytes" },
       { id: "storage", label: "Storage", used: 1_240_000_000, limit: 5_000_000_000, unit: "bytes" },

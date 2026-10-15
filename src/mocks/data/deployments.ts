@@ -232,3 +232,46 @@ export function mockRollback(targetId: string): { deployment: Deployment; previo
   setProjectState(target.projectId, "DEPLOYING")
   return { deployment, previousLiveId: previousLive?.id ?? null }
 }
+
+const runtimeVersionFor: Record<string, string> = {
+  vite: "Vite 6",
+  nextjs: "Next.js 16",
+  node: "Node.js 22",
+  python: "Python 3.12",
+  php: "PHP 8.3",
+  go: "Go 1.23",
+  static: "Static site",
+  docker: "Docker",
+}
+
+/** POST /v1/projects: a new project and its first deployment, which then builds like any other. */
+export function mockCreateProject(input: {
+  name: string
+  runtime: string
+  branch: string
+  commit: { sha: string; message: string }
+  author: string
+  config: { buildCommand: string | null; startCommand: string | null; port: number | null }
+}) {
+  const deployments = mockDeploymentStore()
+  const id = `prj_${input.name.replace(/[^a-z0-9]/g, "").slice(0, 12)}${sequence++}`
+  const project = { id, name: input.name, runtime: input.runtime, state: "QUEUED" as const, url: `${input.name}.dpl.app` }
+  mockProjects.push(project)
+  const deployment: Deployment = {
+    id: nextId(id),
+    projectId: id,
+    projectName: input.name,
+    runtime: input.runtime,
+    state: "QUEUED",
+    live: false,
+    commit: { sha: input.commit.sha, message: input.commit.message, branch: input.branch, author: { name: input.author, avatarUrl: null } },
+    trigger: "manual",
+    createdAt: new Date().toISOString(),
+    durationSeconds: null,
+    url: null,
+    config: { runtimeVersion: runtimeVersionFor[input.runtime] ?? input.runtime, ...input.config },
+  }
+  deployments.unshift(deployment)
+  simulate(deployment.id, { kind: "build", startedAt: Date.now(), fails: false })
+  return { project: { ...project }, deployment }
+}

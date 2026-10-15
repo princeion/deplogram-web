@@ -1,7 +1,9 @@
 import { delay, http, HttpResponse, type HttpHandler } from "msw"
 
 import { deploymentStatusGroups } from "@/features/deployments/deployments"
-import { mockDeploymentStore, mockRedeploy, mockRollback } from "@/mocks/data/deployments"
+import { mockCreateProject, mockDeploymentStore, mockRedeploy, mockRollback } from "@/mocks/data/deployments"
+import { mockRepositories, toRepository } from "@/mocks/data/git"
+import type { CreateProjectInput } from "@/features/deploy/deploy"
 import { mockDeploymentLogs } from "@/mocks/data/deployment-logs"
 import { mockProjects } from "@/mocks/data/projects"
 import { mockViewer } from "@/mocks/data/viewer"
@@ -146,6 +148,71 @@ export const handlers: HttpHandler[] = [
 
   http.get("*/v1/usage", async () => {
     await delay(700)
-    return HttpResponse.json(mockUsage)
+    // Active deployments follow the store, so creating a project moves the meter.
+    const live = mockDeploymentStore().filter((d) => d.live).length
+    return HttpResponse.json({ ...mockUsage, limits: mockUsage.limits.map((l) => (l.id === "active_deployments" ? { ...l, used: live } : l)) })
+  }),
+
+  // ── New deployment flow ──────────────────────────────────────────────────────
+  http.get("*/v1/git/connection", async () => {
+    await delay(200)
+    return HttpResponse.json({ provider: "github", connected: true, account: "ada" })
+  }),
+
+  http.get("*/v1/git/repositories", async ({ request }) => {
+    await delay(450)
+    const q = new URL(request.url).searchParams.get("q")?.toLowerCase().trim() ?? ""
+    const repos = mockRepositories.filter((r) => !q || r.fullName.toLowerCase().includes(q))
+    return HttpResponse.json([...repos].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).map(toRepository))
+  }),
+
+  http.get("*/v1/git/repositories/:id/branches", async ({ params }) => {
+    await delay(300)
+    const repo = mockRepositories.find((r) => r.id === params.id)
+    return repo ? HttpResponse.json(repo.branches) : HttpResponse.json({ error: { message: "Repository not found." } }, { status: 404 })
+  }),
+
+  http.get("*/v1/git/repositories/:id/detect", async ({ params }) => {
+    // Detection reads the repository, so it takes a moment.
+    await delay(1600)
+    const repo = mockRepositories.find((r) => r.id === params.id)
+    return repo ? HttpResponse.json(repo.detection) : HttpResponse.json({ error: { message: "Repository not found." } }, { status: 404 })
+  }),
+
+  http.get("*/v1/projects/name-availability", async ({ request }) => {
+    await delay(350)
+    const name = new URL(request.url).searchParams.get("name") ?? ""
+    const taken = reservedNames.includes(name) || mockProjects.some((p) => p.name === name)
+    let suggestion: string | null = null
+    if (taken) for (let n = 2; !suggestion; n++) if (!mockProjects.some((p) => p.name === `${name}-${n}`)) suggestion = `${name}-${n}`
+    return HttpResponse.json({ available: !taken, url: `${name}.dpl.app`, suggestion })
+  }),
+
+  http.post("*/v1/projects", async ({ request }) => {
+    await delay(1100)
+    const input = (await request.json()) as CreateProjectInput
+    if (reservedNames.includes(input.name) || mockProjects.some((p) => p.name === input.name)) {
+      return HttpResponse.json({ error: { message: "That project name is taken.", fields: { name: `"${input.name}" is already used. Try another name.` } } }, { status: 409 })
+    }
+    const usage = mockUsage.limits.find((l) => l.id === "active_deployments")!
+    if (mockDeploymentStore().filter((d) => d.live).length >= usage.limit) {
+      return HttpResponse.json({ error: { message: `Your plan allows ${usage.limit} live deployments. Take one offline to deploy another.` } }, { status: 403 })
+    }
+    const repo = mockRepositories.find((r) => r.id === input.repositoryId)
+    const branch = repo?.branches.find((b) => b.name === input.branch)
+    if (!repo || !branch) return HttpResponse.json({ error: { message: "That repository or branch no longer exists." } }, { status: 422 })
+    const result = mockCreateProject({
+      name: input.name,
+      runtime: input.runtime,
+      branch: branch.name,
+      commit: branch.commit,
+      author: accountSettings.name || "You",
+      config: { buildCommand: input.config.buildCommand, startCommand: input.config.startCommand, port: input.config.port },
+    })
+    repo.projectId ??= result.project.id
+    return HttpResponse.json(result, { status: 201 })
   }),
 ]
+
+/** Names that would collide with platform hosts. */
+const reservedNames = ["admin", "api", "app", "www", "dashboard", "deplogram", "status"]

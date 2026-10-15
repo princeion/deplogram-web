@@ -28,7 +28,35 @@ const runtimeLines: Record<string, { label: string; install: string[]; build: st
     install: ["No install step for static sites — skipping"],
     build: ["$ npx docusaurus build", "  [INFO] Creating an optimized production build …", "  [SUCCESS] Generated static files in build/"],
   },
+  vite: {
+    label: "Vite · Node.js 22",
+    install: ["$ npm ci"],
+    build: ["$ npm run build", "  vite v6.2.0 building for production…", "  ✓ 412 modules transformed.", "  dist/index.html            0.46 kB │ gzip:  0.30 kB", "  dist/assets/index.js     148.20 kB │ gzip: 47.91 kB", "  ✓ built in 3.12s"],
+  },
+  python: {
+    label: "Python 3.12",
+    install: ["$ pip install -r requirements.txt", "Collecting fastapi==0.115.2", "Collecting uvicorn[standard]==0.32.0", "Successfully installed 38 packages"],
+    build: ["$ pip install -r requirements.txt", "  Requirements already satisfied — nothing to build"],
+  },
+  go: {
+    label: "Go 1.23",
+    install: ["$ go mod download", "go: downloading github.com/jackc/pgx/v5 v5.7.1", "go: downloading github.com/go-chi/chi/v5 v5.1.0"],
+    build: ["$ go build -o app ./cmd/server", "  Built ./app (14.2 MB)"],
+  },
+  php: {
+    label: "PHP 8.3",
+    install: ["$ composer install --no-dev", "Installing dependencies from lock file", "Package operations: 86 installs, 0 updates, 0 removals", "Generating optimized autoload files"],
+    build: ["$ composer install --no-dev", "  Nothing to build — dependencies installed"],
+  },
+  docker: {
+    label: "Docker",
+    install: ["Using the repository's Dockerfile — no separate install step"],
+    build: ["$ docker build .", "  #1 [internal] load build definition from Dockerfile", "  #5 [build 2/4] RUN go build -o /worker ./cmd/worker", "  #8 exporting to image", "  #8 naming to registry.dpl.app/queue-worker:0aa4e57 done"],
+  },
 }
+
+/** JavaScript runtimes print npm's install chatter; others list their own install lines. */
+const npmRuntimes = ["node", "nextjs", "vite"]
 
 /** The full log a deployment would produce, with millisecond offsets from its start. */
 function script(deployment: Deployment, kind: "build" | "rollback", outcome: Outcome): Entry[] {
@@ -52,12 +80,13 @@ function script(deployment: Deployment, kind: "build" | "rollback", outcome: Out
 
   const rt = runtimeLines[deployment.runtime] ?? runtimeLines.node
   const entries: Entry[] = [
-    [3000, "clone", `Cloning github.com/ada/${deployment.projectName} (branch ${deployment.commit.branch}, commit ${deployment.commit.sha})`],
+    [3000, "clone", `Cloning ${deployment.projectName} (branch ${deployment.commit.branch}, commit ${deployment.commit.sha})`],
     [3400, "clone", "Cloned in 0.4s"],
     [3600, "clone", `Detected runtime: ${rt.label}`],
     [3900, "install", rt.install[0]],
   ]
-  if (deployment.runtime !== "static") {
+  rt.install.slice(1).forEach((line, i) => entries.push([4300 + i * 700, "install", line]))
+  if (npmRuntimes.includes(deployment.runtime)) {
     entries.push(
       [4600, "install", "npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory.", "stderr"],
       [5800, "install", "added 312 packages, and audited 313 packages in 2s"],

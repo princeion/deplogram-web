@@ -32,7 +32,8 @@ export function useFormWizard<T extends FieldValues>(
   const active = steps.filter((step) => !step.when || step.when(values))
 
   const [currentId, setCurrentId] = React.useState(initialStepId ?? active[0]?.id)
-  const [visited, setVisited] = React.useState<ReadonlySet<string>>(() => new Set(currentId ? [currentId] : []))
+  // Opening on a later step (a restored draft, a ?step= link) counts the steps before it as visited.
+  const [visited, setVisited] = React.useState<ReadonlySet<string>>(() => new Set(active.slice(0, active.findIndex((s) => s.id === currentId) + 1).map((s) => s.id)))
 
   // If the current step stops applying (its `when` turned false), fall back to the nearest one.
   const index = Math.max(0, active.findIndex((step) => step.id === currentId))
