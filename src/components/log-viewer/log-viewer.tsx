@@ -341,7 +341,7 @@ export function LogViewer({
           <button
             type="button"
             onClick={jumpToLatest}
-            className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 animate-in items-center gap-1.5 rounded-full border border-border/70 bg-popover/95 px-3 py-1.5 text-xs font-medium shadow-lg backdrop-blur-md duration-200 fade-in slide-in-from-bottom-2 hover:bg-muted"
+            className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 animate-in items-center gap-1.5 rounded-full border border-border/70 bg-popover/95 px-3 py-1.5 text-xs font-medium backdrop-blur-md duration-200 fade-in slide-in-from-bottom-2 hover:bg-muted"
           >
             <Icon name="arrow-up" size="xs" className="rotate-180" />
             {unseen > 0 ? `${unseen} new ${unseen === 1 ? "line" : "lines"}` : "Jump to latest"}

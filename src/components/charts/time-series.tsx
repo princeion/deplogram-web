@@ -66,7 +66,7 @@ function ChartTooltipCard({
   if (!active || !payload?.length) return null
   const byKey = new Map(payload.map((item) => [String(item.dataKey), item.value]))
   return (
-    <div className="min-w-40 rounded-lg border border-border/70 bg-popover/95 px-3 py-2.5 text-xs shadow-xl backdrop-blur-md">
+    <div className="min-w-40 rounded-lg border border-border/70 bg-popover/95 px-3 py-2.5 text-xs backdrop-blur-md">
       <p className="mb-1.5 text-muted-foreground">{labelFormat(String(label))}</p>
       <div className="grid gap-1">
         {series.map((s) => (

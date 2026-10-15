@@ -160,11 +160,11 @@ function Node({ node, index }: { node: PipelineNode; index: number }) {
       aria-current={state === "current" ? "step" : undefined}
       className={cn(
         "relative flex min-w-0 flex-1 animate-in flex-col rounded-2xl border p-4 duration-700 fade-in fill-mode-both slide-in-from-bottom-2 ease-out-expo motion-reduce:animate-none",
-        "bg-[color-mix(in_oklab,var(--card),var(--foreground)_4%)] shadow-[inset_0_1px_0_color-mix(in_oklab,var(--foreground)_7%,transparent),0_14px_30px_-18px_rgb(0_0_0/0.6)]",
+        "bg-[color-mix(in_oklab,var(--card),var(--foreground)_4%)] shadow-[inset_0_1px_0_color-mix(in_oklab,var(--foreground)_7%,transparent)]",
         state === "done" && "border-border/80",
-        state === "current" && "border-brand/40 shadow-[inset_0_1px_0_color-mix(in_oklab,var(--foreground)_7%,transparent),0_0_0_1px_color-mix(in_oklab,var(--brand)_12%,transparent),0_18px_60px_-24px_color-mix(in_oklab,var(--brand)_70%,transparent)]",
-        state === "failed" && "border-destructive/45 shadow-[inset_0_1px_0_color-mix(in_oklab,var(--foreground)_7%,transparent),0_18px_60px_-26px_color-mix(in_oklab,var(--destructive)_70%,transparent)]",
-        state === "live" && "border-success/40 shadow-[inset_0_1px_0_color-mix(in_oklab,var(--foreground)_7%,transparent),0_18px_60px_-26px_color-mix(in_oklab,var(--success)_60%,transparent)]",
+        state === "current" && "border-brand/40",
+        state === "failed" && "border-destructive/45",
+        state === "live" && "border-success/40",
         (state === "pending" || state === "skipped") && "border-dashed border-border/80 bg-transparent shadow-none",
         state === "skipped" && "opacity-55"
       )}

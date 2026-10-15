@@ -25,7 +25,7 @@ import { EmptyState } from "@/components/app-shell/empty-state"
 const working = ["QUEUED", "BUILDING", "BUILT", "DEPLOYING"]
 const failed = ["BUILD_FAILED", "DEPLOY_FAILED", "CRASHED"]
 
-// "Welcome" in the languages of home, one a day.
+// "Welcome" in the languages of home, taking turns.
 const welcomes = [
   { word: "Ẹ káàbọ̀", language: "Yoruba" },
   { word: "Nnọọ", language: "Igbo" },
@@ -35,7 +35,13 @@ const welcomes = [
 
 function Greeting({ projects }: { projects?: ProjectSummary[] }) {
   const { data: viewer } = useViewer()
-  const [welcome] = React.useState(() => welcomes[Math.floor(Date.now() / 86_400_000) % welcomes.length])
+  // Cycle through the languages, one every few seconds.
+  const [index, setIndex] = React.useState(0)
+  React.useEffect(() => {
+    const id = window.setInterval(() => setIndex((i) => (i + 1) % welcomes.length), 3500)
+    return () => window.clearInterval(id)
+  }, [])
+  const welcome = welcomes[index]
   const first = viewer?.name?.split(" ")[0]
   const live = projects?.filter((p) => p.url).length ?? 0
   const deploying = projects?.filter((p) => working.includes(p.state)).length ?? 0
@@ -44,11 +50,11 @@ function Greeting({ projects }: { projects?: ProjectSummary[] }) {
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div className="grid gap-1.5">
         <h1 className="flex flex-wrap items-baseline gap-x-3 text-2xl font-semibold tracking-[-0.02em] sm:text-[1.75rem]">
-          <span title={`“Welcome” in ${welcome.language}`}>
+          <span key={welcome.word} title={`“Welcome” in ${welcome.language}`} className="animate-in duration-500 fade-in slide-in-from-bottom-1 ease-out-expo">
             {welcome.word}
             {first ? `, ${first}` : ""}!
           </span>
-          {welcome.language !== "English" && <span className="font-mono text-xs font-normal text-muted-foreground">{welcome.language} for welcome</span>}
+          {welcome.language !== "English" && <span key={welcome.language} className="animate-in font-mono text-xs font-normal text-muted-foreground duration-500 fade-in">{welcome.language} for welcome</span>}
         </h1>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-muted-foreground">
           {projects === undefined ? (
