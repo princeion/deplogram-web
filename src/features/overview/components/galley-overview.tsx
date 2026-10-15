@@ -27,10 +27,10 @@ const failed = ["BUILD_FAILED", "DEPLOY_FAILED", "CRASHED"]
 
 // "Welcome" in the languages of home, taking turns.
 const welcomes = [
+  { word: "Welcome back", language: "English" },
   { word: "Ẹ káàbọ̀", language: "Yoruba" },
   { word: "Nnọọ", language: "Igbo" },
   { word: "Sannu", language: "Hausa" },
-  { word: "Welcome back", language: "English" },
 ] as const
 
 function Greeting({ projects }: { projects?: ProjectSummary[] }) {
