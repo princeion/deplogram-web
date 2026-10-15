@@ -1,7 +1,6 @@
 import { z } from "zod"
 
 import { envVarsSchema } from "@/components/forms"
-import type { WizardStep } from "@/components/forms"
 import { staticRuntimes } from "@/features/deploy/deploy"
 
 /** Project names become hosts (`name.dpl.app`): lowercase, digits, hyphens; 3–40 characters. */
@@ -54,10 +53,3 @@ export const newDeploymentDefaults: NewDeploymentValues = {
   rootDirectory: "",
   env: [],
 }
-
-export const newDeploymentSteps: WizardStep<NewDeploymentValues>[] = [
-  { id: "source", title: "Source", description: "Choose the repository and branch to deploy.", fields: ["repositoryId", "branch"] },
-  { id: "runtime", title: "Runtime", description: "We looked at the code to suggest one. Change it if we got it wrong.", fields: ["runtime"] },
-  { id: "configure", title: "Configure", description: "Name the project and check how it builds and starts.", fields: ["name", "buildCommand", "startCommand", "port", "rootDirectory", "env"] },
-  { id: "review", title: "Review", description: "Check everything, then deploy." },
-]

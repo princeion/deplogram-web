@@ -88,7 +88,7 @@ export function NavigationProgress() {
         {current === "loading" && (
           <motion.div
             key="bar"
-            className="h-full origin-left bg-brand shadow-[0_0_8px_var(--brand)]"
+            className="metal-brand h-full origin-left shadow-[0_0_8px_var(--brand)]"
             initial={{ scaleX: 0, opacity: 1 }}
             // Trickles towards 90% — it never claims to be done before the route arrives.
             animate={{ scaleX: 0.9 }}

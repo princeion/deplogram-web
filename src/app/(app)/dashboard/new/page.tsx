@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 export default function NewDeploymentPage() {
   return (
     <Page width="wide">
-      <PageHeader title="New deployment" description="Import a repository, check its settings, and put it live." />
-      {/* The current step lives in the URL (useSearchParams). */}
+      <PageHeader title="New deployment" description="Pick a repository, check what we detected, deploy." />
+      {/* The chosen repository lives in the URL (useSearchParams). */}
       <Suspense>
         <NewDeployment />
       </Suspense>

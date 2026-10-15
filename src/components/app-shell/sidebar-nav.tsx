@@ -58,8 +58,11 @@ function NavEntry({ item }: { item: ResolvedNavItem }) {
         isActive={item.active}
         tooltip={item.label}
         aria-current={item.active ? "page" : undefined}
+        className="relative"
         aria-disabled={item.soon || undefined}
       >
+        {/* The active item's metallic edge. */}
+        {item.active && <span aria-hidden className="metal-brand pointer-events-none absolute inset-y-2 left-0 w-[3px] rounded-full group-data-[collapsible=icon]:inset-y-2.5" />}
         {item.icon && <Icon name={item.icon} filled={item.active} className={cn(item.active && "text-brand-ink")} />}
         <span>{item.label}</span>
         {item.external && <Icon name="arrow-up-right" size="xs" className="ml-auto text-muted-foreground" />}

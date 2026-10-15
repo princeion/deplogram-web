@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { CrumbTrigger } from "@/components/app-shell/header/crumb"
 
 function PlanBadge({ plan }: { plan: string }) {
-  return <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[0.6875rem] leading-none font-medium text-brand-ink">{plan}</span>
+  return <span className="metal-brand rounded-full px-2 py-0.5 text-[0.6875rem] leading-none font-medium text-brand-foreground">{plan}</span>
 }
 
 /** First breadcrumb segment: the workspace and its plan. Teams come after the MVP. */

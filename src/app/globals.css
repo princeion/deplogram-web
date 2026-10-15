@@ -383,6 +383,41 @@ html.dark:has([data-app]) {
     inset 0 1px 0 0 rgb(255 255 255 / 0.45),
     inset 0 -2px 0 0 rgb(0 0 0 / 0.22);
 }
+/*
+ * Metallic orange — the brand as brushed metal, for the few things that carry the accent
+ * (primary actions, the active nav item, the plan badge). Two layers: a lighting pass (bright top
+ * edge, a darker waist, a soft lower reflection) over a diagonal band of orange tones that slides
+ * on hover like light moving across metal. Inset edges only — never an outer shadow.
+ */
+@utility metal-brand {
+  background-color: var(--brand);
+  background-image:
+    linear-gradient(180deg, rgb(255 255 255 / 0.4) 0%, rgb(255 255 255 / 0.12) 36%, rgb(0 0 0 / 0.06) 54%, rgb(0 0 0 / 0) 74%, rgb(255 255 255 / 0.14) 100%),
+    linear-gradient(105deg, oklch(0.72 0.18 45) 0%, oklch(0.66 0.21 36) 30%, oklch(0.8 0.14 55) 48%, oklch(0.64 0.21 34) 66%, oklch(0.71 0.19 41) 100%);
+  background-size:
+    100% 100%,
+    220% 100%;
+  background-position:
+    0 0,
+    0% 0;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.6),
+    inset 0 -1px 0 rgb(0 0 0 / 0.28),
+    inset 0 0 0 1px rgb(110 30 0 / 0.35);
+  transition: background-position 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  &:hover {
+    background-position:
+      0 0,
+      100% 0;
+  }
+}
+/* The same metal as text — for a single key figure or word. */
+@utility metal-brand-text {
+  background-image: linear-gradient(180deg, oklch(0.86 0.12 60) 0%, oklch(0.72 0.19 42) 45%, oklch(0.6 0.2 34) 55%, oklch(0.76 0.17 48) 100%);
+  background-clip: text;
+  color: transparent;
+}
+
 /* Glass bevel — the floating navbar pill: blur, hairline edge, inner top highlight. */
 @utility glass-bevel {
   @apply border border-white/10 backdrop-blur-xl backdrop-saturate-150;
