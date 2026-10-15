@@ -1,5 +1,5 @@
 import type { Deployment, DeploymentTrigger } from "@/features/deployments/deployments"
-import { mockProjects } from "@/mocks/data/projects"
+import { mockProjects, type MockProject } from "@/mocks/data/projects"
 
 /** Deterministic pseudo-random numbers, so the mock list is the same on every load. */
 function random(seed: number) {
@@ -196,7 +196,8 @@ export function mockRedeploy(sourceId: string): Deployment | null {
     durationSeconds: null,
     url: null,
     commit: { ...source.commit },
-    config: { ...source.config },
+    // Settings saved since the last deployment apply from this one.
+    config: { ...source.config, ...mockProjects.find((p) => p.id === source.projectId)?.configOverride },
   }
   deployments.unshift(deployment)
   simulate(deployment.id, { kind: "build", startedAt: Date.now(), fails: source.projectId === "prj_docs" })
@@ -252,10 +253,25 @@ export function mockCreateProject(input: {
   commit: { sha: string; message: string }
   author: string
   config: { buildCommand: string | null; startCommand: string | null; port: number | null }
+  repository: string
+  rootDirectory: string | null
+  env: { key: string; value: string }[]
 }) {
   const deployments = mockDeploymentStore()
   const id = `prj_${input.name.replace(/[^a-z0-9]/g, "").slice(0, 12)}${sequence++}`
-  const project = { id, name: input.name, runtime: input.runtime, state: "QUEUED" as const, url: `${input.name}.dpl.app` }
+  const now = new Date().toISOString()
+  const project: MockProject = {
+    id,
+    name: input.name,
+    runtime: input.runtime,
+    state: "QUEUED",
+    url: `${input.name}.dpl.app`,
+    repository: input.repository,
+    branch: input.branch,
+    createdAt: now,
+    rootDirectory: input.rootDirectory,
+    env: input.env.map((row) => ({ ...row, updatedAt: now })),
+  }
   mockProjects.push(project)
   const deployment: Deployment = {
     id: nextId(id),
@@ -274,4 +290,17 @@ export function mockCreateProject(input: {
   deployments.unshift(deployment)
   simulate(deployment.id, { kind: "build", startedAt: Date.now(), fails: false })
   return { project: { ...project }, deployment }
+}
+
+/** DELETE /v1/projects/:id: the project and everything it deployed. */
+export function mockDeleteProject(projectId: string) {
+  const deployments = mockDeploymentStore()
+  for (let i = deployments.length - 1; i >= 0; i--) {
+    if (deployments[i].projectId === projectId) {
+      simulations.delete(deployments[i].id)
+      deployments.splice(i, 1)
+    }
+  }
+  const index = mockProjects.findIndex((p) => p.id === projectId)
+  if (index > -1) mockProjects.splice(index, 1)
 }

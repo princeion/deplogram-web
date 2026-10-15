@@ -1,7 +1,9 @@
 import { delay, http, HttpResponse, type HttpHandler } from "msw"
 
 import { deploymentStatusGroups } from "@/features/deployments/deployments"
-import { mockCreateProject, mockDeploymentStore, mockRedeploy, mockRollback } from "@/mocks/data/deployments"
+import { mockCreateProject, mockDeleteProject, mockDeploymentStore, mockRedeploy, mockRollback } from "@/mocks/data/deployments"
+import { mockProjectMetrics, mockRuntimeLogs, toProject, toProjectSummary } from "@/mocks/data/project-api"
+import type { MetricsRange, ProjectUpdate } from "@/features/projects/projects"
 import { mockRepositories, toRepository } from "@/mocks/data/git"
 import type { CreateProjectInput } from "@/features/deploy/deploy"
 import { mockDeploymentLogs } from "@/mocks/data/deployment-logs"
@@ -142,8 +144,8 @@ export const handlers: HttpHandler[] = [
 
   http.get("*/v1/projects", async () => {
     await delay(300)
-    mockDeploymentStore() // advance simulated deployments so project states stay in step
-    return HttpResponse.json(mockProjects)
+    const summaries = mockProjects.map(toProjectSummary)
+    return HttpResponse.json(summaries.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)))
   }),
 
   http.get("*/v1/usage", async () => {
@@ -208,11 +210,92 @@ export const handlers: HttpHandler[] = [
       commit: branch.commit,
       author: accountSettings.name || "You",
       config: { buildCommand: input.config.buildCommand, startCommand: input.config.startCommand, port: input.config.port },
+      repository: repo.fullName,
+      rootDirectory: input.config.rootDirectory,
+      env: input.env,
     })
     repo.projectId ??= result.project.id
-    return HttpResponse.json(result, { status: 201 })
+    return HttpResponse.json({ project: toProjectSummary(result.project), deployment: result.deployment }, { status: 201 })
   }),
 ]
+
+// ── Projects ───────────────────────────────────────────────────────────────────────
+// Registered after /v1/projects/name-availability so ":id" doesn't swallow it.
+const findProject = (id: unknown) => mockProjects.find((p) => p.id === id)
+const notFound = () => HttpResponse.json({ error: { message: "That project doesn't exist." } }, { status: 404 })
+
+handlers.push(
+  http.get("*/v1/projects/:id", async ({ params }) => {
+    await delay(250)
+    const project = findProject(params.id)
+    return project ? HttpResponse.json(toProject(project)) : notFound()
+  }),
+
+  http.patch("*/v1/projects/:id", async ({ params, request }) => {
+    await delay(500)
+    const project = findProject(params.id)
+    if (!project) return notFound()
+    const update = (await request.json()) as ProjectUpdate
+    if (update.name && update.name !== project.name) {
+      if (reservedNames.includes(update.name) || mockProjects.some((p) => p.name === update.name)) {
+        return HttpResponse.json({ error: { message: "That name is taken.", fields: { name: `"${update.name}" is already used.` } } }, { status: 409 })
+      }
+      project.name = update.name
+      project.url = `${update.name}.dpl.app`
+      for (const d of mockDeploymentStore()) if (d.projectId === project.id) d.projectName = update.name
+    }
+    if (update.branch) project.branch = update.branch
+    if (update.config) {
+      const { rootDirectory, ...rest } = update.config
+      if (rootDirectory !== undefined) project.rootDirectory = rootDirectory
+      project.configOverride = { ...project.configOverride, ...rest }
+    }
+    return HttpResponse.json(toProject(project))
+  }),
+
+  http.delete("*/v1/projects/:id", async ({ params }) => {
+    await delay(900)
+    if (!findProject(params.id)) return notFound()
+    mockDeleteProject(String(params.id))
+    for (const repo of mockRepositories) if (repo.projectId === params.id) repo.projectId = null
+    return new HttpResponse(null, { status: 204 })
+  }),
+
+  http.get("*/v1/projects/:id/env", async ({ params }) => {
+    await delay(300)
+    const project = findProject(params.id)
+    return project ? HttpResponse.json(project.env.map(({ key, updatedAt }) => ({ key, updatedAt }))) : notFound()
+  }),
+
+  http.put("*/v1/projects/:id/env", async ({ params, request }) => {
+    await delay(600)
+    const project = findProject(params.id)
+    if (!project) return notFound()
+    const vars = (await request.json()) as { key: string; value: string | null }[]
+    const now = new Date().toISOString()
+    project.env = vars.map((v) => {
+      const existing = project.env.find((e) => e.key === v.key)
+      return v.value === null && existing ? existing : { key: v.key, value: v.value ?? "", updatedAt: now }
+    })
+    return HttpResponse.json(project.env.map(({ key, updatedAt }) => ({ key, updatedAt })))
+  }),
+
+  http.get("*/v1/projects/:id/logs", async ({ params, request }) => {
+    await delay(150)
+    const project = findProject(params.id)
+    if (!project) return notFound()
+    const after = Number(new URL(request.url).searchParams.get("after")) || 0
+    return HttpResponse.json(mockRuntimeLogs(project, after))
+  }),
+
+  http.get("*/v1/projects/:id/metrics", async ({ params, request }) => {
+    await delay(500)
+    const project = findProject(params.id)
+    if (!project) return notFound()
+    const range = (new URL(request.url).searchParams.get("range") ?? "24h") as MetricsRange
+    return HttpResponse.json(mockProjectMetrics(project, ["1h", "24h", "7d"].includes(range) ? range : "24h"))
+  })
+)
 
 /** Names that would collide with platform hosts. */
 const reservedNames = ["admin", "api", "app", "www", "dashboard", "deplogram", "status"]

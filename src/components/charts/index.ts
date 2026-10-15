@@ -4,4 +4,5 @@ export { AreaTimeSeries, BarTimeSeries, ChartLegend, formatLongDate, formatShort
 export { DotProgressList, SegmentedMeter, TickMeter, UsageMeter, limitTone, type Segment } from "@/components/charts/meters"
 export { TickGauge } from "@/components/charts/tick-gauge"
 export { Heatmap } from "@/components/charts/heatmap"
+export { Sparkline } from "@/components/charts/sparkline"
 export { chartColor, type ChartColor, type ChartSeries, type ValueFormat } from "@/components/charts/types"

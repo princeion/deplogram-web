@@ -10,7 +10,17 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { notify } from "@/components/feedback"
 import { parseAnsi, stripAnsi } from "@/components/log-viewer/ansi"
 
-export type LogLine = { n: number; at: string; text: string; stream: "stdout" | "stderr"; group?: string }
+export type LogLine = {
+  n: number
+  at: string
+  text: string
+  stream: "stdout" | "stderr"
+  group?: string
+  /** Explicit severity (runtime logs); otherwise inferred from stderr + "warn". */
+  level?: "info" | "warn" | "error"
+  /** A short source label shown before the text ("req", "app"). */
+  tag?: string
+}
 export type LogGroup = { id: string; label: string; state: "pending" | "running" | "succeeded" | "failed" | "skipped"; startedAt: string | null; endedAt: string | null }
 
 const groupDot: Record<LogGroup["state"], { tone: StatusTone; motion: StatusMotion; dim?: boolean }> = {
@@ -83,13 +93,14 @@ const Line = React.memo(function Line({
   onSelect: (n: number) => void
 }) {
   const plain = stripAnsi(line.text)
-  const warning = line.stream === "stderr" && /\bwarn(ing)?\b/i.test(plain)
+  const level = line.level ?? (line.stream === "stderr" ? (/\bwarn(ing)?\b/i.test(plain) ? "warn" : "error") : "info")
   return (
     <div
       data-line={line.n}
       className={cn(
         "group/line flex gap-3 px-3 hover:bg-foreground/[0.035] sm:px-4",
-        line.stream === "stderr" && (warning ? "bg-brand/[0.05] text-brand-ink" : "bg-destructive/[0.07] text-destructive"),
+        level === "warn" && "bg-brand/[0.05] text-brand-ink",
+        level === "error" && "bg-destructive/[0.07] text-destructive",
         selected && "bg-foreground/[0.07] shadow-[inset_2px_0_0_var(--brand)]",
         fresh && "animate-in duration-300 fade-in slide-in-from-bottom-1 motion-reduce:animate-none"
       )}
@@ -103,6 +114,7 @@ const Line = React.memo(function Line({
         {line.n}
       </button>
       {showTime && <time className="shrink-0 text-muted-foreground/60 tabular-nums select-none max-sm:hidden">{clock.format(new Date(line.at))}</time>}
+      {line.tag && <span className="w-7 shrink-0 text-muted-foreground/70 select-none">{line.tag}</span>}
       <span className={cn("min-w-0 flex-1", wrap ? "break-words whitespace-pre-wrap" : "whitespace-pre")}>
         {query ? (
           <Highlight text={plain} query={query} />
@@ -132,6 +144,7 @@ export function LogViewer({
   loading = false,
   fileName = "log",
   height = "min(640px, 72vh)",
+  toolbar,
   className,
 }: {
   lines: readonly LogLine[]
@@ -140,6 +153,8 @@ export function LogViewer({
   /** Shown beside the cursor while live: "Building", "Deploying". */
   liveLabel?: string
   loading?: boolean
+  /** Extra controls in the toolbar, after search (filters, pause). */
+  toolbar?: React.ReactNode
   /** Download name, without extension. */
   fileName?: string
   height?: string
@@ -247,6 +262,7 @@ export function LogViewer({
             {visible.length} {visible.length === 1 ? "match" : "matches"}
           </span>
         )}
+        {toolbar}
         <div className="ml-auto flex items-center gap-0.5">
           <Button variant="ghost" size="xs" aria-pressed={showTime} onClick={() => setShowTime((v) => !v)} className={cn(!showTime && "text-muted-foreground")}>
             <Icon name="clock" />

@@ -131,7 +131,7 @@ function useAxes<K extends string>({ xKey = "date", format = formatCompact, xFor
   return {
     grid: <CartesianGrid vertical={false} strokeDasharray="2 4" className="[&_line]:stroke-border" />,
     x: <XAxis dataKey={xKey} tickLine={false} axisLine={false} tickMargin={12} minTickGap={28} tick={<AxisTick format={xFormat} />} />,
-    y: <YAxis width={40} tickLine={false} axisLine={false} tickMargin={6} tickCount={5} tickFormatter={(v) => format(Number(v))} />,
+    y: <YAxis width={52} tickLine={false} axisLine={false} tickMargin={6} tickCount={5} tickFormatter={(v) => format(Number(v))} />,
     pill: <ActiveAxisPill format={xFormat} />,
     tooltip: (cursor: React.ComponentProps<typeof Tooltip>["cursor"]) => (
       <Tooltip

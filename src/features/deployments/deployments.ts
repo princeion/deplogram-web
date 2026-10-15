@@ -146,7 +146,7 @@ export const deploymentQuery = (deploymentId: string) =>
   })
 
 export function useDeployment(deploymentId: string) {
-  return useQuery(deploymentQuery(deploymentId))
+  return useQuery({ ...deploymentQuery(deploymentId), enabled: Boolean(deploymentId) })
 }
 
 export const logStepIdSchema = z.enum(["clone", "install", "build", "deploy", "runtime"])

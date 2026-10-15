@@ -9,7 +9,7 @@ import { Icon, type IconName } from "@/components/shared/icon"
 import { StatusDot, type StatusMotion, type StatusTone } from "@/components/shared/status-dot"
 
 type NodeState = "done" | "current" | "failed" | "pending" | "skipped" | "live"
-type CableState = "done" | "flowing" | "failed" | "idle"
+export type CableState = "done" | "flowing" | "failed" | "idle"
 
 type PipelineNode = {
   id: string
@@ -223,7 +223,7 @@ function Node({ node, index }: { node: PipelineNode; index: number }) {
 }
 
 /** A thick cable between stages with sockets at both ends; light travels along it while work flows through. */
-function Cable({ state, label }: { state: CableState; label?: string }) {
+export function Cable({ state, label, as: Tag = "li" }: { state: CableState; label?: string; as?: "li" | "div" }) {
   const fill = {
     done: "bg-foreground/30",
     failed: "bg-destructive/55",
@@ -233,7 +233,7 @@ function Cable({ state, label }: { state: CableState; label?: string }) {
   }[state]
   const socket = cn("size-2.5 shrink-0 rounded-full border-2 bg-card", state === "flowing" ? "border-brand" : state === "failed" ? "border-destructive/70" : state === "done" ? "border-foreground/40" : "border-border")
   return (
-    <li aria-hidden className="relative flex shrink-0 items-center justify-center max-lg:h-12 max-lg:flex-col lg:w-12">
+    <Tag aria-hidden className="relative flex shrink-0 items-center justify-center max-lg:h-12 max-lg:flex-col lg:w-12">
       <span className={socket} />
       <span className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-foreground/[0.06] shadow-[inset_0_1px_2px_rgb(0_0_0/0.5)] max-lg:h-auto max-lg:w-1.5">
         <span className={cn("absolute inset-0 rounded-full transition-colors duration-500", fill)} />
@@ -244,7 +244,7 @@ function Cable({ state, label }: { state: CableState; label?: string }) {
           {label}
         </span>
       )}
-    </li>
+    </Tag>
   )
 }
 

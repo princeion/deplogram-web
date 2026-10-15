@@ -15,6 +15,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { FormRootError } from "@/components/forms"
+import { SettingRow, SettingsTable, settingInputClass } from "@/components/shared/settings-table"
 
 // ── Fact tiles ─────────────────────────────────────────────────────────────────────
 
@@ -106,26 +107,7 @@ function RuntimeSegment({ detected }: { detected?: string | null }) {
 
 // ── Settings table ─────────────────────────────────────────────────────────────────
 
-const inlineInput =
-  "h-8 w-full min-w-0 rounded-md bg-transparent px-2 font-mono text-[0.8125rem] outline-none ring-1 ring-transparent transition-[box-shadow,background-color] placeholder:text-muted-foreground/50 hover:bg-foreground/[0.04] focus:surface-sunken focus:ring-ring/50 aria-invalid:ring-destructive/60"
-
-function SettingRow({ label, htmlFor, error, aside, children }: { label: string; htmlFor: string; error?: string; aside?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="grid border-b border-border/50 last:border-b-0 sm:grid-cols-[8.5rem_minmax(0,1fr)]">
-      {/* The darker label column: a two-tone table. */}
-      <label htmlFor={htmlFor} className="surface-band flex items-center px-3.5 pt-2.5 text-sm text-muted-foreground sm:border-r sm:border-border/50 sm:py-2.5">
-        {label}
-      </label>
-      <div className="grid gap-1 px-2 py-2">
-        <div className="flex min-w-0 items-center gap-2">
-          {children}
-          {aside}
-        </div>
-        {error && <p className="px-2 text-xs text-destructive">{error}</p>}
-      </div>
-    </div>
-  )
-}
+const inlineInput = settingInputClass
 
 function NameStatus() {
   const { control } = useFormContext<NewDeploymentValues>()
@@ -150,13 +132,13 @@ function NameStatus() {
   )
 }
 
-function SettingsTable() {
+function ConfigSettings() {
   const { control, register } = useFormContext<NewDeploymentValues>()
   const { errors } = useFormState({ control })
   const runtime = useWatch({ control, name: "runtime" })
   const isStatic = staticRuntimes.includes(runtime)
   return (
-    <div className="surface-raised overflow-hidden rounded-xl">
+    <SettingsTable>
       <SettingRow label="Project name" htmlFor="cfg-name" error={errors.name?.message} aside={<NameStatus />}>
         <span className="flex min-w-0 flex-1 items-center">
           <input id="cfg-name" {...register("name")} aria-invalid={Boolean(errors.name)} autoComplete="off" spellCheck={false} placeholder="my-project" className={cn(inlineInput, "rounded-r-none")} />
@@ -191,7 +173,7 @@ function SettingsTable() {
       <SettingRow label="Root directory" htmlFor="cfg-root" error={errors.rootDirectory?.message}>
         <input id="cfg-root" {...register("rootDirectory")} spellCheck={false} placeholder="./" className={inlineInput} />
       </SettingRow>
-    </div>
+    </SettingsTable>
   )
 }
 
@@ -320,7 +302,7 @@ export function DeployConfig({
         </Section>
 
         <Section title="Settings">
-          <SettingsTable />
+          <ConfigSettings />
         </Section>
 
         <Section title="Environment" meta="encrypted · values never shown again in full">
