@@ -9,8 +9,8 @@ import type { Traffic } from "@/features/projects/projects"
 
 /**
  * Where traffic is coming from, live: the world in dots, and every city that sent requests in
- * the last minute lit up — brighter and larger the busier it is, with a ring that pulses each
- * time a new request lands. Errors tint a city red.
+ * the last minute lit up — larger the busier it is, each with a steady sonar ring (faster when
+ * busier). Errors tint a city red.
  */
 export function TrafficMap({ map, traffic, className }: { map: WorldMapData; traffic?: Traffic; className?: string }) {
   const stats = React.useMemo(() => {
@@ -36,17 +36,23 @@ export function TrafficMap({ map, traffic, className }: { map: WorldMapData; tra
             <circle key={i} cx={x} cy={y} r={0.36} />
           ))}
         </g>
-        {stats.map(([code, s]) => {
+        {stats.map(([code, s], i) => {
           const [x, y] = map.cities[code]
           const weight = s.requests / max
           const danger = s.errors > 0 && s.errors / s.requests > 0.15
           const color = danger ? "var(--destructive)" : "var(--brand)"
+          const core = 0.5 + weight * 0.35
+          // A steady sonar: busier cities pulse a little faster; cities are staggered so they don't beat in unison.
+          const duration = 3.2 - weight * 1.2
+          const begin = `-${((i * 0.73) % duration).toFixed(2)}s`
           return (
-            <g key={code}>
-              {/* A ring that restarts its pulse whenever a new request arrives from this city. */}
-              <circle key={s.last} cx={x} cy={y} r={0.9 + weight * 1.6} fill="none" stroke={color} strokeWidth={0.18} className="origin-center animate-[map-ping_1.6s_ease-out_forwards] [transform-box:fill-box]" />
-              <circle cx={x} cy={y} r={1.6 + weight * 2.4} fill={color} opacity={0.12 + weight * 0.14} />
-              <circle cx={x} cy={y} r={0.55 + weight * 0.45} fill={color} style={{ filter: `drop-shadow(0 0 0.8px ${color})` }} />
+            <g key={code} className="motion-reduce:[&_animate]:hidden">
+              <circle cx={x} cy={y} r={core + 0.7 + weight * 0.6} fill={color} opacity={0.14} />
+              <circle cx={x} cy={y} r={core} fill="none" stroke={color} strokeWidth={0.14}>
+                <animate attributeName="r" values={`${core};${core + 1.8 + weight * 1.2}`} dur={`${duration}s`} begin={begin} repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.75;0" dur={`${duration}s`} begin={begin} repeatCount="indefinite" />
+              </circle>
+              <circle cx={x} cy={y} r={core} fill={color} />
             </g>
           )
         })}
