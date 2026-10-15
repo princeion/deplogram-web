@@ -117,6 +117,17 @@
       --beam-angle: 360deg;
     }
   }
+  /* Live map: a city's ring expanding and fading when a request lands. */
+  @keyframes map-ping {
+    0% {
+      transform: scale(0.6);
+      opacity: 0.9;
+    }
+    100% {
+      transform: scale(2.6);
+      opacity: 0;
+    }
+  }
   @keyframes cable-flow {
     to {
       background-position: 28px 0;

@@ -234,3 +234,25 @@ export function useProjectMetrics(id: string, range: MetricsRange) {
     refetchInterval: 30_000,
   })
 }
+
+// ── Workspace traffic ────────────────────────────────────────────────────────────
+
+export const trafficSchema = z.object({
+  /** Every request in the last ~65s across live projects. */
+  requests: z.array(z.object({ at: z.string(), projectId: z.string(), error: z.boolean(), /** City code — see features/overview/cities.ts */ city: z.string() })),
+  liveProjects: z.number(),
+})
+export type Traffic = z.infer<typeof trafficSchema>
+
+/**
+ * GET /v1/traffic — the last minute of requests across every live project, for the Overview's
+ * live signal and each project's heartbeat. Polled; proposed contract.
+ * TODO: switch to the realtime channel (SSE/WebSocket) when the backend has one.
+ */
+export function useWorkspaceTraffic() {
+  return useQuery({
+    queryKey: [...projectKeys.all, "traffic"],
+    queryFn: () => apiFetch("/v1/traffic", { schema: trafficSchema }),
+    refetchInterval: 1500,
+  })
+}

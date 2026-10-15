@@ -175,3 +175,27 @@ export function mockProjectMetrics(p: MockProject, range: MetricsRange): Project
     memoryLimit: 512,
   }
 }
+
+/** Requests in the last `windowMs` for a live project — feeds GET /v1/traffic. */
+export function mockRecentTraffic(p: MockProject, windowMs = 65_000) {
+  if (!deploymentsOf(p.id).some((d) => d.live)) return []
+  const since = Date.now() - windowMs
+  const out: { at: string; projectId: string; error: boolean; city: string }[] = []
+  for (let n = newestLine(p.id); n > 0 && lineTime(p.id, n) >= since; n--) {
+    const line = logLine(p, n)
+    if (line.source === "request") out.push({ at: line.at, projectId: p.id, error: line.level === "error", city: cityFor(p.id, n) })
+  }
+  return out.reverse()
+}
+
+/** Where request n came from — weighted toward Nigeria, then the rest of Africa, Europe and the Americas. */
+const cityWeights: [string, number][] = [
+  ["LOS", 30], ["ABV", 10], ["ACC", 6], ["NBO", 5], ["JNB", 4], ["CAI", 3], ["LON", 10], ["FRA", 5],
+  ["NYC", 8], ["SFO", 4], ["TOR", 3], ["GRU", 3], ["DXB", 3], ["BOM", 2], ["SIN", 2], ["TYO", 1], ["SYD", 1],
+]
+const totalWeight = cityWeights.reduce((a, [, w]) => a + w, 0)
+function cityFor(projectId: string, n: number) {
+  let roll = rand(hash(projectId) + n * 23) * totalWeight
+  for (const [city, w] of cityWeights) if ((roll -= w) < 0) return city
+  return "LOS"
+}

@@ -7,13 +7,22 @@ import { useRuntimeLogs } from "@/features/projects/projects"
 
 const WINDOW = 60 // seconds on screen
 
-/**
- * The project's traffic as a live signal: one bar per second of requests over the last minute,
- * gliding left as time passes. The newest second glows in the brand metal; errors cap their bar
- * in red; a scan line marks "now". Fed by the runtime log, so it moves when the app does.
- */
+/** A request on the signal: when, and whether it failed. */
+export type SignalEvent = { at: string; error: boolean }
+
+/** A project's live signal, fed by its runtime log. */
 export function LiveSignal({ projectId, live, height = 112, className }: { projectId: string; live: boolean; height?: number; className?: string }) {
   const { data } = useRuntimeLogs(projectId, { paused: !live })
+  const events = React.useMemo(() => (data?.lines ?? []).filter((l) => l.source === "request").map((l) => ({ at: l.at, error: l.level === "error" })), [data])
+  return <SignalBars events={events} live={live} height={height} className={className} />
+}
+
+/**
+ * Traffic as a live signal: one bar per second of requests over the last minute, gliding left as
+ * time passes. The newest second glows in the brand metal; errors cap their bar in red; a scan
+ * line marks "now". Give it events from any source (one project's log, the whole workspace).
+ */
+export function SignalBars({ events, live, height = 112, label = "Live traffic · last 60s", className }: { events: readonly SignalEvent[]; live: boolean; height?: number; label?: string; className?: string }) {
   const [second, setSecond] = React.useState(() => Math.floor(Date.now() / 1000))
   const trackRef = React.useRef<HTMLDivElement>(null)
 
@@ -35,20 +44,19 @@ export function LiveSignal({ projectId, live, height = 112, className }: { proje
 
   const buckets = React.useMemo(() => {
     const counts = new Map<number, { requests: number; errors: number }>()
-    for (const line of data?.lines ?? []) {
-      if (line.source !== "request") continue
-      const s = Math.floor(new Date(line.at).getTime() / 1000)
+    for (const event of events) {
+      const s = Math.floor(new Date(event.at).getTime() / 1000)
       if (s < second - WINDOW - 1) continue
       const b = counts.get(s) ?? { requests: 0, errors: 0 }
       b.requests++
-      if (line.level === "error") b.errors++
+      if (event.error) b.errors++
       counts.set(s, b)
     }
     return Array.from({ length: WINDOW + 1 }, (_, i) => {
       const s = second - WINDOW + i
       return { s, ...(counts.get(s) ?? { requests: 0, errors: 0 }) }
     })
-  }, [data, second])
+  }, [events, second])
 
   const max = Math.max(4, ...buckets.map((b) => b.requests))
   const perMinute = buckets.slice(1).reduce((a, b) => a + b.requests, 0)
@@ -66,7 +74,7 @@ export function LiveSignal({ projectId, live, height = 112, className }: { proje
       <div className="absolute inset-x-4 top-3 z-10 flex items-baseline justify-between gap-4 text-xs">
         <span className="flex items-center gap-2 text-muted-foreground">
           <span className={cn("size-1.5 rounded-full", live ? "animate-pulse-dot bg-success" : "bg-muted-foreground/50")} />
-          {live ? "Live traffic · last 60s" : "No live traffic"}
+          {live ? label : "No live traffic"}
         </span>
         {live && (
           <span className="font-mono text-muted-foreground tabular-nums">

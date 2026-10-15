@@ -2,7 +2,8 @@ import { delay, http, HttpResponse, type HttpHandler } from "msw"
 
 import { deploymentStatusGroups } from "@/features/deployments/deployments"
 import { mockCreateProject, mockDeleteProject, mockDeploymentStore, mockRedeploy, mockRollback } from "@/mocks/data/deployments"
-import { mockProjectMetrics, mockRuntimeLogs, toProject, toProjectSummary } from "@/mocks/data/project-api"
+import { mockProjectMetrics, mockRecentTraffic, mockRuntimeLogs, toProject, toProjectSummary } from "@/mocks/data/project-api"
+import { mockActivity, recordActivity } from "@/mocks/data/activity"
 import type { MetricsRange, ProjectUpdate } from "@/features/projects/projects"
 import { mockRepositories, toRepository } from "@/mocks/data/git"
 import type { CreateProjectInput } from "@/features/deploy/deploy"
@@ -215,6 +216,7 @@ export const handlers: HttpHandler[] = [
       env: input.env,
     })
     repo.projectId ??= result.project.id
+    recordActivity({ type: "project.created", actor: { name: accountSettings.name || "You" }, project: { id: result.project.id, name: result.project.name }, detail: `from ${repo.fullName}` })
     return HttpResponse.json({ project: toProjectSummary(result.project), deployment: result.deployment }, { status: 201 })
   }),
 ]
@@ -240,9 +242,14 @@ handlers.push(
       if (reservedNames.includes(update.name) || mockProjects.some((p) => p.name === update.name)) {
         return HttpResponse.json({ error: { message: "That name is taken.", fields: { name: `"${update.name}" is already used.` } } }, { status: 409 })
       }
+      recordActivity({ type: "project.renamed", actor: { name: accountSettings.name || "You" }, project: { id: project.id, name: update.name }, detail: `from ${project.name}` })
       project.name = update.name
       project.url = `${update.name}.dpl.app`
       for (const d of mockDeploymentStore()) if (d.projectId === project.id) d.projectName = update.name
+    }
+    if (update.branch || update.config) {
+      const what = [update.branch && `branch → ${update.branch}`, ...Object.keys(update.config ?? {}).map((k) => k.replace(/[A-Z]/g, (c) => ` ${c.toLowerCase()}`))].filter(Boolean).join(", ")
+      recordActivity({ type: "settings.updated", actor: { name: accountSettings.name || "You" }, project: { id: project.id, name: update.name ?? project.name }, detail: `changed ${what}` })
     }
     if (update.branch) project.branch = update.branch
     if (update.config) {
@@ -256,6 +263,8 @@ handlers.push(
   http.delete("*/v1/projects/:id", async ({ params }) => {
     await delay(900)
     if (!findProject(params.id)) return notFound()
+    const gone = findProject(params.id)!
+    recordActivity({ type: "project.deleted", actor: { name: accountSettings.name || "You" }, project: { id: null, name: gone.name }, detail: null })
     mockDeleteProject(String(params.id))
     for (const repo of mockRepositories) if (repo.projectId === params.id) repo.projectId = null
     return new HttpResponse(null, { status: 204 })
@@ -273,6 +282,13 @@ handlers.push(
     if (!project) return notFound()
     const vars = (await request.json()) as { key: string; value: string | null }[]
     const now = new Date().toISOString()
+    const before = new Set(project.env.map((e) => e.key))
+    const after = new Set(vars.map((v) => v.key))
+    const added = vars.filter((v) => !before.has(v.key)).map((v) => v.key)
+    const replaced = vars.filter((v) => before.has(v.key) && v.value !== null).map((v) => v.key)
+    const removed = [...before].filter((k) => !after.has(k))
+    const summary = [added.length && `added ${added.join(", ")}`, replaced.length && `replaced ${replaced.join(", ")}`, removed.length && `removed ${removed.join(", ")}`].filter(Boolean).join(" · ")
+    if (summary) recordActivity({ type: "env.updated", actor: { name: accountSettings.name || "You" }, project: { id: project.id, name: project.name }, detail: summary })
     project.env = vars.map((v) => {
       const existing = project.env.find((e) => e.key === v.key)
       return v.value === null && existing ? existing : { key: v.key, value: v.value ?? "", updatedAt: now }
@@ -294,6 +310,28 @@ handlers.push(
     if (!project) return notFound()
     const range = (new URL(request.url).searchParams.get("range") ?? "24h") as MetricsRange
     return HttpResponse.json(mockProjectMetrics(project, ["1h", "24h", "7d"].includes(range) ? range : "24h"))
+  })
+)
+
+handlers.push(
+  http.get("*/v1/traffic", async () => {
+    await delay(120)
+    const requests = mockProjects.flatMap((p) => mockRecentTraffic(p)).sort((a, b) => a.at.localeCompare(b.at))
+    const liveProjects = mockProjects.filter((p) => toProjectSummary(p).url).length
+    return HttpResponse.json({ requests, liveProjects })
+  }),
+
+  http.get("*/v1/activity", async ({ request }) => {
+    await delay(300)
+    const url = new URL(request.url)
+    return HttpResponse.json(
+      mockActivity({
+        type: url.searchParams.get("type"),
+        project: url.searchParams.get("project"),
+        cursor: url.searchParams.get("cursor"),
+        limit: Math.min(100, Number(url.searchParams.get("limit")) || 25),
+      })
+    )
   })
 )
 
