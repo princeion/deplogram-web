@@ -20,7 +20,7 @@ import { FormRootError } from "@/components/forms"
 
 function Tile({ label, icon, children, className }: { label: string; icon: IconName; children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("grid min-w-0 content-start gap-1.5 rounded-xl border border-border/70 bg-background/25 px-3.5 py-3", className)}>
+    <div className={cn("surface-raised grid min-w-0 content-start gap-1.5 rounded-xl px-3.5 py-3", className)}>
       <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Icon name={icon} size="xs" />
         {label}
@@ -40,7 +40,7 @@ function BranchTile({ branches, loading }: { branches?: Branch[]; loading: boole
           <button
             type="button"
             disabled={loading}
-            className="grid min-w-0 content-start gap-1.5 rounded-xl border border-border/70 bg-background/25 px-3.5 py-3 text-left transition-colors outline-none hover:border-foreground/25 focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="surface-raised grid min-w-0 content-start gap-1.5 rounded-xl px-3.5 py-3 text-left transition-colors outline-none hover:bg-[color-mix(in_oklab,var(--surface-raised),var(--foreground)_5%)] focus-visible:ring-2 focus-visible:ring-ring/50"
           />
         }
       >
@@ -86,8 +86,10 @@ function RuntimeSegment({ detected }: { detected?: string | null }) {
               aria-checked={selected}
               onClick={() => setValue("runtime", r.id, { shouldDirty: true, shouldValidate: true })}
               className={cn(
-                "relative flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-                selected ? "border-foreground/35 bg-foreground/[0.08] text-foreground" : "border-border/70 text-muted-foreground hover:border-foreground/25 hover:text-foreground"
+                "relative flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                selected
+                  ? "surface-raised bg-[color-mix(in_oklab,var(--surface-raised),var(--foreground)_8%)] text-foreground ring-1 ring-foreground/35"
+                  : "surface-raised text-muted-foreground hover:text-foreground"
               )}
             >
               <Icon name={r.icon} size="xs" filled={selected} />
@@ -105,15 +107,16 @@ function RuntimeSegment({ detected }: { detected?: string | null }) {
 // ── Settings table ─────────────────────────────────────────────────────────────────
 
 const inlineInput =
-  "h-8 w-full min-w-0 rounded-md bg-transparent px-2 font-mono text-[0.8125rem] outline-none ring-1 ring-transparent transition-[box-shadow,background-color] placeholder:text-muted-foreground/50 hover:ring-border focus:bg-foreground/[0.03] focus:ring-ring/50 aria-invalid:ring-destructive/60"
+  "h-8 w-full min-w-0 rounded-md bg-transparent px-2 font-mono text-[0.8125rem] outline-none ring-1 ring-transparent transition-[box-shadow,background-color] placeholder:text-muted-foreground/50 hover:bg-foreground/[0.04] focus:surface-sunken focus:ring-ring/50 aria-invalid:ring-destructive/60"
 
 function SettingRow({ label, htmlFor, error, aside, children }: { label: string; htmlFor: string; error?: string; aside?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="grid gap-1 border-b border-border/50 px-3 py-2 last:border-b-0 sm:grid-cols-[7.5rem_minmax(0,1fr)] sm:items-center sm:gap-3">
-      <label htmlFor={htmlFor} className="text-sm text-muted-foreground">
+    <div className="grid border-b border-border/50 last:border-b-0 sm:grid-cols-[8.5rem_minmax(0,1fr)]">
+      {/* The darker label column: a two-tone table. */}
+      <label htmlFor={htmlFor} className="surface-band flex items-center px-3.5 pt-2.5 text-sm text-muted-foreground sm:border-r sm:border-border/50 sm:py-2.5">
         {label}
       </label>
-      <div className="grid gap-1">
+      <div className="grid gap-1 px-2 py-2">
         <div className="flex min-w-0 items-center gap-2">
           {children}
           {aside}
@@ -153,20 +156,20 @@ function SettingsTable() {
   const runtime = useWatch({ control, name: "runtime" })
   const isStatic = staticRuntimes.includes(runtime)
   return (
-    <div className="overflow-hidden rounded-xl border border-border/70">
+    <div className="surface-raised overflow-hidden rounded-xl">
       <SettingRow label="Project name" htmlFor="cfg-name" error={errors.name?.message} aside={<NameStatus />}>
         <span className="flex min-w-0 flex-1 items-center">
           <input id="cfg-name" {...register("name")} aria-invalid={Boolean(errors.name)} autoComplete="off" spellCheck={false} placeholder="my-project" className={cn(inlineInput, "rounded-r-none")} />
-          <span className="flex h-8 items-center rounded-r-md bg-foreground/[0.04] px-2 font-mono text-[0.8125rem] text-muted-foreground">.dpl.app</span>
+          <span className="surface-band flex h-8 items-center rounded-r-md px-2 font-mono text-[0.8125rem] text-muted-foreground">.dpl.app</span>
         </span>
       </SettingRow>
       <SettingRow label="Build" htmlFor="cfg-build" error={errors.buildCommand?.message}>
         <input id="cfg-build" {...register("buildCommand")} spellCheck={false} placeholder="nothing to build" className={inlineInput} />
       </SettingRow>
       {isStatic ? (
-        <div className="grid gap-1 border-b border-border/50 px-3 py-2.5 last:border-b-0 sm:grid-cols-[7.5rem_minmax(0,1fr)] sm:gap-3">
-          <span className="text-sm text-muted-foreground">Serve</span>
-          <span className="px-2 text-sm text-muted-foreground">Build output as static files — no start command or port.</span>
+        <div className="grid border-b border-border/50 last:border-b-0 sm:grid-cols-[8.5rem_minmax(0,1fr)]">
+          <span className="surface-band flex items-center px-3.5 pt-2.5 text-sm text-muted-foreground sm:border-r sm:border-border/50 sm:py-2.5">Serve</span>
+          <span className="px-4 py-2.5 text-sm text-muted-foreground">Build output as static files — no start command or port.</span>
         </div>
       ) : (
         <>
@@ -214,7 +217,7 @@ function DeployBar({ submitting }: { submitting: boolean }) {
   const full = live ? live.used >= live.limit : false
   const emptyValues = (useWatch({ control, name: "env" }) ?? []).filter((row) => row?.key && !row.value).length
   return (
-    <div className="sticky bottom-0 z-10 border-t border-border/60 bg-card/90 px-4 py-3 backdrop-blur-md sm:px-5">
+    <div className="surface-sunken sticky bottom-0 z-10 border-t border-border/60 px-4 py-3 sm:px-5">
       <FormRootError className="mb-3" />
       {full && <p className="mb-2 text-xs text-destructive">All {live!.limit} live deployments on your plan are in use. Take a project offline to deploy another.</p>}
       {emptyValues > 0 && (

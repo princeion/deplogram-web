@@ -33,7 +33,7 @@ function Row({ repo, selected, onSelect }: { repo: Repository; selected: boolean
       onClick={onSelect}
       className={cn(
         "relative grid w-full gap-1.5 rounded-lg px-3 py-2.5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50",
-        selected ? "bg-foreground/[0.07]" : "hover:bg-foreground/[0.04]"
+        selected ? "surface-raised" : "border border-transparent hover:bg-foreground/[0.04]"
       )}
     >
       {selected && <span aria-hidden className="metal-brand absolute inset-y-2.5 left-0 w-[3px] rounded-full" />}
@@ -99,7 +99,7 @@ export function RepoList({ selectedId, onSelect, className }: { selectedId?: str
         </div>
 
         {/* Segmented filter with counts. */}
-        <div role="tablist" aria-label="Filter repositories" className="grid grid-cols-3 gap-0.5 rounded-lg bg-foreground/[0.05] p-0.5 text-xs">
+        <div role="tablist" aria-label="Filter repositories" className="surface-sunken grid grid-cols-3 gap-0.5 rounded-lg p-0.5 text-xs">
           {(
             [
               ["all", "All"],
@@ -115,7 +115,7 @@ export function RepoList({ selectedId, onSelect, className }: { selectedId?: str
               onClick={() => setTab(id)}
               className={cn(
                 "rounded-md px-2 py-1.5 transition-colors",
-                tab === id ? "bg-card text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.25),inset_0_1px_0_color-mix(in_oklab,var(--foreground)_8%,transparent)]" : "text-muted-foreground hover:text-foreground"
+                tab === id ? "surface-raised text-foreground" : "border border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
               {label} <span className="text-muted-foreground tabular-nums">· {repos.isPending ? "–" : counts[id]}</span>
@@ -130,7 +130,7 @@ export function RepoList({ selectedId, onSelect, className }: { selectedId?: str
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search"
             aria-label="Search repositories"
-            className="h-8 w-full rounded-md bg-foreground/[0.04] pr-2 pl-8 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+            className="surface-sunken h-8 w-full rounded-md pr-2 pl-8 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
           />
         </label>
       </div>

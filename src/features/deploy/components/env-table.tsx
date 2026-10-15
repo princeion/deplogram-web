@@ -9,7 +9,7 @@ import { Icon } from "@/components/shared/icon"
 import { notify } from "@/components/feedback"
 import { parseDotEnv } from "@/components/forms"
 
-const cell = "h-9 w-full bg-transparent px-3 font-mono text-[0.8rem] outline-none placeholder:text-muted-foreground/50 focus:bg-foreground/[0.03]"
+const cell = "h-9 w-full bg-transparent px-3 font-mono text-[0.8rem] outline-none placeholder:text-muted-foreground/50 hover:bg-foreground/[0.03] focus:surface-sunken"
 
 /**
  * Environment variables as a table: KEY | VALUE rows with borderless inputs, values masked until
@@ -50,8 +50,8 @@ export function EnvTable({ suggestions = [] }: { suggestions?: readonly string[]
   const listError = !Array.isArray(errors.env) ? (errors.env as { message?: string } | undefined)?.message : undefined
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border/70">
-      <div className={cn("grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)_2.25rem] items-center border-b border-border/60 bg-foreground/[0.03] font-mono text-[0.6875rem] text-muted-foreground uppercase", fields.length === 0 && "hidden")}>
+    <div className="surface-raised overflow-hidden rounded-xl">
+      <div className={cn("grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)_2.25rem] items-center border-b border-border/60 surface-band font-mono text-[0.6875rem] text-muted-foreground uppercase", fields.length === 0 && "hidden")}>
         <span className="px-3 py-2">Key</span>
         <span className="flex items-center justify-between px-3 py-2">
           Value
@@ -85,7 +85,7 @@ export function EnvTable({ suggestions = [] }: { suggestions?: readonly string[]
                 type={revealed ? "text" : "password"}
                 placeholder="value"
                 aria-label={`Variable ${index + 1} value`}
-                autoComplete="off"
+                autoComplete="new-password"
                 spellCheck={false}
                 className={cell}
               />
@@ -103,7 +103,7 @@ export function EnvTable({ suggestions = [] }: { suggestions?: readonly string[]
         )
       })}
 
-      <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 text-xs", fields.length > 0 && "border-t border-border/60")}>
+      <div className={cn("surface-band flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 text-xs", fields.length > 0 && "border-t border-border/60")}>
         <button type="button" onClick={() => append({ key: "", value: "" })} className="flex items-center gap-1 font-medium hover:text-foreground">
           <Icon name="plus" size="xs" />
           Add variable
