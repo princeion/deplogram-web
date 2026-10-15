@@ -331,6 +331,7 @@ export function GalleyOverview({ map }: { map: WorldMapData }) {
     <div className="grid gap-5">
       <Greeting projects={projects} />
       <Figures projects={projects} />
+      <Projects projects={projects} />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
         <LivePanel map={map} />
         <div className="grid content-start gap-4">
@@ -338,7 +339,6 @@ export function GalleyOverview({ map }: { map: WorldMapData }) {
           <RecentActivity />
         </div>
       </div>
-      <Projects projects={projects} />
     </div>
   )
 }
