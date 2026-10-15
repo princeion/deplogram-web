@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils"
 import type { NewDeploymentValues } from "@/features/deploy/components/schema"
 import { Icon } from "@/components/shared/icon"
 import { notify } from "@/components/feedback"
-import { parseDotEnv } from "@/components/forms"
+import { EnvImportDialog, parseDotEnv, type EnvVar } from "@/components/forms"
+import { Button } from "@/components/ui/button"
 
 const cell = "h-9 w-full bg-transparent px-3 font-mono text-[0.8rem] outline-none placeholder:text-muted-foreground/50 hover:bg-foreground/[0.03] focus:surface-sunken"
 
@@ -22,6 +23,7 @@ export function EnvTable({ suggestions = [] }: { suggestions?: readonly string[]
   const { errors } = useFormState({ control, name: "env" })
   const env = useWatch({ control, name: "env" }) ?? []
   const [revealed, setRevealed] = React.useState(false)
+  const [importOpen, setImportOpen] = React.useState(false)
   const missing = suggestions.filter((key) => !env.some((row) => row?.key === key))
 
   const onPaste = (index: number) => (event: React.ClipboardEvent<HTMLInputElement>) => {
@@ -104,11 +106,14 @@ export function EnvTable({ suggestions = [] }: { suggestions?: readonly string[]
       })}
 
       <div className={cn("surface-band flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 text-xs", fields.length > 0 && "border-t border-border/60")}>
-        <button type="button" onClick={() => append({ key: "", value: "" })} className="flex items-center gap-1 font-medium hover:text-foreground">
-          <Icon name="plus" size="xs" />
+        <Button type="button" variant="outline" size="xs" onClick={() => append({ key: "", value: "" })}>
+          <Icon name="plus" />
           Add variable
-        </button>
-        <span className="text-muted-foreground">or paste a .env into a key</span>
+        </Button>
+        <Button type="button" variant="outline" size="xs" onClick={() => setImportOpen(true)}>
+          <Icon name="upload" />
+          Import .env
+        </Button>
         {missing.length > 0 && (
           <span className="flex flex-wrap items-center gap-1.5 sm:ml-auto">
             <span className="text-muted-foreground">.env.example</span>
@@ -126,6 +131,20 @@ export function EnvTable({ suggestions = [] }: { suggestions?: readonly string[]
         )}
       </div>
       {listError && <p className="border-t border-border/60 px-3 py-2 text-xs text-destructive">{listError}</p>}
+      <EnvImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        existing={env.map((row) => row?.key).filter(Boolean) as string[]}
+        onImport={(vars: EnvVar[]) => {
+          const next = [...(getValues("env") ?? [])].filter((row) => row.key || row.value)
+          for (const entry of vars) {
+            const at = next.findIndex((row) => row.key === entry.key)
+            if (at > -1) next[at] = entry
+            else next.push(entry)
+          }
+          replace(next)
+        }}
+      />
     </div>
   )
 }
