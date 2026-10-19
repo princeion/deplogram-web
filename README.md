@@ -1,36 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Deplogram
 
-## Getting Started
+A lightweight developer cloud: the marketing site (`/`) and the product app, **Your Galley** (`/dashboard`).
 
-First, run the development server:
+**Using an AI assistant (Claude, ChatGPT…)? Paste [`docs/project-guide-for-ai.md`](docs/project-guide-for-ai.md) first.**
+It lists what already exists (the logo, colours, icons, buttons, forms, auth and data hooks), so the AI reuses
+them instead of inventing new ones.
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
+cp .env.example .env.local   # set NEXT_PUBLIC_API_MOCKING=enabled to use the mock API
+bun dev                       # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Bun only — not npm, pnpm or yarn.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Docs
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| File | What's in it |
+|---|---|
+| [`docs/project-guide-for-ai.md`](docs/project-guide-for-ai.md) | Structure, stack, components to reuse, rules. Start here. |
+| [`docs/product-blueprint.md`](docs/product-blueprint.md) | What the product is, naming and tone |
+| [`docs/design-system.md`](docs/design-system.md) | Marketing-site design rules |
+| [`docs/deplogram-design-system.md`](docs/deplogram-design-system.md) | How the app UI was designed: tokens, motion, patterns |
