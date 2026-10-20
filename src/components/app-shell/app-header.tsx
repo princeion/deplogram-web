@@ -11,6 +11,7 @@ import { AccountMenu } from "@/components/app-shell/header/account-menu"
 import { SearchButton } from "@/components/command-palette/search-button"
 import { ProjectCommands } from "@/features/projects/components/project-commands"
 import { CodepadCommands } from "@/features/codepad/components/codepad-commands"
+import { StorageCommands } from "@/features/storage/components/storage-commands"
 import { CrumbLink, CrumbSeparator } from "@/components/app-shell/header/crumb"
 import { PageSwitcher } from "@/components/app-shell/header/page-switcher"
 import { ProjectSwitcher } from "@/components/app-shell/header/project-switcher"
@@ -65,6 +66,7 @@ export function AppHeader() {
 
       {projectId && <ProjectCommands projectId={projectId} />}
       <CodepadCommands />
+      <StorageCommands />
 
       <div className="flex shrink-0 items-center gap-1.5">
         <SearchButton />

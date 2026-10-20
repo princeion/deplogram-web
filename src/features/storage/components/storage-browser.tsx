@@ -17,6 +17,7 @@ import {
   typeLabel,
   useCreateLink,
   useDeleteItems,
+  useSetPublic,
   useStorageList,
   useStorageSearch,
   type LinkExpiry,
@@ -29,6 +30,11 @@ import { notify, useConfirm } from "@/components/feedback"
 import { useStorage } from "@/features/storage/components/storage-context"
 import { MoveDialog, NewFolderDialog, RenameDialog } from "@/features/storage/components/storage-dialogs"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { FilePreview, previewKindOf } from "@/features/storage/components/file-preview"
+import { useRegisterCommands } from "@/components/command-palette/command-palette-provider"
+import type { CommandSource } from "@/components/command-palette/types"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { FolderShape } from "@/components/shared/folder-shape"
 import { Icon } from "@/components/shared/icon"
 import { Segmented } from "@/components/shared/segmented"
@@ -41,6 +47,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
@@ -55,6 +62,8 @@ import { useLocalPreference } from "@/hooks/use-local-preference"
  * the layout (grid or list) is remembered on this device. Selecting a file opens its details
  * beside the list — or as a sheet on smaller screens — with its preview and a link that expires.
  * Drop files anywhere on the page to upload them here; tick items to move or delete several.
+ * Keys: Delete, F2 (rename), ⌘A / Ctrl+A (select all), Esc. A folder can be made public; its
+ * files then have permanent addresses instead of expiring links.
  */
 
 const VIEWS = ["grid", "list"] as const
@@ -136,7 +145,14 @@ export function StorageBrowser({ path }: { path: string }) {
     })
   }
   const itemMenu = (item: StorageItem) => (
-    <ItemMenu item={item} onDetails={() => select(item)} onRename={() => setRenaming(item)} onMove={() => setMoving([item])} onDelete={() => requestDelete([item])} />
+    <ItemMenu
+      item={item}
+      onDetails={() => select(item)}
+      onRename={() => setRenaming(item)}
+      onMove={() => setMoving([item])}
+      onDelete={() => requestDelete([item])}
+      onTogglePublic={() => togglePublic(item.path, !item.public)}
+    />
   )
 
   // Drag files over the page to upload them into this folder.
@@ -169,6 +185,71 @@ export function StorageBrowser({ path }: { path: string }) {
       }
   const viewProps = { checked, onToggle: toggle, menu: itemMenu, anyChecked: checked.size > 0 }
 
+  // ── Public folders ──────────────────────────────────────────────────────────
+  const setPublic = useSetPublic()
+  const togglePublic = (folderPath: string, makePublic: boolean) => {
+    const name = folderPath.split("/").pop() || "Storage"
+    void confirm({
+      title: makePublic ? `Make “${name}” public?` : `Make “${name}” private?`,
+      description: makePublic
+        ? "Anyone with a file's address can open every file in this folder and its subfolders — including files added later. Addresses never expire."
+        : "Public addresses stop working right away. Share files with links that expire instead.",
+      confirmLabel: makePublic ? "Make public" : "Make private",
+      tone: makePublic ? "destructive" : "default",
+      icon: makePublic ? "network" : "shield",
+      action: async () => {
+        await setPublic.mutateAsync({ path: folderPath, public: makePublic })
+        notify.success(makePublic ? `“${name}” is public` : `“${name}” is private`)
+      },
+    })
+  }
+
+  // ── Preview, large ──────────────────────────────────────────────────────────
+  const [previewing, setPreviewing] = React.useState<StorageItem | null>(null)
+
+  // ── Keyboard: Delete, F2, ⌘A / Ctrl+A, Esc (not while typing or in a dialog) ──
+  const keys = React.useRef({ checkedItems, selected, items, requestDelete, setRenaming, setChecked, select })
+  keys.current = { checkedItems, selected, items, requestDelete, setRenaming, setChecked, select }
+  React.useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target instanceof Element ? event.target : null
+      if (target?.closest("input, textarea, select, [contenteditable=true], [role=menu], .monaco-editor")) return
+      if (document.querySelector('[data-slot="dialog-content"], [data-slot="sheet-content"]')) return
+      const k = keys.current
+      const targets = k.checkedItems.length ? k.checkedItems : k.selected ? [k.selected] : []
+      if ((event.key === "Delete" || event.key === "Backspace") && targets.length) {
+        event.preventDefault()
+        k.requestDelete(targets)
+      } else if (event.key === "F2" && targets.length === 1) {
+        event.preventDefault()
+        k.setRenaming(targets[0])
+      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "a" && k.items.length) {
+        event.preventDefault()
+        k.setChecked(new Set(k.items.map((i) => i.path)))
+      } else if (event.key === "Escape") {
+        if (k.checkedItems.length) k.setChecked(new Set())
+        else if (k.selected) k.select(null)
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [])
+
+  // ── ⌘K: act on this folder ──────────────────────────────────────────────────
+  const here = path ? `/${path}` : "Storage"
+  const commands = React.useMemo<CommandSource>(
+    () => ({
+      commands: [
+        { id: "storage-upload-here", label: `Upload files to ${here}`, group: "This folder", kind: "action", icon: "upload", keywords: ["storage", "add", "file"], perform: pickFiles },
+        { id: "storage-new-folder-here", label: `New folder in ${here}`, group: "This folder", kind: "action", icon: "folder-plus", keywords: ["storage", "create"], perform: () => setNewFolderOpen(true) },
+      ],
+    }),
+    [here, pickFiles, setNewFolderOpen]
+  )
+  useRegisterCommands("storage-here", commands)
+
+  const isMobile = useIsMobile()
+
   return (
     <div className="grid gap-5">
       <UsageStrip />
@@ -199,6 +280,9 @@ export function StorageBrowser({ path }: { path: string }) {
                 <Icon name="upload" className="text-brand-ink" /> Drop to upload to {path ? `/${path}` : "Storage"}
               </p>
             </div>
+          )}
+          {!searching && list.data?.public && (
+            <PublicNotice here={path} from={list.data.publicFrom} onMakePrivate={() => list.data?.publicFrom && togglePublic(list.data.publicFrom, false)} />
           )}
           {checkedItems.length > 0 && (
             <BulkBar
@@ -262,7 +346,7 @@ export function StorageBrowser({ path }: { path: string }) {
         {/* Details: beside the files on wide screens, a sheet below that. */}
         <aside aria-label="File details" className="sticky top-20 hidden lg:block">
           {selected ? (
-            <FileDetails item={selected} onClose={() => select(null)} onRename={() => setRenaming(selected)} onMove={() => setMoving([selected])} onDelete={() => requestDelete([selected])} />
+            <FileDetails item={selected} onClose={() => select(null)} onRename={() => setRenaming(selected)} onMove={() => setMoving([selected])} onDelete={() => requestDelete([selected])} onPreview={() => setPreviewing(selected)} />
           ) : (
             <div className="grid place-items-center gap-2 rounded-xl border border-dashed border-border/70 px-4 py-10 text-center text-sm text-muted-foreground">
               <Icon name="file" className="text-muted-foreground/70" />
@@ -271,14 +355,19 @@ export function StorageBrowser({ path }: { path: string }) {
           )}
         </aside>
         <Sheet open={selected != null && !wide} onOpenChange={(open) => !open && select(null)}>
-          <SheetContent side="right" className="w-full max-w-sm overflow-y-auto p-4" showCloseButton={false}>
+          <SheetContent
+            side={isMobile ? "bottom" : "right"}
+            className={cn("overflow-y-auto p-4", isMobile ? "max-h-[88svh] rounded-t-2xl" : "w-full max-w-sm")}
+            showCloseButton={false}
+          >
             <SheetTitle className="sr-only">{selected?.name ?? "File"}</SheetTitle>
-            {selected && <FileDetails item={selected} onClose={() => select(null)} onRename={() => setRenaming(selected)} onMove={() => setMoving([selected])} onDelete={() => requestDelete([selected])} />}
+            {selected && <FileDetails item={selected} onClose={() => select(null)} onRename={() => setRenaming(selected)} onMove={() => setMoving([selected])} onDelete={() => requestDelete([selected])} onPreview={() => setPreviewing(selected)} />}
           </SheetContent>
         </Sheet>
       </div>
 
       <NewFolderDialog />
+      <PreviewDialog item={previewing} onClose={() => setPreviewing(null)} />
       <RenameDialog
         item={renaming}
         onClose={(renamed) => {
@@ -551,7 +640,10 @@ function GridView({ items, selected, onSelect, showFolder, checked, onToggle, me
                   </span>
                 </span>
                 <Link href={folderHref(folder.path)} className="grid min-w-0 flex-1 outline-none after:absolute after:inset-0 after:rounded-[inherit] focus-visible:after:ring-2 focus-visible:after:ring-ring/60 focus-visible:after:ring-inset">
-                  <span className="truncate text-sm font-medium">{folder.name}</span>
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span className="truncate text-sm font-medium">{folder.name}</span>
+                    {folder.public && <PublicChip />}
+                  </span>
                   {showFolder ? <FolderIn item={folder} /> : <span className="truncate text-xs text-muted-foreground tabular-nums">{folderSummary(folder)}</span>}
                 </Link>
                 <span className="relative z-10 -mr-1.5">{menu(folder)}</span>
@@ -654,7 +746,10 @@ function ListView({ items, selected, onSelect, showFolder, checked, onToggle, me
                   )}
                 </span>
                 <span className="grid min-w-0">
-                  <span className="truncate text-sm font-medium">{item.name}</span>
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span className="truncate text-sm font-medium">{item.name}</span>
+                    {item.kind === "folder" && item.public && <PublicChip />}
+                  </span>
                   {showFolder ? <FolderIn item={item} /> : <span className="truncate text-xs text-muted-foreground sm:hidden">{item.kind === "folder" ? folderSummary(item) : formatBytes(item.size)}</span>}
                 </span>
               </span>
@@ -705,7 +800,21 @@ function ItemCheckbox({ item, checked, onToggle, visible }: { item: StorageItem;
 }
 
 /** The ⋯ menu on every item. */
-function ItemMenu({ item, onDetails, onRename, onMove, onDelete }: { item: StorageItem; onDetails: () => void; onRename: () => void; onMove: () => void; onDelete: () => void }) {
+function ItemMenu({
+  item,
+  onDetails,
+  onRename,
+  onMove,
+  onDelete,
+  onTogglePublic,
+}: {
+  item: StorageItem
+  onDetails: () => void
+  onRename: () => void
+  onMove: () => void
+  onDelete: () => void
+  onTogglePublic: () => void
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={`Actions for ${item.name}`} />}>
@@ -723,13 +832,20 @@ function ItemMenu({ item, onDetails, onRename, onMove, onDelete }: { item: Stora
         )}
         <DropdownMenuItem onClick={onRename}>
           <Icon name="feather" /> Rename
+          <DropdownMenuShortcut>F2</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onMove}>
           <Icon name="folder" /> Move to…
         </DropdownMenuItem>
+        {item.kind === "folder" && (
+          <DropdownMenuItem onClick={onTogglePublic}>
+            <Icon name={item.public ? "shield" : "network"} /> {item.public ? "Make private…" : "Make public…"}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={onDelete}>
           <Icon name="trash" /> Delete
+          <DropdownMenuShortcut>Del</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -779,6 +895,81 @@ function BulkBar({
 
 const expiryFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
 
+/** In a public folder: say so plainly, and how to undo it. */
+function PublicNotice({ here, from, onMakePrivate }: { here: string; from: string | null; onMakePrivate: () => void }) {
+  const self = from === here
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-success/25 bg-success/[0.06] px-3.5 py-2.5 text-sm">
+      <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-success/15 text-success">
+        <Icon name="network" size="sm" />
+      </span>
+      <p className="min-w-0 flex-1">
+        <span className="font-medium">{self ? "This folder is public." : `Public because /${from} is public.`}</span>{" "}
+        <span className="text-muted-foreground">Anyone with a file&apos;s address can open it.</span>
+      </p>
+      {from && (
+        <Button variant="outline" size="sm" onClick={onMakePrivate}>
+          <Icon name="shield" /> Make {self ? "it" : `/${from}`} private
+        </Button>
+      )}
+    </div>
+  )
+}
+
+/** The large preview, for reading a file properly. */
+function PreviewDialog({ item, onClose }: { item: StorageItem | null; onClose: () => void }) {
+  return (
+    <Dialog open={item != null} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="gap-4 sm:max-w-5xl">
+        {item && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Icon name={kindMeta[kindOf(item)].icon} size="sm" className="text-muted-foreground" />
+                <span className="truncate">{item.name}</span>
+              </DialogTitle>
+              <DialogDescription className="font-mono text-xs">
+                {formatBytes(item.size)} · {item.contentType ?? typeLabel(item)} · {parentOf(item.path) ? `/${parentOf(item.path)}` : "Storage"}
+              </DialogDescription>
+            </DialogHeader>
+            <FilePreview item={item} size="large" />
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function PublicChip() {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-1.5 py-px text-[0.625rem] font-medium text-success">
+      <Icon name="network" className="size-2.5!" /> Public
+    </span>
+  )
+}
+
+/** A public file's permanent address, and copying it. */
+function PublicAddress({ url }: { url: string }) {
+  return (
+    <div className="grid gap-2">
+      <Button
+        className="w-full"
+        onClick={() =>
+          void navigator.clipboard
+            .writeText(url)
+            .then(() => notify.success("Address copied", { description: "It works for anyone, until the folder is made private." }))
+            .catch(() => notify.error(new Error("Your browser blocked copying."), { title: "Couldn't copy" }))
+        }
+      >
+        <Icon name="copy" /> Copy address
+      </Button>
+      <p className="surface-sunken truncate rounded-lg px-2.5 py-2 font-mono text-xs" title={url}>
+        {url}
+      </p>
+    </div>
+  )
+}
+
 /** One file: preview, facts, and the two ways out — a link that expires, or a download. */
 function FileDetails({
   item,
@@ -786,12 +977,14 @@ function FileDetails({
   onRename,
   onMove,
   onDelete,
+  onPreview,
 }: {
   item: StorageItem
   onClose: () => void
   onRename: () => void
   onMove: () => void
   onDelete: () => void
+  onPreview: () => void
 }) {
   const kind = kindOf(item)
   const createLink = useCreateLink()
@@ -826,28 +1019,31 @@ function FileDetails({
   ]
 
   return (
-    <div className="grid gap-4 rounded-xl border border-border/70 bg-card p-4">
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 rounded-xl border border-border/70 bg-card p-4">
       <div className="flex items-start gap-3">
         <div className="grid min-w-0 flex-1 gap-0.5">
           <p className="text-sm font-medium break-all">{item.name}</p>
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Icon name="shield" size="xs" /> Private
-          </p>
+          {item.public ? (
+            <p className="flex items-center gap-1.5 text-xs text-success">
+              <Icon name="network" size="xs" /> Public
+            </p>
+          ) : (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Icon name="shield" size="xs" /> Private
+            </p>
+          )}
         </div>
         <Button variant="ghost" size="icon-sm" aria-label="Close details" onClick={onClose} className="-mt-1 -mr-1">
           <Icon name="x" />
         </Button>
       </div>
 
-      <div className="surface-sunken grid aspect-[16/10] place-items-center overflow-hidden rounded-lg">
-        {item.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- generated or signed previews
-          <img src={item.thumbnailUrl} alt={`Preview of ${item.name}`} className="size-full object-contain" />
-        ) : (
-          <span className="grid justify-items-center gap-2 text-xs text-muted-foreground">
-            <Icon name={kindMeta[kind].icon} size="lg" className="text-muted-foreground/70" />
-            {kindMeta[kind].label} · no preview
-          </span>
+      <div className="relative min-w-0">
+        <FilePreview item={item} />
+        {previewKindOf(item) !== "none" && (
+          <Button variant="outline" size="xs" onClick={onPreview} className="absolute top-2 right-2 bg-background/85 backdrop-blur-sm">
+            <Icon name="scan-search" /> Open
+          </Button>
         )}
       </div>
 
@@ -861,6 +1057,9 @@ function FileDetails({
       </dl>
 
       <div className="grid gap-2">
+        {item.publicUrl ? (
+          <PublicAddress url={item.publicUrl} />
+        ) : (
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button className="w-full" loading={createLink.isPending} />}>
             {!createLink.isPending && <Icon name="link" />}
@@ -877,6 +1076,7 @@ function FileDetails({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        )}
         <Button variant="outline" className="w-full" onClick={() => void download()} disabled={createLink.isPending}>
           <Icon name="download" />
           Download

@@ -211,28 +211,5 @@ export function useRunLogs(runId: string | null) {
   })
 }
 
-/** Monaco language id for a file path. */
-export function languageOf(path: string): string {
-  const ext = path.split(".").pop()?.toLowerCase() ?? ""
-  const map: Record<string, string> = {
-    html: "html",
-    htm: "html",
-    css: "css",
-    js: "javascript",
-    mjs: "javascript",
-    cjs: "javascript",
-    jsx: "javascript",
-    ts: "typescript",
-    tsx: "typescript",
-    json: "json",
-    md: "markdown",
-    py: "python",
-    php: "php",
-    go: "go",
-    yml: "yaml",
-    yaml: "yaml",
-    sh: "shell",
-    txt: "plaintext",
-  }
-  return map[ext] ?? "plaintext"
-}
+/** Monaco language id for a file path (moved to lib/languages). */
+export { languageOf } from "@/lib/languages"

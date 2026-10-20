@@ -22,7 +22,7 @@ import {
 } from "@/features/codepad/codepad"
 import { buildStaticPreview } from "@/features/codepad/preview"
 import { projectNameSchema } from "@/features/deploy/components/schema"
-import { CodeEditor, type CodeEditorHandle } from "@/features/codepad/components/code-editor"
+import { CodeEditor, type CodeEditorHandle } from "@/components/code-editor/code-editor"
 import { errorMessage, notify, useConfirm } from "@/components/feedback"
 import { Icon } from "@/components/shared/icon"
 import { StatusDot } from "@/components/shared/status-dot"

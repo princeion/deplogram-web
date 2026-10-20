@@ -6,17 +6,19 @@ import type { IconName } from "@/components/shared/icon"
 
 /**
  * Storage: one private drive per workspace, organised in folders. Files are private; sharing is
- * by links that expire. (Buckets may come later — they'd sit above these folders.) Endpoint
+ * by links that expire — or a folder is made public (website images, downloads) and its files get
+ * a permanent address. (Buckets may come later — they'd sit above these folders.) Endpoint
  * shapes are the frontend's proposal until the backend contract is agreed; src/mocks/handlers.ts
  * implements them meanwhile.
  *
- *   GET  /v1/storage/list?path=assets/logos   → { path, items }   folders first
+ *   GET  /v1/storage/list?path=assets/logos   → { path, items, public, publicFrom }
  *   GET  /v1/storage/search?q=logo            → { items }         across the whole drive
  *   POST /v1/storage/links  { path, expiresIn } → { url, expiresAt }
  *   GET  /v1/storage/folders                  → { folders: string[] }   every folder path, for "Move to…"
  *   POST /v1/storage/folders  { path }        → StorageItem
  *   POST /v1/storage/uploads  { path, size, contentType } → { uploadUrl }   then PUT the file there → StorageItem
- *   PATCH /v1/storage/items  { path, name }   → StorageItem   (rename)
+ *   PATCH /v1/storage/items  { path, name? , public? }  → StorageItem   (rename; folders: make public)
+ *   GET  /v1/storage/preview?path=           → { url, text, truncated }   media → a short-lived URL; text-like → the text
  *   POST /v1/storage/move  { paths, to }      → { moved }
  *   POST /v1/storage/delete  { paths }        → { deleted }   folders go with everything in them
  *
@@ -38,12 +40,20 @@ export const storageItemSchema = z.object({
   updatedAt: z.string(),
   /** Images only: a small thumbnail URL. */
   thumbnailUrl: z.string().nullable(),
+  /** Folders: made public. Files: inside a public folder (inherited). */
+  public: z.boolean(),
+  /** Files in a public folder: their permanent address. */
+  publicUrl: z.string().nullable(),
 })
 export type StorageItem = z.infer<typeof storageItemSchema>
 
 export const storageListSchema = z.object({
   path: z.string(),
   items: z.array(storageItemSchema),
+  /** This folder's files are public: it, or a folder above it, was made public. */
+  public: z.boolean(),
+  /** The folder that made it public ("" never — the top of the drive can't be public). */
+  publicFrom: z.string().nullable(),
 })
 
 export const storageLinkSchema = z.object({ url: z.string(), expiresAt: z.string() })
@@ -165,6 +175,34 @@ export function useCreateFolder() {
   const invalidate = useInvalidateStorage()
   return useMutation({
     mutationFn: (path: string) => apiFetch("/v1/storage/folders", { method: "POST", json: { path }, schema: storageItemSchema }),
+    onSuccess: invalidate,
+  })
+}
+
+export const storagePreviewSchema = z.object({
+  /** A short-lived URL for images, video, audio and PDFs; null when there's nothing to show. */
+  url: z.string().nullable(),
+  /** The text of text-like files (code, CSV, JSON, Markdown), up to a limit. */
+  text: z.string().nullable(),
+  truncated: z.boolean(),
+})
+export type StoragePreview = z.infer<typeof storagePreviewSchema>
+
+export function useStoragePreview(item: StorageItem | null) {
+  return useQuery({
+    queryKey: [...storageKeys.all, "preview", item?.path ?? "", item?.updatedAt ?? ""],
+    queryFn: () => apiFetch(`/v1/storage/preview?path=${encodeURIComponent(item!.path)}`, { schema: storagePreviewSchema }),
+    enabled: item != null && item.kind === "file",
+    // Signed URLs last 15 minutes on the backend; refresh well before.
+    staleTime: 10 * 60_000,
+  })
+}
+
+/** Make a folder public (its files get permanent addresses) or private again. */
+export function useSetPublic() {
+  const invalidate = useInvalidateStorage()
+  return useMutation({
+    mutationFn: (input: { path: string; public: boolean }) => apiFetch("/v1/storage/items", { method: "PATCH", json: input, schema: storageItemSchema }),
     onSuccess: invalidate,
   })
 }

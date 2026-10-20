@@ -468,7 +468,8 @@ handlers.push(
     await delay(220)
     const path = new URL(request.url).searchParams.get("path") ?? ""
     if (!mockStorage.exists(path)) return HttpResponse.json({ error: { message: "That folder doesn't exist." } }, { status: 404 })
-    return HttpResponse.json({ path, items: mockStorage.list(path) })
+    const from = mockStorage.publicFrom(path)
+    return HttpResponse.json({ path, items: mockStorage.list(path), public: from != null, publicFrom: from })
   }),
 
   http.get("*/v1/storage/search", async ({ request }) => {
@@ -503,18 +504,24 @@ handlers.push(
     return HttpResponse.json({ uploadUrl: `/v1/storage/uploads/${token}` })
   }),
 
-  http.put("*/v1/storage/uploads/:token", async ({ params }) => {
+  http.put("*/v1/storage/uploads/:token", async ({ params, request }) => {
     await delay(300)
+    const bytes = await request.arrayBuffer().catch(() => null)
     const upload = pendingUploads.get(String(params.token))
     if (!upload) return HttpResponse.json({ error: { message: "That upload expired. Try again." } }, { status: 410 })
     pendingUploads.delete(String(params.token))
     mockUsage.limits.find((l) => l.id === "storage")!.used += upload.size
-    return HttpResponse.json(mockStorage.addFile(upload.path, upload.size, upload.contentType), { status: 201 })
+    return HttpResponse.json(mockStorage.addFile(upload.path, upload.size, upload.contentType, bytes), { status: 201 })
   }),
 
   http.patch("*/v1/storage/items", async ({ request }) => {
     await delay(250)
-    const { path, name } = (await request.json()) as { path: string; name: string }
+    const { path, name, public: makePublic } = (await request.json()) as { path: string; name?: string; public?: boolean }
+    if (makePublic !== undefined) {
+      const folder = mockStorage.setPublic(path, makePublic)
+      return folder ? HttpResponse.json(folder) : HttpResponse.json({ error: { message: "Only folders can be made public." } }, { status: 422 })
+    }
+    if (!name) return HttpResponse.json({ error: { message: "Nothing to change." } }, { status: 422 })
     const result = mockStorage.rename(path, name)
     if (result === "missing") return HttpResponse.json({ error: { message: "That item no longer exists." } }, { status: 404 })
     if (result === "exists") return HttpResponse.json({ error: { message: `There's already something called “${name}” here.` } }, { status: 409 })
@@ -536,6 +543,12 @@ handlers.push(
     const limit = mockUsage.limits.find((l) => l.id === "storage")!
     limit.used = Math.max(0, limit.used - freed)
     return HttpResponse.json({ deleted })
+  }),
+
+  http.get("*/v1/storage/preview", async ({ request }) => {
+    await delay(200)
+    const preview = mockStorage.preview(new URL(request.url).searchParams.get("path") ?? "")
+    return preview ? HttpResponse.json(preview) : HttpResponse.json({ error: { message: "That file doesn't exist." } }, { status: 404 })
   }),
 
   http.post("*/v1/storage/links", async ({ request }) => {

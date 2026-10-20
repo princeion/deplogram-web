@@ -5,11 +5,11 @@ import Editor, { type BeforeMount, type OnMount } from "@monaco-editor/react"
 import type { editor } from "monaco-editor"
 
 import { cn } from "@/lib/utils"
-import { languageOf } from "@/features/codepad/codepad"
+import { languageOf } from "@/lib/languages"
 import { Skeleton } from "@/components/ui/skeleton"
 
 /**
- * Monaco, dressed as Deplogram: the editor's colours come from the theme tokens (resolved at
+ * Monaco, dressed as Deplogram (CodePad's editor, Storage's text previews): the editor's colours come from the theme tokens (resolved at
  * runtime, so light and dark both match the app), Geist Mono, no minimap. Each file is its own
  * Monaco model (`path`), so undo history and cursor survive switching tabs. Monaco itself is
  * fetched from the CDN by @monaco-editor/react on first use, so it never weighs on other pages.
@@ -83,6 +83,7 @@ export function CodeEditor({
   onChange,
   onMount,
   readOnly = false,
+  minimal = false,
   className,
 }: {
   /** Unique per pad + file, e.g. "pad_1/index.html" — one Monaco model each. */
@@ -94,6 +95,8 @@ export function CodeEditor({
   onChange: (value: string) => void
   onMount?: (editor: CodeEditorHandle, monaco: Parameters<OnMount>[1]) => void
   readOnly?: boolean
+  /** Previews: no line highlight, no folding, tighter padding. */
+  minimal?: boolean
   className?: string
 }) {
   const monacoRef = React.useRef<Parameters<BeforeMount>[0] | null>(null)
@@ -137,7 +140,9 @@ export function CodeEditor({
           smoothScrolling: true,
           cursorBlinking: "smooth",
           cursorSmoothCaretAnimation: "on",
-          renderLineHighlight: "line",
+          renderLineHighlight: minimal ? "none" : "line",
+          folding: !minimal,
+          domReadOnly: readOnly,
           tabSize: 2,
           wordWrap: "on",
           automaticLayout: true,
