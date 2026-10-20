@@ -43,13 +43,15 @@ export const padSummarySchema = z.object({
   name: z.string(),
   runtime: z.string(),
   fileCount: z.number(),
+  /** File paths, for previews in the list (no contents). */
+  paths: z.array(z.string()),
   updatedAt: z.string(),
   /** Set once the pad has been deployed: the project it became. */
   projectId: z.string().nullable(),
 })
 export type PadSummary = z.infer<typeof padSummarySchema>
 
-export const padSchema = padSummarySchema.omit({ fileCount: true }).extend({
+export const padSchema = padSummarySchema.omit({ fileCount: true, paths: true }).extend({
   files: z.array(padFileSchema),
   /** The file to open first. */
   entry: z.string(),

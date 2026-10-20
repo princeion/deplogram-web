@@ -140,6 +140,7 @@ const summary = (pad: Pad): PadSummary => ({
   name: pad.name,
   runtime: pad.runtime,
   fileCount: pad.files.length,
+  paths: pad.files.map((f) => f.path),
   updatedAt: pad.updatedAt,
   projectId: pad.projectId,
 })
