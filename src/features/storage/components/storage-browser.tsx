@@ -678,19 +678,20 @@ function GridView({ items, selected, onSelect, showFolder, checked, onToggle, me
                 >
                   {active && <span aria-hidden className="metal-brand absolute inset-x-0 top-0 z-10 h-[3px]" />}
                   <span className="surface-sunken relative grid aspect-[16/10] place-items-center overflow-hidden rounded-lg">
-                    {file.thumbnailUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- generated or signed thumbnails, not optimisable
-                      <img src={file.thumbnailUrl} alt="" className="size-full object-cover transition-transform duration-500 ease-out-expo group-hover/file:scale-[1.04]" />
-                    ) : (
-                      // No picture: the type set large over the dot grid.
-                      <>
-                        <span aria-hidden className="absolute inset-0 bg-dot-grid opacity-70 mask-fade-edges" />
-                        <span className="relative grid justify-items-center gap-1.5">
-                          <Icon name={kindMeta[kind].icon} size="md" className="text-muted-foreground/80" />
-                          <span className="font-mono text-2xl font-medium tracking-tight text-foreground/25 transition-colors group-hover/file:text-foreground/40">{typeLabel(file)}</span>
-                        </span>
-                      </>
-                    )}
+                    <Thumbnail
+                      src={file.thumbnailUrl}
+                      className="size-full object-cover transition-transform duration-500 ease-out-expo group-hover/file:scale-[1.04]"
+                      fallback={
+                        // No picture (or it won't load): the type set large over the dot grid.
+                        <>
+                          <span aria-hidden className="absolute inset-0 bg-dot-grid opacity-70 mask-fade-edges" />
+                          <span className="relative grid justify-items-center gap-1.5">
+                            <Icon name={kindMeta[kind].icon} size="md" className="text-muted-foreground/80" />
+                            <span className="font-mono text-2xl font-medium tracking-tight text-foreground/25 transition-colors group-hover/file:text-foreground/40">{typeLabel(file)}</span>
+                          </span>
+                        </>
+                      }
+                    />
                   </span>
                   {/* The tear line, notched where it meets the edges. */}
                   <span aria-hidden className="relative my-2 block h-px">
@@ -738,12 +739,7 @@ function ListView({ items, selected, onSelect, showFolder, checked, onToggle, me
             <>
               <span className="flex min-w-0 items-center gap-3">
                 <span className="surface-sunken flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md text-muted-foreground">
-                  {item.thumbnailUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- generated or signed thumbnails
-                    <img src={item.thumbnailUrl} alt="" className="size-full object-cover" />
-                  ) : (
-                    <Icon name={kindMeta[kind].icon} size="xs" />
-                  )}
+                  <Thumbnail src={item.thumbnailUrl} className="size-full object-cover" fallback={<Icon name={kindMeta[kind].icon} size="xs" />} />
                 </span>
                 <span className="grid min-w-0">
                   <span className="flex min-w-0 items-center gap-1.5">
@@ -786,6 +782,15 @@ function ListView({ items, selected, onSelect, showFolder, checked, onToggle, me
       </ul>
     </div>
   )
+}
+
+/** A thumbnail that falls back (to the type, an icon) when there's none or it won't load. */
+function Thumbnail({ src, className, fallback }: { src: string | null; className?: string; fallback: React.ReactNode }) {
+  const [failed, setFailed] = React.useState(false)
+  React.useEffect(() => setFailed(false), [src])
+  if (!src || failed) return <>{fallback}</>
+  // eslint-disable-next-line @next/next/no-img-element -- generated or signed thumbnails, not optimisable
+  return <img src={src} alt="" onError={() => setFailed(true)} className={className} />
 }
 
 function ItemCheckbox({ item, checked, onToggle, visible }: { item: StorageItem; checked: boolean; onToggle: (item: StorageItem) => void; visible: boolean }) {
