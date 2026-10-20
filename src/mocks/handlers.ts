@@ -12,6 +12,8 @@ import { mockProjects } from "@/mocks/data/projects"
 import { mockViewer } from "@/mocks/data/viewer"
 import { generateMockUsage } from "@/mocks/data/usage"
 import { mockWorkspace } from "@/mocks/data/workspace"
+import { mockPads, mockRuns } from "@/mocks/data/pads"
+import type { PadTemplate } from "@/features/codepad/codepad"
 
 // Mock session: signed in by default; sign-in / sign-out toggle it for the browser tab.
 let signedIn = true
@@ -337,3 +339,73 @@ handlers.push(
 
 /** Names that would collide with platform hosts. */
 const reservedNames = ["admin", "api", "app", "www", "dashboard", "deplogram", "status"]
+
+// ── CodePad ─────────────────────────────────────────────────────────────────────
+
+const padNotFound = (what: string) => HttpResponse.json({ error: { message: `That ${what} doesn't exist.` } }, { status: 404 })
+
+handlers.push(
+  http.get("*/v1/pads", async () => {
+    await delay(250)
+    return HttpResponse.json(mockPads.list())
+  }),
+
+  http.post("*/v1/pads", async ({ request }) => {
+    await delay(400)
+    const { name, template } = (await request.json()) as { name: string; template: PadTemplate }
+    return HttpResponse.json(mockPads.create(name, template), { status: 201 })
+  }),
+
+  http.get("*/v1/pads/:id", async ({ params }) => {
+    await delay(300)
+    const pad = mockPads.get(String(params.id))
+    return pad ? HttpResponse.json(pad) : padNotFound("pad")
+  }),
+
+  http.patch("*/v1/pads/:id", async ({ params, request }) => {
+    await delay(200)
+    const { name } = (await request.json()) as { name: string }
+    const pad = mockPads.rename(String(params.id), name)
+    return pad ? HttpResponse.json(pad) : padNotFound("pad")
+  }),
+
+  http.delete("*/v1/pads/:id", async ({ params }) => {
+    await delay(300)
+    return mockPads.remove(String(params.id)) ? new HttpResponse(null, { status: 204 }) : padNotFound("pad")
+  }),
+
+  http.put("*/v1/pads/:id/files", async ({ params, request }) => {
+    await delay(180)
+    const { path, content } = (await request.json()) as { path: string; content: string }
+    const saved = mockPads.saveFile(String(params.id), path, content)
+    return saved ? HttpResponse.json(saved) : padNotFound("pad")
+  }),
+
+  http.post("*/v1/pads/:id/files/rename", async ({ params, request }) => {
+    await delay(200)
+    const { from, to } = (await request.json()) as { from: string; to: string }
+    const pad = mockPads.renameFile(String(params.id), from, to)
+    if (pad === "exists") return HttpResponse.json({ error: { message: `There's already a file called ${to}.` } }, { status: 409 })
+    return pad ? HttpResponse.json(pad) : padNotFound("file")
+  }),
+
+  http.delete("*/v1/pads/:id/files", async ({ params, request }) => {
+    await delay(200)
+    const path = new URL(request.url).searchParams.get("path") ?? ""
+    const pad = mockPads.deleteFile(String(params.id), path)
+    return pad ? HttpResponse.json(pad) : padNotFound("pad")
+  }),
+
+  http.post("*/v1/pads/:id/runs", async ({ params }) => {
+    await delay(250)
+    const pad = mockPads.get(String(params.id))
+    return pad ? HttpResponse.json({ id: mockRuns.start(pad) }, { status: 201 }) : padNotFound("pad")
+  }),
+
+  http.get("*/v1/runs/:id/logs", async ({ params, request }) => {
+    await delay(120)
+    const after = Number(new URL(request.url).searchParams.get("after")) || 0
+    const logs = mockRuns.logs(String(params.id), after)
+    return logs ? HttpResponse.json(logs) : padNotFound("run")
+  })
+)

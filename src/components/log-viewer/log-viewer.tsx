@@ -157,6 +157,7 @@ export function LogViewer({
   toolbar?: React.ReactNode
   /** Download name, without extension. */
   fileName?: string
+  /** A CSS height for the scrolling area, or "fill" to take the rest of a sized parent (panels). */
   height?: string
   className?: string
 }) {
@@ -289,8 +290,8 @@ export function LogViewer({
           role="log"
           aria-live={live ? "polite" : "off"}
           aria-busy={loading}
-          className="overflow-auto pb-2 font-mono text-[0.78rem] leading-[1.6rem]"
-          style={{ height }}
+          className={cn("overflow-auto pb-2 font-mono text-[0.78rem] leading-[1.6rem]", height === "fill" && "min-h-0 flex-1")}
+          style={height === "fill" ? undefined : { height }}
         >
           {loading ? (
             <div className="grid gap-2.5 px-4 py-2">
