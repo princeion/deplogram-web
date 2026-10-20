@@ -160,7 +160,7 @@ src/
     command-palette/   ⌘K palette
     marketing/         marketing sections: navbar, footer, hero, section-header, faq…
   features/<area>/     data hooks (<area>.ts) + that area's components/
-                       auth · account · projects · deployments · deploy · activity · usage · overview
+                       auth · account · projects · deployments · deploy · activity · usage · overview · codepad · storage
   lib/                 api-client (apiFetch), format (dates, money, bytes), site config,
                        navigation registry, motion constants, utils (cn)
   content/             marketing copy as typed data (home.ts, faq.ts, nav.ts, runtimes.ts…)
@@ -276,7 +276,7 @@ import { DeploymentStatus } from "@/features/deployments/components/deployment-s
 
 ### Others that already exist
 
-`Segmented` (tabs with counts) · `SettingsTable` / `SettingRow` ·
+`CodeEditor` (Monaco, `@/components/code-editor/code-editor`) · `FolderShape` (folder-shaped card) · `useLocalPreference` (remember a choice per device, `@/hooks/use-local-preference`) · `Segmented` (tabs with counts) · `SettingsTable` / `SettingRow` ·
 `Callout` (`@/components/feedback`) · `useConfirm` (confirm dialogs) ·
 `DataTable` · `LogViewer` · `Stat`, `AreaTimeSeries`, `BarTimeSeries`,
 `UsageMeter` (`@/components/charts`) · `StatusDot` · `ThemeToggle` ·
