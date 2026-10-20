@@ -461,6 +461,8 @@ handlers.push(
 
 // ── Storage ─────────────────────────────────────────────────────────────────────
 
+const pendingUploads = new Map<string, { path: string; size: number; contentType: string }>()
+
 handlers.push(
   http.get("*/v1/storage/list", async ({ request }) => {
     await delay(220)
@@ -473,6 +475,67 @@ handlers.push(
     await delay(200)
     const q = new URL(request.url).searchParams.get("q") ?? ""
     return HttpResponse.json({ items: q ? mockStorage.search(q) : [] })
+  }),
+
+  http.get("*/v1/storage/folders", async () => {
+    await delay(150)
+    return HttpResponse.json({ folders: mockStorage.folders() })
+  }),
+
+  http.post("*/v1/storage/folders", async ({ request }) => {
+    await delay(250)
+    const { path } = (await request.json()) as { path: string }
+    const result = mockStorage.createFolder(path)
+    if (result === "exists") return HttpResponse.json({ error: { message: "There's already something with that name here." } }, { status: 409 })
+    if (result === "no-parent") return HttpResponse.json({ error: { message: "That folder no longer exists." } }, { status: 404 })
+    return HttpResponse.json(result, { status: 201 })
+  }),
+
+  http.post("*/v1/storage/uploads", async ({ request }) => {
+    await delay(150)
+    const { path, size, contentType } = (await request.json()) as { path: string; size: number; contentType: string }
+    const limit = mockUsage.limits.find((l) => l.id === "storage")!
+    if (limit.used + size > limit.limit) {
+      return HttpResponse.json({ error: { message: "Not enough space left on your plan for this file." } }, { status: 413 })
+    }
+    const token = Math.random().toString(36).slice(2, 12)
+    pendingUploads.set(token, { path, size, contentType })
+    return HttpResponse.json({ uploadUrl: `/v1/storage/uploads/${token}` })
+  }),
+
+  http.put("*/v1/storage/uploads/:token", async ({ params }) => {
+    await delay(300)
+    const upload = pendingUploads.get(String(params.token))
+    if (!upload) return HttpResponse.json({ error: { message: "That upload expired. Try again." } }, { status: 410 })
+    pendingUploads.delete(String(params.token))
+    mockUsage.limits.find((l) => l.id === "storage")!.used += upload.size
+    return HttpResponse.json(mockStorage.addFile(upload.path, upload.size, upload.contentType), { status: 201 })
+  }),
+
+  http.patch("*/v1/storage/items", async ({ request }) => {
+    await delay(250)
+    const { path, name } = (await request.json()) as { path: string; name: string }
+    const result = mockStorage.rename(path, name)
+    if (result === "missing") return HttpResponse.json({ error: { message: "That item no longer exists." } }, { status: 404 })
+    if (result === "exists") return HttpResponse.json({ error: { message: `There's already something called “${name}” here.` } }, { status: 409 })
+    return HttpResponse.json(result)
+  }),
+
+  http.post("*/v1/storage/move", async ({ request }) => {
+    await delay(350)
+    const { paths, to } = (await request.json()) as { paths: string[]; to: string }
+    const moved = mockStorage.move(paths, to)
+    if (moved === "bad-target") return HttpResponse.json({ error: { message: "Can't move a folder into itself." } }, { status: 422 })
+    return HttpResponse.json({ moved })
+  }),
+
+  http.post("*/v1/storage/delete", async ({ request }) => {
+    await delay(350)
+    const { paths } = (await request.json()) as { paths: string[] }
+    const { deleted, freed } = mockStorage.remove(paths)
+    const limit = mockUsage.limits.find((l) => l.id === "storage")!
+    limit.used = Math.max(0, limit.used - freed)
+    return HttpResponse.json({ deleted })
   }),
 
   http.post("*/v1/storage/links", async ({ request }) => {

@@ -16,14 +16,19 @@ import {
   storageSorts,
   typeLabel,
   useCreateLink,
+  useDeleteItems,
   useStorageList,
   useStorageSearch,
   type LinkExpiry,
   type StorageItem,
   type StorageSort,
 } from "@/features/storage/storage"
-import { UsageMeter } from "@/components/charts"
-import { notify } from "@/components/feedback"
+import { chartColor, limitTone, type ChartColor } from "@/components/charts"
+import { useEntered } from "@/components/charts/meters"
+import { notify, useConfirm } from "@/components/feedback"
+import { useStorage } from "@/features/storage/components/storage-context"
+import { MoveDialog, NewFolderDialog, RenameDialog } from "@/features/storage/components/storage-dialogs"
+import { Checkbox } from "@/components/ui/checkbox"
 import { FolderShape } from "@/components/shared/folder-shape"
 import { Icon } from "@/components/shared/icon"
 import { Segmented } from "@/components/shared/segmented"
@@ -49,6 +54,7 @@ import { useLocalPreference } from "@/hooks/use-local-preference"
  * can be bookmarked or shared with the team); search, sort and the selected file are URL params;
  * the layout (grid or list) is remembered on this device. Selecting a file opens its details
  * beside the list — or as a sheet on smaller screens — with its preview and a link that expires.
+ * Drop files anywhere on the page to upload them here; tick items to move or delete several.
  */
 
 const VIEWS = ["grid", "list"] as const
@@ -90,6 +96,79 @@ export function StorageBrowser({ path }: { path: string }) {
   const selected = selectedPath ? (items.find((i) => i.path === selectedPath) ?? null) : null
   const select = (item: StorageItem | null) => setParams({ file: item?.path ?? null })
 
+  const { upload, pickFiles, setNewFolderOpen } = useStorage()
+  const confirm = useConfirm()
+  const deleteItems = useDeleteItems()
+  const [checked, setChecked] = React.useState<ReadonlySet<string>>(new Set())
+  const [renaming, setRenaming] = React.useState<StorageItem | null>(null)
+  const [moving, setMoving] = React.useState<StorageItem[] | null>(null)
+  // A new folder or search starts with nothing ticked.
+  React.useEffect(() => setChecked(new Set()), [path, q])
+  const toggle = (item: StorageItem) =>
+    setChecked((prev) => {
+      const next = new Set(prev)
+      if (next.has(item.path)) next.delete(item.path)
+      else next.add(item.path)
+      return next
+    })
+  const checkedItems = items.filter((i) => checked.has(i.path))
+
+  const requestDelete = (targets: StorageItem[]) => {
+    const folders = targets.filter((t) => t.kind === "folder")
+    const bytes = targets.reduce((sum, t) => sum + t.size, 0)
+    const one = targets.length === 1 ? targets[0] : null
+    void confirm({
+      title: one ? `Delete “${one.name}”?` : `Delete ${targets.length} items?`,
+      description: [
+        folders.length ? (one ? "The folder is deleted with everything inside it." : "Folders are deleted with everything inside them.") : null,
+        `This frees ${formatBytes(bytes)} and can't be undone. Shared links stop working.`,
+      ]
+        .filter(Boolean)
+        .join(" "),
+      confirmLabel: one ? `Delete ${one.kind === "folder" ? "folder" : "file"}` : `Delete ${targets.length} items`,
+      tone: "destructive",
+      action: async () => {
+        await deleteItems.mutateAsync(targets.map((t) => t.path))
+        if (selected && targets.some((t) => t.path === selected.path)) select(null)
+        setChecked(new Set())
+        notify.success(one ? `“${one.name}” was deleted` : `${targets.length} items deleted`)
+      },
+    })
+  }
+  const itemMenu = (item: StorageItem) => (
+    <ItemMenu item={item} onDetails={() => select(item)} onRename={() => setRenaming(item)} onMove={() => setMoving([item])} onDelete={() => requestDelete([item])} />
+  )
+
+  // Drag files over the page to upload them into this folder.
+  const [dragging, setDragging] = React.useState(false)
+  const dragDepth = React.useRef(0)
+  const hasFiles = (event: React.DragEvent) => event.dataTransfer.types.includes("Files")
+  const dropProps = searching
+    ? {}
+    : {
+        onDragEnter: (event: React.DragEvent) => {
+          if (!hasFiles(event)) return
+          event.preventDefault()
+          dragDepth.current++
+          setDragging(true)
+        },
+        onDragOver: (event: React.DragEvent) => {
+          if (hasFiles(event)) event.preventDefault()
+        },
+        onDragLeave: () => {
+          dragDepth.current = Math.max(0, dragDepth.current - 1)
+          if (dragDepth.current === 0) setDragging(false)
+        },
+        onDrop: (event: React.DragEvent) => {
+          if (!hasFiles(event)) return
+          event.preventDefault()
+          dragDepth.current = 0
+          setDragging(false)
+          upload([...event.dataTransfer.files], path)
+        },
+      }
+  const viewProps = { checked, onToggle: toggle, menu: itemMenu, anyChecked: checked.size > 0 }
+
   return (
     <div className="grid gap-5">
       <UsageStrip />
@@ -113,7 +192,24 @@ export function StorageBrowser({ path }: { path: string }) {
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <section aria-label={searching ? "Search results" : "Files"} className="min-w-0">
+        <section aria-label={searching ? "Search results" : "Files"} className="relative min-w-0" {...dropProps}>
+          {dragging && (
+            <div className="pointer-events-none absolute -inset-2 z-20 grid place-items-center rounded-2xl border-2 border-dashed border-brand/60 bg-brand/5">
+              <p className="flex items-center gap-2 rounded-full bg-popover px-4 py-2 text-sm font-medium ring-1 ring-border">
+                <Icon name="upload" className="text-brand-ink" /> Drop to upload to {path ? `/${path}` : "Storage"}
+              </p>
+            </div>
+          )}
+          {checkedItems.length > 0 && (
+            <BulkBar
+              count={checkedItems.length}
+              allChecked={checkedItems.length === items.length}
+              onAll={() => setChecked(new Set(items.map((i) => i.path)))}
+              onClear={() => setChecked(new Set())}
+              onMove={() => setMoving(checkedItems)}
+              onDelete={() => requestDelete(checkedItems)}
+            />
+          )}
           {searching && (
             <p className="mb-3 text-sm text-muted-foreground">
               {search.data ? `${items.length} ${items.length === 1 ? "result" : "results"}` : "Searching"} for “{q}” across your storage
@@ -140,19 +236,33 @@ export function StorageBrowser({ path }: { path: string }) {
             searching ? (
               <EmptyState variant="plain" size="compact" icon="search" title={`Nothing matches “${q}”.`} description="Try another name, or clear the search." />
             ) : (
-              <EmptyState icon="folder" title={path ? "This folder is empty." : "Nothing stored yet."} description="Files you upload appear here." />
+              <EmptyState
+                icon="folder"
+                title={path ? "This folder is empty." : "Nothing stored yet."}
+                description="Upload files, or drop them anywhere on this page."
+                actions={
+                  <>
+                    <Button onClick={pickFiles}>
+                      <Icon name="upload" /> Upload
+                    </Button>
+                    <Button variant="outline" onClick={() => setNewFolderOpen(true)}>
+                      <Icon name="folder-plus" /> New folder
+                    </Button>
+                  </>
+                }
+              />
             )
           ) : view === "grid" ? (
-            <GridView items={items} selected={selected} onSelect={select} showFolder={searching} />
+            <GridView items={items} selected={selected} onSelect={select} showFolder={searching} {...viewProps} />
           ) : (
-            <ListView items={items} selected={selected} onSelect={select} showFolder={searching} />
+            <ListView items={items} selected={selected} onSelect={select} showFolder={searching} {...viewProps} />
           )}
         </section>
 
         {/* Details: beside the files on wide screens, a sheet below that. */}
         <aside aria-label="File details" className="sticky top-20 hidden lg:block">
           {selected ? (
-            <FileDetails item={selected} onClose={() => select(null)} />
+            <FileDetails item={selected} onClose={() => select(null)} onRename={() => setRenaming(selected)} onMove={() => setMoving([selected])} onDelete={() => requestDelete([selected])} />
           ) : (
             <div className="grid place-items-center gap-2 rounded-xl border border-dashed border-border/70 px-4 py-10 text-center text-sm text-muted-foreground">
               <Icon name="file" className="text-muted-foreground/70" />
@@ -163,10 +273,29 @@ export function StorageBrowser({ path }: { path: string }) {
         <Sheet open={selected != null && !wide} onOpenChange={(open) => !open && select(null)}>
           <SheetContent side="right" className="w-full max-w-sm overflow-y-auto p-4" showCloseButton={false}>
             <SheetTitle className="sr-only">{selected?.name ?? "File"}</SheetTitle>
-            {selected && <FileDetails item={selected} onClose={() => select(null)} />}
+            {selected && <FileDetails item={selected} onClose={() => select(null)} onRename={() => setRenaming(selected)} onMove={() => setMoving([selected])} onDelete={() => requestDelete([selected])} />}
           </SheetContent>
         </Sheet>
       </div>
+
+      <NewFolderDialog />
+      <RenameDialog
+        item={renaming}
+        onClose={(renamed) => {
+          if (renamed && selected && selected.path === renaming?.path) select(renamed)
+          setRenaming(null)
+        }}
+      />
+      <MoveDialog
+        items={moving}
+        onClose={(moved) => {
+          if (moved) {
+            setChecked(new Set())
+            if (selected && moving?.some((m) => m.path === selected.path)) select(null)
+          }
+          setMoving(null)
+        }}
+      />
     </div>
   )
 }
@@ -186,35 +315,99 @@ function useWideScreen() {
 
 // ── Header pieces ──────────────────────────────────────────────────────────────────
 
-/** "1.24 GB of 5 GB", the meter, and what the space is used by. */
+const hatch = "bg-[repeating-linear-gradient(135deg,color-mix(in_oklab,var(--foreground)_10%,transparent)_0_3px,transparent_3px_7px)]"
+
+/** Ruler marks that land on round numbers: 0, 1 GB, 2 GB… — at most six. */
+function rulerTicks(limit: number) {
+  const steps = [1e8, 2.5e8, 5e8, 1e9, 2e9, 2.5e9, 5e9, 1e10, 2e10, 2.5e10, 5e10, 1e11, 2.5e11, 5e11, 1e12]
+  const step = steps.find((s) => limit / s <= 6) ?? limit / 5
+  const ticks: number[] = []
+  for (let t = 0; t < limit - step / 2; t += step) ticks.push(t)
+  return [...ticks, limit]
+}
+
+/**
+ * Storage as a capacity gauge: the figure first, then one track split by what fills it (greys,
+ * strongest first), free space hatched, and a ruler under it so the bar reads as a measurement.
+ * The used figure turns orange from 80% and red when full.
+ */
 function UsageStrip() {
   const { data } = useUsage()
+  const entered = useEntered()
   const limit = data?.limits.find((l) => l.id === "storage")
-  if (!data || !limit) return <Skeleton className="h-[74px] rounded-xl" />
+  if (!data || !limit) return <Skeleton className="h-[146px] rounded-xl" />
+
+  const tone = limitTone(limit.used / limit.limit)
+  const shades: ChartColor[] = ["chart-1", "chart-2", "chart-3", "chart-4", "chart-5"]
+  const kinds = data.storageByKind.map((k, i) => ({ ...k, color: shades[i % shades.length] }))
+  // Anything the breakdown hasn't caught up with yet (a fresh upload) still shows as used.
+  const unaccounted = limit.used - kinds.reduce((sum, k) => sum + k.bytes, 0)
+  if (unaccounted > 0) kinds.push({ kind: "Recent uploads", bytes: unaccounted, color: shades[kinds.length % shades.length] })
+  const free = Math.max(0, limit.limit - limit.used)
+  const ticks = rulerTicks(limit.limit)
+
   return (
-    <div className="grid gap-3 rounded-xl border border-border/70 bg-card px-4 py-3.5 sm:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] sm:items-center sm:gap-6 sm:px-5">
-      <div className="grid gap-2">
-        <p className="flex items-baseline justify-between gap-3 text-sm">
-          <span className="text-muted-foreground">Storage</span>
-          <span className="font-mono tabular-nums">
-            {formatBytes(limit.used)} <span className="text-muted-foreground">of {formatBytes(limit.limit)}</span>
-          </span>
-        </p>
-        <UsageMeter used={limit.used} limit={limit.limit} label="Storage used" />
-      </div>
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-        {data.storageByKind.map((k) => (
-          <li key={k.kind}>
-            {k.kind} <span className="font-mono text-foreground/80 tabular-nums">{formatBytes(k.bytes)}</span>
-          </li>
-        ))}
-        <li>
+    <section aria-label="Storage used" className="rounded-xl border border-border/70 bg-card px-4 pt-4 pb-3.5 sm:px-5">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+        <div className="grid gap-1">
+          <p className="text-[0.6875rem] font-medium tracking-[0.08em] text-muted-foreground uppercase">Storage</p>
+          <p className="flex flex-wrap items-baseline gap-x-2">
+            <span className={cn("font-mono text-2xl font-medium tracking-tight tabular-nums", tone.label !== "ok" && tone.text)}>{formatBytes(limit.used, 2)}</span>
+            <span className="text-sm text-muted-foreground">used of {formatBytes(limit.limit)}</span>
+          </p>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          <span className="font-mono text-foreground tabular-nums">{formatBytes(free, 2)}</span> free
+          <span className="mx-2 text-border">|</span>
           <Link href="/dashboard/usage" className="underline-offset-2 hover:text-foreground hover:underline">
             Usage &amp; limits →
           </Link>
+        </p>
+      </div>
+
+      <div role="meter" aria-label="Storage used" aria-valuemin={0} aria-valuemax={limit.limit} aria-valuenow={limit.used} aria-valuetext={`${formatBytes(limit.used)} of ${formatBytes(limit.limit)}`} className="mt-4">
+        {/* The track: one segment per kind, then the free space. */}
+        <div className="surface-sunken flex h-3.5 gap-[2px] rounded-full p-[3px]">
+          {kinds.map((k, i) => (
+            <span
+              key={k.kind}
+              title={`${k.kind}: ${formatBytes(k.bytes)}`}
+              className="h-full origin-left rounded-full transition-transform duration-700 ease-out-expo motion-reduce:transition-none"
+              style={{ width: `${(k.bytes / limit.limit) * 100}%`, background: chartColor(k.color), transform: `scaleX(${entered ? 1 : 0})`, transitionDelay: `${i * 90}ms` }}
+            />
+          ))}
+          <span className={cn("h-full flex-1 rounded-full", hatch)} />
+        </div>
+        {/* The ruler. */}
+        <div aria-hidden className="relative mx-[3px] mt-1 h-5">
+          {ticks.map((t, i) => (
+            <span
+              key={t}
+              className={cn("absolute top-0 grid justify-items-center", i === 0 ? "justify-items-start" : i === ticks.length - 1 ? "-translate-x-full justify-items-end" : "-translate-x-1/2")}
+              style={{ left: `${(t / limit.limit) * 100}%` }}
+            >
+              <span className="h-1.5 w-px bg-foreground/20" />
+              <span className="font-mono text-[0.625rem] whitespace-nowrap text-muted-foreground tabular-nums">{t === 0 ? "0" : formatBytes(t, 0)}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <ul className="mt-1.5 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
+        {kinds.map((k) => (
+          <li key={k.kind} className="flex items-center gap-1.5">
+            <span className="size-2 rounded-[3px]" style={{ background: chartColor(k.color) }} />
+            {k.kind}
+            <span className="font-mono text-foreground/85 tabular-nums">{formatBytes(k.bytes)}</span>
+          </li>
+        ))}
+        <li className="flex items-center gap-1.5">
+          <span className={cn("size-2 rounded-[3px] ring-1 ring-foreground/15", hatch)} />
+          Free
+          <span className="font-mono text-foreground/85 tabular-nums">{formatBytes(free)}</span>
         </li>
       </ul>
-    </div>
+    </section>
   )
 }
 
@@ -325,6 +518,12 @@ type ItemsProps = {
   onSelect: (item: StorageItem) => void
   /** Search results come from anywhere: show which folder each is in. */
   showFolder: boolean
+  checked: ReadonlySet<string>
+  onToggle: (item: StorageItem) => void
+  /** The ⋯ menu for an item. */
+  menu: (item: StorageItem) => React.ReactNode
+  /** Something is ticked: show every checkbox, not just on hover. */
+  anyChecked: boolean
 }
 
 const folderSummary = (item: StorageItem) => `${item.items ?? 0} ${item.items === 1 ? "item" : "items"} · ${formatBytes(item.size)}`
@@ -334,7 +533,7 @@ function FolderIn({ item }: { item: StorageItem }) {
   return <span className="truncate text-xs text-muted-foreground">in {parent ? `/${parent}` : "Storage"}</span>
 }
 
-function GridView({ items, selected, onSelect, showFolder }: ItemsProps) {
+function GridView({ items, selected, onSelect, showFolder, checked, onToggle, menu, anyChecked }: ItemsProps) {
   const folders = items.filter((i) => i.kind === "folder")
   const files = items.filter((i) => i.kind === "file")
   return (
@@ -343,14 +542,19 @@ function GridView({ items, selected, onSelect, showFolder }: ItemsProps) {
         <ul aria-label="Folders" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {folders.map((folder) => (
             <li key={folder.path}>
-              <FolderShape bodyClassName="flex-row items-center gap-3 p-3.5">
-                <span className="surface-sunken flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground">
-                  <Icon name="folder" size="sm" />
+              <FolderShape bodyClassName={cn("flex-row items-center gap-3 p-3.5", checked.has(folder.path) && "border-brand/60")}>
+                {/* The checkbox takes the icon's place on hover, or while anything is ticked. */}
+                <span className="surface-sunken relative flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground">
+                  <Icon name="folder" size="sm" className={cn("transition-opacity", anyChecked || checked.has(folder.path) ? "opacity-0" : "group-hover/folder:opacity-0")} />
+                  <span className="absolute inset-0 grid place-items-center">
+                    <ItemCheckbox item={folder} checked={checked.has(folder.path)} onToggle={onToggle} visible={anyChecked} />
+                  </span>
                 </span>
                 <Link href={folderHref(folder.path)} className="grid min-w-0 flex-1 outline-none after:absolute after:inset-0 after:rounded-[inherit] focus-visible:after:ring-2 focus-visible:after:ring-ring/60 focus-visible:after:ring-inset">
                   <span className="truncate text-sm font-medium">{folder.name}</span>
                   {showFolder ? <FolderIn item={folder} /> : <span className="truncate text-xs text-muted-foreground tabular-nums">{folderSummary(folder)}</span>}
                 </Link>
+                <span className="relative z-10 -mr-1.5">{menu(folder)}</span>
               </FolderShape>
             </li>
           ))}
@@ -361,29 +565,59 @@ function GridView({ items, selected, onSelect, showFolder }: ItemsProps) {
           {files.map((file) => {
             const kind = kindOf(file)
             const active = selected?.path === file.path
+            const ticked = checked.has(file.path)
             return (
-              <li key={file.path}>
+              <li key={file.path} className="group/tile relative">
+                <span className={cn("absolute top-3 left-3 z-10 flex rounded-md bg-background/85 p-1 backdrop-blur-sm", !anyChecked && !ticked && "opacity-0 group-hover/tile:opacity-100 focus-within:opacity-100")}>
+                  <ItemCheckbox item={file} checked={ticked} onToggle={onToggle} visible />
+                </span>
+                <span className="absolute top-2.5 right-2.5 z-10 rounded-md bg-background/85 opacity-0 backdrop-blur-sm group-hover/tile:opacity-100 focus-within:opacity-100 has-aria-expanded:opacity-100">
+                  {menu(file)}
+                </span>
                 <button
                   type="button"
                   onClick={() => onSelect(file)}
                   aria-pressed={active}
                   className={cn(
-                    "group/file grid w-full overflow-hidden rounded-xl border bg-card text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-                    active ? "border-brand/60 ring-1 ring-brand/40" : "border-border/70 hover:border-foreground/20"
+                    // A file ticket: the preview mounted in a sunken well, a perforated tear line, the stub.
+                    "group/file relative grid w-full overflow-hidden rounded-xl border bg-card p-1.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                    active || ticked ? "border-brand/60" : "border-border/70 hover:border-foreground/25"
                   )}
                 >
-                  <span className="surface-sunken relative grid aspect-[16/10] place-items-center overflow-hidden">
+                  {active && <span aria-hidden className="metal-brand absolute inset-x-0 top-0 z-10 h-[3px]" />}
+                  <span className="surface-sunken relative grid aspect-[16/10] place-items-center overflow-hidden rounded-lg">
                     {file.thumbnailUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element -- generated or signed thumbnails, not optimisable
-                      <img src={file.thumbnailUrl} alt="" className="size-full object-cover transition-transform duration-500 ease-out-expo group-hover/file:scale-[1.03]" />
+                      <img src={file.thumbnailUrl} alt="" className="size-full object-cover transition-transform duration-500 ease-out-expo group-hover/file:scale-[1.04]" />
                     ) : (
-                      <Icon name={kindMeta[kind].icon} size="lg" className="text-muted-foreground/70" />
+                      // No picture: the type set large over the dot grid.
+                      <>
+                        <span aria-hidden className="absolute inset-0 bg-dot-grid opacity-70 mask-fade-edges" />
+                        <span className="relative grid justify-items-center gap-1.5">
+                          <Icon name={kindMeta[kind].icon} size="md" className="text-muted-foreground/80" />
+                          <span className="font-mono text-2xl font-medium tracking-tight text-foreground/25 transition-colors group-hover/file:text-foreground/40">{typeLabel(file)}</span>
+                        </span>
+                      </>
                     )}
-                    <span className="absolute bottom-2 left-2 rounded-md bg-background/80 px-1.5 py-0.5 font-mono text-[0.625rem] text-muted-foreground backdrop-blur-sm">{typeLabel(file)}</span>
                   </span>
-                  <span className="grid gap-0.5 px-3 py-2.5">
+                  {/* The tear line, notched where it meets the edges. */}
+                  <span aria-hidden className="relative my-2 block h-px">
+                    <span className="absolute inset-x-2.5 top-0 border-t border-dashed border-border transition-colors group-hover/file:border-foreground/25" />
+                    <span className={cn("absolute top-1/2 -left-[0.85rem] size-[0.85rem] -translate-y-1/2 rounded-full border bg-app-panel", active || ticked ? "border-brand/60" : "border-border/70")} />
+                    <span className={cn("absolute top-1/2 -right-[0.85rem] size-[0.85rem] -translate-y-1/2 rounded-full border bg-app-panel", active || ticked ? "border-brand/60" : "border-border/70")} />
+                  </span>
+                  <span className="grid gap-1 px-1.5 pb-1">
                     <span className="truncate text-sm font-medium">{file.name}</span>
-                    {showFolder ? <FolderIn item={file} /> : <span className="text-xs text-muted-foreground tabular-nums">{formatBytes(file.size)} · {formatRelativeTime(file.updatedAt)}</span>}
+                    {showFolder ? (
+                      <FolderIn item={file} />
+                    ) : (
+                      <span className="flex items-center justify-between gap-2 font-mono text-[0.6875rem] text-muted-foreground tabular-nums">
+                        <span className="truncate">
+                          {formatBytes(file.size)} · {typeLabel(file)}
+                        </span>
+                        <span className="shrink-0 font-sans">{formatRelativeTime(file.updatedAt)}</span>
+                      </span>
+                    )}
                   </span>
                 </button>
               </li>
@@ -395,10 +629,10 @@ function GridView({ items, selected, onSelect, showFolder }: ItemsProps) {
   )
 }
 
-function ListView({ items, selected, onSelect, showFolder }: ItemsProps) {
+function ListView({ items, selected, onSelect, showFolder, checked, onToggle, menu, anyChecked }: ItemsProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-border/70 bg-card">
-      <div className="surface-band hidden grid-cols-[minmax(0,1fr)_6rem_5rem_7rem] gap-4 border-b border-border/60 px-4 py-2 text-xs font-medium text-muted-foreground sm:grid">
+      <div className="surface-band hidden grid-cols-[minmax(0,1fr)_6rem_5rem_7rem] gap-4 border-b border-border/60 py-2 pr-12 pl-12 text-xs font-medium text-muted-foreground sm:grid">
         <span>Name</span>
         <span className="text-right">Size</span>
         <span>Type</span>
@@ -434,21 +668,109 @@ function ListView({ items, selected, onSelect, showFolder }: ItemsProps) {
             active ? "bg-muted" : "hover:bg-muted/50"
           )
           return (
-            <li key={item.path} className="relative">
+            <li key={item.path} className={cn("group/row relative flex items-center", checked.has(item.path) && "bg-brand/5")}>
               {active && <span aria-hidden className="metal-brand absolute inset-y-1.5 left-0 w-[3px] rounded-full" />}
-              {item.kind === "folder" ? (
-                <Link href={folderHref(item.path)} className={rowClass}>
-                  {content}
-                </Link>
-              ) : (
-                <button type="button" aria-pressed={active} onClick={() => onSelect(item)} className={rowClass}>
-                  {content}
-                </button>
-              )}
+              <span className="flex shrink-0 pl-4">
+                <ItemCheckbox item={item} checked={checked.has(item.path)} onToggle={onToggle} visible={anyChecked} />
+              </span>
+              <div className="min-w-0 flex-1">
+                {item.kind === "folder" ? (
+                  <Link href={folderHref(item.path)} className={rowClass}>
+                    {content}
+                  </Link>
+                ) : (
+                  <button type="button" aria-pressed={active} onClick={() => onSelect(item)} className={rowClass}>
+                    {content}
+                  </button>
+                )}
+              </div>
+              <span className="shrink-0 pr-2">{menu(item)}</span>
             </li>
           )
         })}
       </ul>
+    </div>
+  )
+}
+
+function ItemCheckbox({ item, checked, onToggle, visible }: { item: StorageItem; checked: boolean; onToggle: (item: StorageItem) => void; visible: boolean }) {
+  return (
+    <Checkbox
+      checked={checked}
+      onCheckedChange={() => onToggle(item)}
+      aria-label={`Select ${item.name}`}
+      className={cn("relative z-10", !visible && !checked && "opacity-0 group-hover/row:opacity-100 group-hover/folder:opacity-100 focus-visible:opacity-100")}
+    />
+  )
+}
+
+/** The ⋯ menu on every item. */
+function ItemMenu({ item, onDetails, onRename, onMove, onDelete }: { item: StorageItem; onDetails: () => void; onRename: () => void; onMove: () => void; onDelete: () => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={`Actions for ${item.name}`} />}>
+        <Icon name="more" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        {item.kind === "folder" ? (
+          <DropdownMenuItem render={<Link href={folderHref(item.path)} />}>
+            <Icon name="folder" /> Open
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onClick={onDetails}>
+            <Icon name="file" /> Details &amp; link
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={onRename}>
+          <Icon name="feather" /> Rename
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onMove}>
+          <Icon name="folder" /> Move to…
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onClick={onDelete}>
+          <Icon name="trash" /> Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/** Shown while items are ticked: what you can do with all of them. */
+function BulkBar({
+  count,
+  allChecked,
+  onAll,
+  onClear,
+  onMove,
+  onDelete,
+}: {
+  count: number
+  allChecked: boolean
+  onAll: () => void
+  onClear: () => void
+  onMove: () => void
+  onDelete: () => void
+}) {
+  return (
+    <div className="sticky top-16 z-10 mb-3 flex animate-in flex-wrap items-center gap-2 rounded-xl border border-brand/40 bg-popover px-3 py-2 duration-200 fade-in slide-in-from-top-1">
+      <span className="text-sm font-medium tabular-nums">{count} selected</span>
+      {!allChecked && (
+        <Button variant="ghost" size="xs" onClick={onAll}>
+          Select all
+        </Button>
+      )}
+      <span className="ml-auto flex items-center gap-1.5">
+        <Button variant="outline" size="sm" onClick={onMove}>
+          <Icon name="folder" /> Move to…
+        </Button>
+        <Button variant="destructive" size="sm" onClick={onDelete}>
+          <Icon name="trash" /> Delete
+        </Button>
+        <Button variant="ghost" size="icon-sm" aria-label="Clear selection" onClick={onClear}>
+          <Icon name="x" />
+        </Button>
+      </span>
     </div>
   )
 }
@@ -458,7 +780,19 @@ function ListView({ items, selected, onSelect, showFolder }: ItemsProps) {
 const expiryFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
 
 /** One file: preview, facts, and the two ways out — a link that expires, or a download. */
-function FileDetails({ item, onClose }: { item: StorageItem; onClose: () => void }) {
+function FileDetails({
+  item,
+  onClose,
+  onRename,
+  onMove,
+  onDelete,
+}: {
+  item: StorageItem
+  onClose: () => void
+  onRename: () => void
+  onMove: () => void
+  onDelete: () => void
+}) {
   const kind = kindOf(item)
   const createLink = useCreateLink()
   const [link, setLink] = React.useState<{ url: string; expiresAt: string } | null>(null)
@@ -547,6 +881,17 @@ function FileDetails({ item, onClose }: { item: StorageItem; onClose: () => void
           <Icon name="download" />
           Download
         </Button>
+        <div className="grid grid-cols-3 gap-1.5">
+          <Button variant="ghost" size="sm" onClick={onRename}>
+            <Icon name="feather" /> Rename
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onMove}>
+            <Icon name="folder" /> Move
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onDelete} className="text-destructive hover:text-destructive">
+            <Icon name="trash" /> Delete
+          </Button>
+        </div>
       </div>
 
       {link && (

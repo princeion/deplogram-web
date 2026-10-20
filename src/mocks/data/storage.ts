@@ -93,4 +93,87 @@ export const mockStorage = {
       .map((item) => (item.kind === "folder" ? withTotals(item) : item))
   },
   get: (path: string) => items.get(path) ?? null,
+  folders: () => [...items.values()].filter((i) => i.kind === "folder").map((i) => i.path).sort(),
+
+  createFolder(path: string): StorageItem | "exists" | "no-parent" {
+    if (items.has(path)) return "exists"
+    if (!this.exists(parentOf(path))) return "no-parent"
+    const now = new Date().toISOString()
+    const folder: StorageItem = { kind: "folder", name: path.split("/").pop()!, path, size: 0, contentType: null, items: 0, createdAt: now, updatedAt: now, thumbnailUrl: null }
+    items.set(path, folder)
+    return folder
+  },
+
+  /** A finished upload. Takes "name (1).ext" if the name is taken. */
+  addFile(path: string, size: number, contentType: string): StorageItem {
+    const folder = parentOf(path)
+    const taken = new Set(this.list(folder).map((i) => i.name))
+    let name = path.split("/").pop()!
+    if (taken.has(name)) {
+      const dot = name.lastIndexOf(".")
+      const [base, ext] = dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""]
+      let n = 1
+      while (taken.has(`${base} (${n})${ext}`)) n++
+      name = `${base} (${n})${ext}`
+    }
+    const full = folder ? `${folder}/${name}` : name
+    const now = new Date().toISOString()
+    const file: StorageItem = { kind: "file", name, path: full, size, contentType, items: null, createdAt: now, updatedAt: now, thumbnailUrl: contentType.startsWith("image/") ? thumbnail(name) : null }
+    items.set(full, file)
+    return file
+  },
+
+  /** Rename in place; a folder takes everything inside with it. */
+  rename(path: string, name: string): StorageItem | "missing" | "exists" {
+    const item = items.get(path)
+    if (!item) return "missing"
+    const parent = parentOf(path)
+    const to = parent ? `${parent}/${name}` : name
+    if (to !== path && items.has(to)) return "exists"
+    this.relocate(path, to)
+    return items.get(to)!
+  },
+
+  /** Move items into a folder; returns how many moved. */
+  move(paths: string[], to: string): number | "bad-target" {
+    if (!this.exists(to)) return "bad-target"
+    if (paths.some((p) => to === p || to.startsWith(`${p}/`))) return "bad-target"
+    let moved = 0
+    for (const path of paths) {
+      const item = items.get(path)
+      if (!item || parentOf(path) === to) continue
+      const taken = new Set(this.list(to).map((i) => i.name))
+      let name = item.name
+      for (let n = 1; taken.has(name); n++) name = `${item.name} (${n})`
+      this.relocate(path, to ? `${to}/${name}` : name)
+      moved++
+    }
+    return moved
+  },
+
+  /** Delete items; folders with everything in them. Returns bytes freed. */
+  remove(paths: string[]) {
+    let freed = 0
+    let deleted = 0
+    for (const path of paths) {
+      for (const [key, item] of [...items]) {
+        if (key === path || key.startsWith(`${path}/`)) {
+          if (item.kind === "file") freed += item.size
+          items.delete(key)
+          if (key === path) deleted++
+        }
+      }
+    }
+    return { deleted, freed }
+  },
+
+  relocate(from: string, to: string) {
+    const now = new Date().toISOString()
+    for (const [key, item] of [...items]) {
+      if (key !== from && !key.startsWith(`${from}/`)) continue
+      const next = to + key.slice(from.length)
+      items.delete(key)
+      items.set(next, { ...item, path: next, name: next.split("/").pop()!, updatedAt: key === from ? now : item.updatedAt })
+    }
+  },
 }
