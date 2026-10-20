@@ -13,6 +13,7 @@ import { mockViewer } from "@/mocks/data/viewer"
 import { generateMockUsage } from "@/mocks/data/usage"
 import { mockWorkspace } from "@/mocks/data/workspace"
 import { mockPads, mockRuns } from "@/mocks/data/pads"
+import { mockStorage } from "@/mocks/data/storage"
 import type { PadTemplate } from "@/features/codepad/codepad"
 
 // Mock session: signed in by default; sign-in / sign-out toggle it for the browser tab.
@@ -455,5 +456,31 @@ handlers.push(
     const after = Number(new URL(request.url).searchParams.get("after")) || 0
     const logs = mockRuns.logs(String(params.id), after)
     return logs ? HttpResponse.json(logs) : padNotFound("run")
+  })
+)
+
+// ── Storage ─────────────────────────────────────────────────────────────────────
+
+handlers.push(
+  http.get("*/v1/storage/list", async ({ request }) => {
+    await delay(220)
+    const path = new URL(request.url).searchParams.get("path") ?? ""
+    if (!mockStorage.exists(path)) return HttpResponse.json({ error: { message: "That folder doesn't exist." } }, { status: 404 })
+    return HttpResponse.json({ path, items: mockStorage.list(path) })
+  }),
+
+  http.get("*/v1/storage/search", async ({ request }) => {
+    await delay(200)
+    const q = new URL(request.url).searchParams.get("q") ?? ""
+    return HttpResponse.json({ items: q ? mockStorage.search(q) : [] })
+  }),
+
+  http.post("*/v1/storage/links", async ({ request }) => {
+    await delay(250)
+    const { path, expiresIn } = (await request.json()) as { path: string; expiresIn: "1h" | "1d" | "7d" }
+    if (!mockStorage.get(path)) return HttpResponse.json({ error: { message: "That file doesn't exist." } }, { status: 404 })
+    const ms = { "1h": 3_600_000, "1d": 86_400_000, "7d": 7 * 86_400_000 }[expiresIn]
+    const token = Math.random().toString(36).slice(2, 12)
+    return HttpResponse.json({ url: `https://files.dpl.app/${encodeURI(path)}?token=${token}`, expiresAt: new Date(Date.now() + ms).toISOString() })
   })
 )

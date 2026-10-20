@@ -14,6 +14,8 @@ import { Form, FormRootError, RadioCardsField, TextField, useZodForm } from "@/c
 import { notify, useConfirm } from "@/components/feedback"
 import { Icon } from "@/components/shared/icon"
 import { Segmented } from "@/components/shared/segmented"
+import { FolderShape } from "@/components/shared/folder-shape"
+import { useLocalPreference } from "@/hooks/use-local-preference"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -180,13 +182,8 @@ function PadFolder({ pad }: { pad: PadSummary }) {
   const shown = pad.paths.slice(0, 3)
   const more = pad.paths.length - shown.length
   return (
-    <li className="group/folder relative pt-3">
-      {/* The folder's tab. */}
-      <span
-        aria-hidden
-        className="absolute top-0 left-0 z-[1] h-[calc(0.75rem+1px)] w-24 rounded-t-lg border border-b-0 border-border/70 bg-card transition-colors group-hover/folder:border-foreground/20"
-      />
-      <div className="relative flex h-full flex-col gap-4 rounded-xl rounded-tl-none border border-border/70 bg-card p-4 transition-colors group-hover/folder:border-foreground/20">
+    <li>
+      <FolderShape className="h-full" bodyClassName="gap-4 p-4">
         <div className="flex items-start gap-3">
           <span className="surface-sunken flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground">
             <Icon name={runtime?.icon ?? "code"} size="sm" />
@@ -218,7 +215,7 @@ function PadFolder({ pad }: { pad: PadSummary }) {
           </span>
           <DeployedBadge pad={pad} />
         </div>
-      </div>
+      </FolderShape>
     </li>
   )
 }
@@ -247,31 +244,12 @@ function fileIcon(path: string) {
   return "file-code" as const
 }
 
-type PadsView = "folders" | "list"
-const VIEW_KEY = "deplogram:codepad:view"
-
-/** Folders or list — remembered on this device. */
-function usePadsView() {
-  const [view, setView] = React.useState<PadsView>("folders")
-  React.useEffect(() => {
-    try {
-      const saved = localStorage.getItem(VIEW_KEY)
-      if (saved === "folders" || saved === "list") setView(saved)
-    } catch {}
-  }, [])
-  const change = (next: PadsView) => {
-    setView(next)
-    try {
-      localStorage.setItem(VIEW_KEY, next)
-    } catch {}
-  }
-  return [view, change] as const
-}
+const VIEWS = ["folders", "list"] as const
 
 /** CodePad's front page: your pads, newest first, as folders or a list. */
 export function PadsList() {
   const { data, isPending, isError, refetch, isRefetching } = usePads()
-  const [view, setView] = usePadsView()
+  const [view, setView] = useLocalPreference("codepad:view", "folders", VIEWS)
 
   if (isPending) {
     return (
