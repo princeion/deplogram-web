@@ -1,7 +1,8 @@
 import { Suspense, type ReactNode } from "react"
 import { cookies } from "next/headers"
 
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { SidebarInset } from "@/components/ui/sidebar"
+import { GalleySidebarProvider } from "@/components/app-shell/sidebar-state"
 import { AppHeader } from "@/components/app-shell/app-header"
 import { AppSidebar } from "@/components/app-shell/app-sidebar"
 import { NavigationProgress } from "@/components/app-shell/navigation-progress"
@@ -20,7 +21,7 @@ export async function AppShell({ children, sidebarFooter }: { children: ReactNod
   const defaultOpen = (await cookies()).get(SIDEBAR_COOKIE)?.value !== "false"
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen} className="bg-app-frame">
+    <GalleySidebarProvider defaultOpen={defaultOpen} className="bg-app-frame">
       {/* Inside SidebarProvider: palette commands can toggle the sidebar. */}
       <CommandPaletteProvider>
         <ConfirmProvider>
@@ -49,6 +50,6 @@ export async function AppShell({ children, sidebarFooter }: { children: ReactNod
           <PageScrollbar />
         </ConfirmProvider>
       </CommandPaletteProvider>
-    </SidebarProvider>
+    </GalleySidebarProvider>
   )
 }

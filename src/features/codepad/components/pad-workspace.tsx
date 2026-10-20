@@ -29,6 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { EmptyState } from "@/components/app-shell/empty-state"
 import { ErrorState } from "@/components/app-shell/error-state"
 import { LogViewer, type LogLine } from "@/components/log-viewer"
+import { useSidebarScope } from "@/components/app-shell/sidebar-state"
 
 /**
  * A pad, open for editing — one screen, IDE-shaped: files on the left, tabs and the editor in
@@ -46,6 +47,9 @@ type SaveState = { status: "idle" | "saving" | "saved" | "error"; at?: number; e
 const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
 
 export function PadWorkspace({ padId }: { padId: string }) {
+  // The editor needs the width: the app sidebar folds to its icon rail here, and remembers
+  // CodePad's own choice separately from the rest of the Galley.
+  useSidebarScope("codepad", false)
   const { data: pad, isPending, isError, error, refetch, isRefetching } = usePad(padId)
   if (isPending) return <WorkspaceSkeleton />
   if (isError) {
