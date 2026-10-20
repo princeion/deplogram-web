@@ -402,6 +402,54 @@ handlers.push(
     return pad ? HttpResponse.json({ id: mockRuns.start(pad) }, { status: 201 }) : padNotFound("pad")
   }),
 
+  http.post("*/v1/pads/:id/deploy", async ({ params }) => {
+    await delay(900)
+    const pad = mockPads.get(String(params.id))
+    if (!pad) return padNotFound("pad")
+    const sha = Math.random().toString(16).slice(2, 9)
+    const commit = { sha, message: "Deployed from CodePad", branch: "codepad", author: { name: accountSettings.name || "You", avatarUrl: null } }
+
+    // Deployed before: a new deployment of the same project.
+    if (pad.projectId) {
+      const project = mockProjects.find((p) => p.id === pad.projectId)
+      const latest = mockDeploymentStore().find((d) => d.projectId === pad.projectId)
+      const deployment = latest ? mockRedeploy(latest.id) : null
+      if (!project || !deployment) return padNotFound("project")
+      deployment.commit = commit
+      deployment.trigger = "manual"
+      return HttpResponse.json({ project: toProjectSummary(project), deployment }, { status: 201 })
+    }
+
+    if (reservedNames.includes(pad.name) || mockProjects.some((p) => p.name === pad.name)) {
+      return HttpResponse.json({ error: { message: `A project called "${pad.name}" already exists. Rename the pad, then deploy.` } }, { status: 409 })
+    }
+    const usage = mockUsage.limits.find((l) => l.id === "active_deployments")!
+    if (mockDeploymentStore().filter((d) => d.live).length >= usage.limit) {
+      return HttpResponse.json({ error: { message: `Your plan allows ${usage.limit} live deployments. Take one offline to deploy another.` } }, { status: 403 })
+    }
+    const hasRequirements = pad.files.some((f) => f.path === "requirements.txt")
+    const config =
+      pad.runtime === "node"
+        ? { buildCommand: null, startCommand: `node ${pad.entry}`, port: 3000 }
+        : pad.runtime === "python"
+          ? { buildCommand: hasRequirements ? "pip install -r requirements.txt" : null, startCommand: `python ${pad.entry}`, port: 8000 }
+          : { buildCommand: null, startCommand: null, port: null }
+    const result = mockCreateProject({
+      name: pad.name,
+      runtime: pad.runtime,
+      branch: "codepad",
+      commit: { sha, message: commit.message },
+      author: commit.author.name,
+      config,
+      repository: `codepad/${pad.name}`,
+      rootDirectory: null,
+      env: [],
+    })
+    mockPads.linkProject(pad.id, result.project.id)
+    recordActivity({ type: "project.created", actor: { name: commit.author.name }, project: { id: result.project.id, name: result.project.name }, detail: "from CodePad" })
+    return HttpResponse.json({ project: toProjectSummary(result.project), deployment: result.deployment }, { status: 201 })
+  }),
+
   http.get("*/v1/runs/:id/logs", async ({ params, request }) => {
     await delay(120)
     const after = Number(new URL(request.url).searchParams.get("after")) || 0

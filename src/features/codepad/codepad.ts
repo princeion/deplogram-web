@@ -2,6 +2,9 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/r
 import { z } from "zod"
 
 import { apiFetch } from "@/lib/api-client"
+import { createProjectResultSchema } from "@/features/deploy/deploy"
+import { deploymentKeys, deploymentQuery } from "@/features/deployments/deployments"
+import { projectKeys } from "@/features/projects/projects"
 
 /**
  * CodePad: small standalone projects ("pads") edited in the browser — a few files and a runtime —
@@ -17,6 +20,7 @@ import { apiFetch } from "@/lib/api-client"
  *   POST   /v1/pads/:id/files/rename  { from, to } → Pad
  *   DELETE /v1/pads/:id/files?path=…               → Pad
  *   POST   /v1/pads/:id/runs             → { id }
+ *   POST   /v1/pads/:id/deploy           → { project, deployment }  (first time: creates the project)
  *   GET    /v1/runs/:id/logs?after=n     → { lines, done, exitCode }
  */
 
@@ -159,6 +163,28 @@ export function useDeleteFile(padId: string) {
 export function useRunPad(padId: string) {
   return useMutation({
     mutationFn: () => apiFetch(`/v1/pads/${padId}/runs`, { method: "POST", schema: z.object({ id: z.string() }) }),
+  })
+}
+
+/**
+ * Deploy what's saved: the first time, the pad becomes a project (named after the pad) and its
+ * first deployment starts; after that, each deploy is a new deployment of that project.
+ */
+export function useDeployPad(padId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => apiFetch(`/v1/pads/${padId}/deploy`, { method: "POST", schema: createProjectResultSchema }),
+    onSuccess: ({ project, deployment }) => {
+      // The deployment page opens next: give it the deployment now instead of a loading state.
+      queryClient.setQueryData(deploymentQuery(deployment.id).queryKey, deployment)
+      queryClient.setQueryData<Pad>(padKeys.detail(padId), (pad) => (pad ? { ...pad, projectId: project.id } : pad))
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: padKeys.list() }),
+        queryClient.invalidateQueries({ queryKey: projectKeys.all }),
+        queryClient.invalidateQueries({ queryKey: deploymentKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ["usage"] }),
+      ])
+    },
   })
 }
 

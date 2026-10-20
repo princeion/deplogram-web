@@ -183,6 +183,11 @@ export const mockPads = {
     pad.updatedAt = now()
     return pad
   },
+  /** After the first deploy: the project this pad became. */
+  linkProject(id: string, projectId: string) {
+    const pad = pads.get(id)
+    if (pad) pad.projectId = projectId
+  },
   deleteFile(id: string, path: string) {
     const pad = pads.get(id)
     if (!pad) return null

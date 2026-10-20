@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 
 import { cn } from "@/lib/utils"
@@ -10,14 +11,17 @@ import { runtimes } from "@/content/runtimes"
 import {
   padKeys,
   useDeleteFile,
+  useDeployPad,
   usePad,
   useRenameFile,
+  useRenamePad,
   useRunLogs,
   useRunPad,
   useSaveFile,
   type Pad,
 } from "@/features/codepad/codepad"
 import { buildStaticPreview } from "@/features/codepad/preview"
+import { projectNameSchema } from "@/features/deploy/components/schema"
 import { CodeEditor, type CodeEditorHandle } from "@/features/codepad/components/code-editor"
 import { errorMessage, notify, useConfirm } from "@/components/feedback"
 import { Icon } from "@/components/shared/icon"
@@ -30,12 +34,19 @@ import { EmptyState } from "@/components/app-shell/empty-state"
 import { ErrorState } from "@/components/app-shell/error-state"
 import { LogViewer, type LogLine } from "@/components/log-viewer"
 import { useSidebarScope } from "@/components/app-shell/sidebar-state"
+import { useRegisterCommands } from "@/components/command-palette/command-palette-provider"
+import type { CommandSource } from "@/components/command-palette/types"
+import { Segmented } from "@/components/shared/segmented"
+import { deploymentHref } from "@/features/deployments/components/use-deployment-actions"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 /**
  * A pad, open for editing — one screen, IDE-shaped: files on the left, tabs and the editor in
  * the middle, the run output under it, and (for static sites) a live preview on the right. Edits
- * autosave a moment after typing stops; ⌘S saves now, ⌘↵ saves and runs. The workspace fills the
- * content panel instead of scrolling like other pages.
+ * autosave a moment after typing stops; ⌘S saves now, ⌘↵ saves and runs; Deploy turns the pad
+ * into a project (or ships a new deployment of it). The workspace fills the content panel instead
+ * of scrolling like other pages. On phones it becomes one view at a time — code (read-only),
+ * output, preview — with Run and Deploy still there.
  */
 
 const AUTOSAVE_MS = 800
@@ -83,6 +94,11 @@ function Workspace({ pad }: { pad: Pad }) {
   const deleteFile = useDeleteFile(pad.id)
   const runtime = runtimes.find((r) => r.id === pad.runtime)
   const isStatic = pad.runtime === "static"
+  const router = useRouter()
+  const deploy = useDeployPad(pad.id)
+  const isMobile = useIsMobile()
+  const [view, setView] = React.useState<"code" | "output" | "preview">("code")
+  const [adding, setAdding] = React.useState(false)
 
   // The working copy: what's in the editor (value) and what the server has (saved).
   const [buffers, setBuffers] = React.useState<Record<string, Buffer>>(() =>
@@ -142,10 +158,40 @@ function Workspace({ pad }: { pad: Pad }) {
       const { id } = await run.mutateAsync()
       setRunId(id)
       setPreviewKey((k) => k + 1)
+      setView((current) => (current === "code" ? "output" : current))
     } catch (caught) {
       notify.error(caught, { title: "Couldn't start the run" })
     }
   }, [saveAll, run])
+
+  // ── Deploying ───────────────────────────────────────────────────────────────
+  const startDeploy = React.useCallback(async () => {
+    await saveAll()
+    let result: Awaited<ReturnType<typeof deploy.mutateAsync>> | undefined
+    const first = !pad.projectId
+    const confirmed = await confirm({
+      title: first ? `Deploy ${pad.name}?` : `Deploy the latest ${pad.name}?`,
+      description: first
+        ? `Creates a project called ${pad.name} from this pad and starts its first deployment.`
+        : "Builds what's saved now. The live version keeps serving until the new one is running.",
+      details: (
+        <span className="grid gap-1">
+          <span className="font-mono">https://{pad.name}.dpl.app</span>
+          <span className="text-xs text-muted-foreground">
+            {runtime?.name ?? pad.runtime} · {pad.files.length} {pad.files.length === 1 ? "file" : "files"}
+          </span>
+        </span>
+      ),
+      confirmLabel: "Deploy",
+      icon: "rocket",
+      action: async () => {
+        result = await deploy.mutateAsync()
+      },
+    })
+    if (!confirmed || !result) return
+    notify.success(first ? `${pad.name} is deploying` : "New deployment started", { description: "Follow the build on its page." })
+    router.push(deploymentHref(result.deployment))
+  }, [saveAll, confirm, deploy, pad.projectId, pad.name, pad.files.length, runtime?.name, pad.runtime, router])
 
   // ⌘S / ⌘↵ anywhere in the workspace (the editor binds its own too, below).
   const startRunRef = React.useRef(startRun)
@@ -244,87 +290,223 @@ function Workspace({ pad }: { pad: Pad }) {
 
   const mod = isMac() ? "⌘" : "Ctrl"
 
+  // ── ⌘K: this pad's actions, and "Go to file…" ───────────────────────────────
+  const latest = React.useRef({ saveAll, startDeploy, open })
+  latest.current = { saveAll, startDeploy, open }
+  const filesKey = pad.files.map((f) => f.path).join("\n")
+  const commands = React.useMemo<CommandSource>(() => {
+    const group = pad.name
+    const files = filesKey ? filesKey.split("\n") : []
+    return {
+      commands: [
+        { id: "pad-run", label: `Run ${pad.name}`, group, kind: "action", icon: "play", shortcut: ["mod", "↵"], keywords: ["execute", "start"], perform: () => void startRunRef.current() },
+        { id: "pad-save", label: "Save all files", group, kind: "action", icon: "save", shortcut: ["mod", "S"], perform: () => void latest.current.saveAll() },
+        { id: "pad-deploy", label: pad.projectId ? `Deploy the latest ${pad.name}` : `Deploy ${pad.name}`, group, kind: "action", icon: "rocket", keywords: ["ship", "publish", "live"], perform: () => void latest.current.startDeploy() },
+        { id: "pad-new-file", label: "New file", group, kind: "action", icon: "plus", keywords: ["create", "add"], perform: () => setAdding(true) },
+        { id: "pad-go-to-file", label: "Go to file…", group, kind: "action", icon: "file-code", keywords: ["open", "switch"], page: "pad-files" },
+        ...(pad.projectId
+          ? [{ id: "pad-project", label: "Open the deployed project", group, kind: "action" as const, icon: "folder" as const, href: `/dashboard/projects/${pad.projectId}` }]
+          : []),
+      ],
+      pages: [
+        {
+          id: "pad-files",
+          title: "Go to file",
+          placeholder: "Search this pad's files…",
+          commands: files.map((path) => ({ id: `pad-file:${path}`, label: path, group: "Files", kind: "action" as const, icon: iconFor(path), perform: () => latest.current.open(path) })),
+        },
+      ],
+    }
+  }, [pad.name, pad.projectId, filesKey])
+  useRegisterCommands("codepad-editor", commands)
+
+  const filesPanel = (
+    <FilesPanel
+      files={pad.files.map((f) => f.path)}
+      entry={pad.entry}
+      active={active}
+      dirty={dirty}
+      onOpen={open}
+      onCreate={createFile}
+      onRename={rename}
+      onDelete={remove}
+      adding={adding}
+      onAddingChange={setAdding}
+    />
+  )
+  const output = <OutputPanel runId={runId} logs={logs.data} loading={runId != null && logs.isPending} mod={mod} entry={pad.entry} />
+  const preview = <PreviewPanel doc={previewDoc} reloadKey={previewKey} onReload={() => setPreviewKey((k) => k + 1)} />
+  const editorFor = (readOnly: boolean) =>
+    active && buffers[active] ? (
+      <CodeEditor
+        key={active}
+        modelPath={`${pad.id}/${active}`}
+        filePath={active}
+        value={buffers[active].value}
+        onChange={(value) => edit(active, value)}
+        onMount={readOnly ? undefined : onEditorMount}
+        readOnly={readOnly}
+        className="flex-1"
+      />
+    ) : (
+      <div className="grid flex-1 place-items-center p-6 text-center text-sm text-muted-foreground">Open a file from the list to edit it.</div>
+    )
+
   return (
     <div className="flex h-[calc(100svh-3.5rem)] min-h-0 flex-col">
       {/* Top bar */}
-      <div className="flex h-12 shrink-0 items-center gap-3 border-b border-border/60 px-3">
+      <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border/60 px-2 sm:gap-3 sm:px-3">
         <Link href="/dashboard/codepad" aria-label="All pads" className={buttonVariants({ variant: "ghost", size: "icon-sm" })}>
           <Icon name="arrow-left" />
         </Link>
-        <span className="surface-sunken flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground">
+        <span className="surface-sunken hidden size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground sm:flex">
           <Icon name={runtime?.icon ?? "code"} size="xs" />
         </span>
-        <div className="flex min-w-0 items-baseline gap-2">
-          <h1 className="truncate font-mono text-sm font-medium">{pad.name}</h1>
-          <span className="hidden text-xs text-muted-foreground sm:inline">{runtime?.name ?? pad.runtime}</span>
-        </div>
+        <PadName pad={pad} />
+        <span className="hidden text-xs text-muted-foreground lg:inline">{runtime?.name ?? pad.runtime}</span>
+        {pad.projectId && (
+          <Link href={`/dashboard/projects/${pad.projectId}`} className="hidden items-center gap-1 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success hover:bg-success/15 md:inline-flex">
+            Deployed <Icon name="arrow-up-right" size="xs" />
+          </Link>
+        )}
         <SaveStatus state={saveState} dirty={dirty.length} onRetry={() => void saveAll()} />
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => void startRun()} loading={run.isPending}>
             {!run.isPending && <Icon name="play" />}
             Run
-            <kbd className="ml-1 hidden rounded border border-border/70 px-1 font-mono text-[0.625rem] text-muted-foreground sm:inline">{mod}↵</kbd>
+            <kbd className="ml-1 hidden rounded border border-border/70 px-1 font-mono text-[0.625rem] text-muted-foreground lg:inline">{mod}↵</kbd>
+          </Button>
+          <Button size="sm" onClick={() => void startDeploy()} loading={deploy.isPending}>
+            {!deploy.isPending && <Icon name="rocket" />}
+            Deploy
           </Button>
         </div>
       </div>
 
-      <p className="border-b border-border/60 bg-muted/40 px-4 py-2 text-xs text-muted-foreground md:hidden">CodePad works best on a larger screen.</p>
-
-      <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
-        <ResizablePanel id="files" defaultSize="18%" minSize={150} maxSize="35%">
-          <FilesPanel
-            files={pad.files.map((f) => f.path)}
-            entry={pad.entry}
-            active={active}
-            dirty={dirty}
-            onOpen={open}
-            onCreate={createFile}
-            onRename={rename}
-            onDelete={remove}
-          />
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel id="main" defaultSize={isStatic ? "47%" : "82%"} minSize="30%">
-          <ResizablePanelGroup orientation="vertical">
-            <ResizablePanel id="editor" defaultSize="68%" minSize="25%">
-              <div className="flex h-full min-h-0 flex-col bg-card">
-                <Tabs tabs={tabs} active={active} dirty={dirty} onSelect={setActive} onClose={close} />
-                {active && buffers[active] ? (
-                  <CodeEditor
-                    key={active}
-                    modelPath={`${pad.id}/${active}`}
-                    filePath={active}
-                    value={buffers[active].value}
-                    onChange={(value) => edit(active, value)}
-                    onMount={onEditorMount}
-                    className="flex-1"
-                  />
-                ) : (
-                  <div className="grid flex-1 place-items-center p-6 text-center text-sm text-muted-foreground">Open a file from the list to edit it.</div>
-                )}
-              </div>
-            </ResizablePanel>
-            <ResizableHandle />
-            <ResizablePanel id="output" defaultSize="32%" minSize={90}>
-              <OutputPanel runId={runId} logs={logs.data} loading={runId != null && logs.isPending} mod={mod} entry={pad.entry} />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </ResizablePanel>
-        {isStatic && (
-          <>
-            <ResizableHandle />
-            <ResizablePanel id="preview" defaultSize="35%" minSize="20%">
-              <PreviewPanel doc={previewDoc} reloadKey={previewKey} onReload={() => setPreviewKey((k) => k + 1)} />
-            </ResizablePanel>
-          </>
-        )}
-      </ResizablePanelGroup>
+      {isMobile ? (
+        // Phones: one view at a time. Code is read-only — Monaco isn't made for touch typing.
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex items-center justify-between gap-3 border-b border-border/60 px-3 py-2">
+            <Segmented
+              label="View"
+              size="sm"
+              value={view}
+              onChange={setView}
+              options={[
+                { value: "code", label: "Code" },
+                { value: "output", label: "Output" },
+                ...(isStatic ? [{ value: "preview" as const, label: "Preview" }] : []),
+              ]}
+            />
+            <SaveStatus state={saveState} dirty={dirty.length} onRetry={() => void saveAll()} always />
+          </div>
+          {view === "code" && (
+            <div className="flex min-h-0 flex-1 flex-col bg-card">
+              <Tabs tabs={pad.files.map((f) => f.path)} active={active} dirty={dirty} onSelect={open} />
+              {editorFor(true)}
+              <p className="border-t border-border/60 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">Reading only on a phone — open this pad on a computer to edit.</p>
+            </div>
+          )}
+          {view === "output" && <div className="min-h-0 flex-1">{output}</div>}
+          {view === "preview" && isStatic && <div className="min-h-0 flex-1">{preview}</div>}
+        </div>
+      ) : (
+        <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
+          <ResizablePanel id="files" defaultSize="18%" minSize={150} maxSize="35%">
+            {filesPanel}
+          </ResizablePanel>
+          <ResizableHandle />
+          <ResizablePanel id="main" defaultSize={isStatic ? "47%" : "82%"} minSize="30%">
+            <ResizablePanelGroup orientation="vertical">
+              <ResizablePanel id="editor" defaultSize="68%" minSize="25%">
+                <div className="flex h-full min-h-0 flex-col bg-card">
+                  <Tabs tabs={tabs} active={active} dirty={dirty} onSelect={setActive} onClose={close} />
+                  {editorFor(false)}
+                </div>
+              </ResizablePanel>
+              <ResizableHandle />
+              <ResizablePanel id="output" defaultSize="32%" minSize={90}>
+                {output}
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </ResizablePanel>
+          {isStatic && (
+            <>
+              <ResizableHandle />
+              <ResizablePanel id="preview" defaultSize="35%" minSize="20%">
+                {preview}
+              </ResizablePanel>
+            </>
+          )}
+        </ResizablePanelGroup>
+      )}
     </div>
   )
 }
 
+/** The pad's name, renamed in place: click, type, Enter. Names follow the project-name rules. */
+function PadName({ pad }: { pad: Pad }) {
+  const rename = useRenamePad(pad.id)
+  const [editing, setEditing] = React.useState(false)
+  const [value, setValue] = React.useState(pad.name)
+  const [error, setError] = React.useState<string | null>(null)
+
+  const submit = async () => {
+    const next = value.trim()
+    if (!next || next === pad.name) return setEditing(false)
+    const valid = projectNameSchema.safeParse(next)
+    if (!valid.success) return setError(valid.error.issues[0]?.message ?? "Not a valid name")
+    try {
+      await rename.mutateAsync(next)
+      setEditing(false)
+    } catch (caught) {
+      setError(errorMessage(caught))
+    }
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setValue(pad.name)
+          setError(null)
+          setEditing(true)
+        }}
+        title="Rename"
+        className="min-w-0 truncate rounded-md px-1.5 py-0.5 font-mono text-sm font-medium outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50"
+      >
+        {pad.name}
+      </button>
+    )
+  }
+  return (
+    <span className="relative">
+      <input
+        autoFocus
+        value={value}
+        spellCheck={false}
+        aria-label="Pad name"
+        aria-invalid={error ? true : undefined}
+        disabled={rename.isPending}
+        onChange={(e) => {
+          setValue(e.target.value)
+          setError(null)
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") void submit()
+          if (e.key === "Escape") setEditing(false)
+        }}
+        onBlur={() => void submit()}
+        className="surface-sunken h-7 w-44 rounded-md px-2 font-mono text-sm outline-none focus:ring-2 focus:ring-ring/50 aria-invalid:ring-2 aria-invalid:ring-destructive/50 sm:w-56"
+      />
+      {error && <span className="absolute top-full left-0 z-20 mt-1 w-64 rounded-md bg-popover px-2 py-1.5 text-xs text-destructive ring-1 ring-border">{error}</span>}
+    </span>
+  )
+}
+
 /** "Saving…" · "Saved · just now" · "Unsaved changes" · "Couldn't save — Retry". */
-function SaveStatus({ state, dirty, onRetry }: { state: SaveState; dirty: number; onRetry: () => void }) {
+function SaveStatus({ state, dirty, onRetry, always = false }: { state: SaveState; dirty: number; onRetry: () => void; always?: boolean }) {
   const [, tick] = React.useReducer((n: number) => n + 1, 0)
   React.useEffect(() => {
     const id = window.setInterval(tick, 15_000)
@@ -358,7 +540,7 @@ function SaveStatus({ state, dirty, onRetry }: { state: SaveState; dirty: number
     content = <span className="text-muted-foreground">All changes saved</span>
   }
   return (
-    <span role="status" aria-live="polite" className="hidden text-xs md:inline-flex">
+    <span role="status" aria-live="polite" className={cn("text-xs", always ? "inline-flex" : "hidden md:inline-flex")}>
       {content}
     </span>
   )
@@ -375,7 +557,8 @@ function Tabs({
   active: string | null
   dirty: string[]
   onSelect: (path: string) => void
-  onClose: (path: string) => void
+  /** Without it, tabs can't be closed (phones list every file as a tab). */
+  onClose?: (path: string) => void
 }) {
   if (tabs.length === 0) return <div className="h-9 shrink-0 border-b border-border/60 bg-app-panel" />
   return (
@@ -395,6 +578,7 @@ function Tabs({
             <button type="button" role="tab" aria-selected={selected} onClick={() => onSelect(path)} className="h-full pr-1 pl-3 font-mono outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset">
               {path.split("/").pop()}
             </button>
+            {onClose ? (
             <button
               type="button"
               aria-label={`Close ${path}${changed ? " (unsaved changes)" : ""}`}
@@ -410,6 +594,9 @@ function Tabs({
                 <Icon name="x" size="xs" className={cn(!selected && "opacity-0 group-hover/tab:opacity-100")} />
               )}
             </button>
+            ) : (
+              <span className="w-2" aria-hidden />
+            )}
           </div>
         )
       })}
@@ -427,7 +614,11 @@ function FilesPanel({
   onCreate,
   onRename,
   onDelete,
+  adding,
+  onAddingChange: setAdding,
 }: {
+  adding: boolean
+  onAddingChange: (adding: boolean) => void
   files: string[]
   entry: string
   active: string | null
@@ -437,7 +628,6 @@ function FilesPanel({
   onRename: (from: string, to: string) => Promise<string | null>
   onDelete: (path: string) => void
 }) {
-  const [adding, setAdding] = React.useState(false)
   const [renaming, setRenaming] = React.useState<string | null>(null)
 
   return (
