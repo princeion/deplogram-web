@@ -14,6 +14,7 @@ import { generateMockUsage } from "@/mocks/data/usage"
 import { mockWorkspace } from "@/mocks/data/workspace"
 import { mockPads, mockRuns } from "@/mocks/data/pads"
 import { mockStorage } from "@/mocks/data/storage"
+import { mockWebhooks } from "@/mocks/data/webhooks"
 import type { PadTemplate } from "@/features/codepad/codepad"
 
 // Mock session: signed in by default; sign-in / sign-out toggle it for the browser tab.
@@ -558,5 +559,40 @@ handlers.push(
     const ms = { "1h": 3_600_000, "1d": 86_400_000, "7d": 7 * 86_400_000 }[expiresIn]
     const token = Math.random().toString(36).slice(2, 12)
     return HttpResponse.json({ url: `https://files.dpl.app/${encodeURI(path)}?token=${token}`, expiresAt: new Date(Date.now() + ms).toISOString() })
+  })
+)
+
+// ── Utilities: webhook tester ───────────────────────────────────────────────────
+
+handlers.push(
+  http.get("*/v1/webhooks/endpoint", async () => {
+    await delay(150)
+    return HttpResponse.json(mockWebhooks.endpoint())
+  }),
+  http.post("*/v1/webhooks/endpoint", async () => {
+    await delay(300)
+    return HttpResponse.json(mockWebhooks.rotate())
+  }),
+  http.get("*/v1/webhooks/requests", async () => {
+    await delay(120)
+    return HttpResponse.json({ items: mockWebhooks.list() })
+  }),
+  http.delete("*/v1/webhooks/requests", async () => {
+    await delay(200)
+    mockWebhooks.clear()
+    return new HttpResponse(null, { status: 204 })
+  }),
+  http.post("*/v1/webhooks/test", async ({ request }) => {
+    await delay(500)
+    const { sample } = (await request.json()) as { sample: "github-push" | "paystack-charge" | "form" }
+    return HttpResponse.json(mockWebhooks.send(sample), { status: 201 })
+  }),
+  http.post("*/v1/webhooks/requests/:id/replay", async ({ params, request }) => {
+    await delay(700)
+    const { url } = (await request.json()) as { url: string }
+    if (!mockWebhooks.get(String(params.id))) return HttpResponse.json({ error: { message: "That request is gone." } }, { status: 404 })
+    if (!/^https?:\/\//.test(url)) return HttpResponse.json({ status: null, durationMs: 0, error: "Use a full address starting with https://" })
+    if (/localhost|127\.0\.0\.1/.test(url)) return HttpResponse.json({ status: null, durationMs: 0, error: "Deplogram can't reach localhost — use a public address or a tunnel." })
+    return HttpResponse.json({ status: 200, durationMs: 180 + Math.floor(Math.random() * 300), error: null })
   })
 )

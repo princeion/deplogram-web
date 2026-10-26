@@ -90,7 +90,7 @@ export function CodeEditor({
   modelPath: string
   /** The file's path in the pad, for the language. */
   filePath: string
-  /** Initial content of the model (later edits live in the model). */
+  /** The content. Edits come back through onChange; a different value set from outside replaces the model's. */
   value: string
   onChange: (value: string) => void
   onMount?: (editor: CodeEditorHandle, monaco: Parameters<OnMount>[1]) => void
@@ -100,6 +100,13 @@ export function CodeEditor({
   className?: string
 }) {
   const monacoRef = React.useRef<Parameters<BeforeMount>[0] | null>(null)
+  const editorRef = React.useRef<CodeEditorHandle | null>(null)
+
+  // Follow `value` when it changes from outside (Clear, a sample) — typing already matches it.
+  React.useEffect(() => {
+    const editor = editorRef.current
+    if (editor && editor.getValue() !== value) editor.setValue(value)
+  }, [value])
   const [font, setFont] = React.useState("ui-monospace, monospace")
 
   // Re-theme when the app's theme flips (next-themes toggles the class on <html>).
@@ -126,7 +133,10 @@ export function CodeEditor({
           monacoRef.current = monaco
           setFont(defineTheme(monaco).font)
         }}
-        onMount={onMount}
+        onMount={(editor, monaco) => {
+          editorRef.current = editor
+          onMount?.(editor, monaco)
+        }}
         onChange={(next) => onChange(next ?? "")}
         options={{
           readOnly,
