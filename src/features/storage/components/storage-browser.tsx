@@ -43,6 +43,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -577,8 +578,8 @@ function SortMenu({ value, onChange }: { value: StorageSort; onChange: (value: S
         <span className="text-muted-foreground">Sort:</span> {current?.label}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuLabel>Sort by</DropdownMenuLabel>
         <DropdownMenuRadioGroup value={value} onValueChange={(next) => onChange(next as StorageSort)}>
+          <DropdownMenuLabel>Sort by</DropdownMenuLabel>
           {storageSorts.map((s) => (
             <DropdownMenuRadioItem key={s.value} value={s.value}>
               {s.label}
@@ -1072,13 +1073,15 @@ function FileDetails({
             <Icon name="chevron-down" size="xs" className="ml-auto" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>The link stops working after</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {linkExpiries.map((e) => (
-              <DropdownMenuItem key={e.value} onClick={() => void share(e.value)}>
-                <Icon name="clock" /> {e.label}
-              </DropdownMenuItem>
-            ))}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>The link stops working after</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {linkExpiries.map((e) => (
+                <DropdownMenuItem key={e.value} onClick={() => void share(e.value)}>
+                  <Icon name="clock" /> {e.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
         )}

@@ -20,7 +20,7 @@ import { Icon } from "@/components/shared/icon"
 import { Segmented } from "@/components/shared/segmented"
 import { StatusDot } from "@/components/shared/status-dot"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { EmptyState } from "@/components/app-shell/empty-state"
@@ -78,6 +78,7 @@ export function WebhookTester() {
               {!sendSample.isPending && <Icon name="play" />} Send a test request
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuGroup>
               <DropdownMenuLabel>Send a sample to your URL</DropdownMenuLabel>
               {webhookSamples.map((s) => (
                 <DropdownMenuItem
@@ -95,6 +96,7 @@ export function WebhookTester() {
                   <Icon name="webhook" /> {s.label}
                 </DropdownMenuItem>
               ))}
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
