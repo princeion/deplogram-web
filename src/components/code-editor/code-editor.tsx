@@ -152,6 +152,9 @@ export function CodeEditor({
           cursorSmoothCaretAnimation: "on",
           renderLineHighlight: minimal ? "none" : "line",
           folding: !minimal,
+          // Read-only views: "#1042" isn't a colour and URLs in a snippet aren't links.
+          colorDecorators: !minimal,
+          links: !minimal,
           domReadOnly: readOnly,
           tabSize: 2,
           wordWrap: "on",

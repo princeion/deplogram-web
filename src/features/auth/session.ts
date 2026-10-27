@@ -42,7 +42,20 @@ export function useViewer() {
   return useQuery(viewerQuery())
 }
 
-export type SignInInput = { email: string; password: string }
+/**
+ * POST /v1/auth/sign-in { email, password, code? } → Viewer. With two-factor on, the first try
+ * (no code) answers 401 { error: "two_factor_required" }; send again with the code from the
+ * authenticator app or a recovery code. Wrong credentials: 401 { error: "invalid_credentials" };
+ * wrong code: 401 { error: "invalid_code" }.
+ */
+export type SignInInput = { email: string; password: string; code?: string }
+
+/** The reason a sign-in was refused, from the 401's body. */
+export function signInRefusal(error: unknown): "two_factor_required" | "invalid_code" | "invalid_credentials" | null {
+  if (!(error instanceof ApiError) || error.status !== 401) return null
+  const reason = (error.body as { error?: unknown } | null)?.error
+  return reason === "two_factor_required" || reason === "invalid_code" ? reason : "invalid_credentials"
+}
 
 export function useSignIn() {
   const queryClient = useQueryClient()

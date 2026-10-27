@@ -107,7 +107,7 @@ export function SecretField<T extends FieldValues, N extends FieldPath<T>>({
           />
           <InputGroupAddon align="inline-end">
             <InputGroupButton size="icon-xs" aria-label={revealed ? "Hide value" : "Show value"} aria-pressed={revealed} onClick={() => setRevealed((r) => !r)}>
-              <Icon name={revealed ? "eye" : "eye"} className={cn(!revealed && "opacity-60")} />
+              <Icon name={revealed ? "eye-off" : "eye"} />
             </InputGroupButton>
             {copyable && (
               <InputGroupButton

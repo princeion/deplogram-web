@@ -15,10 +15,29 @@ import { mockWorkspace } from "@/mocks/data/workspace"
 import { mockPads, mockRuns } from "@/mocks/data/pads"
 import { mockStorage } from "@/mocks/data/storage"
 import { mockWebhooks } from "@/mocks/data/webhooks"
+import { mockApis } from "@/mocks/data/apis"
+import { mockAccount } from "@/mocks/data/account"
+import type { NotificationUpdate } from "@/features/account/notifications"
+import type { ApiId, NewApiKey, TryRequest } from "@/features/apis/apis"
 import type { PadTemplate } from "@/features/codepad/codepad"
 
-// Mock session: signed in by default; sign-in / sign-out toggle it for the browser tab.
-let signedIn = true
+// Mock session: signed in by default; sign-in / sign-out toggle it for the browser tab (kept in
+// sessionStorage, so signing out survives a reload — e.g. to see /signin).
+const SIGNED_OUT = "deplogram:mock-signed-out"
+let signedIn = (() => {
+  try {
+    return sessionStorage.getItem(SIGNED_OUT) !== "1"
+  } catch {
+    return true
+  }
+})()
+function setSignedIn(value: boolean) {
+  signedIn = value
+  try {
+    if (value) sessionStorage.removeItem(SIGNED_OUT)
+    else sessionStorage.setItem(SIGNED_OUT, "1")
+  } catch {}
+}
 
 const mockUsage = generateMockUsage()
 
@@ -47,21 +66,26 @@ export const handlers: HttpHandler[] = [
 
   http.post("*/v1/auth/sign-in", async ({ request }) => {
     await delay(400)
-    const { email, password } = (await request.json()) as { email?: string; password?: string }
-    if (!email || !password) return HttpResponse.json({ error: "invalid_credentials" }, { status: 401 })
-    signedIn = true
+    const { email, password, code } = (await request.json()) as { email?: string; password?: string; code?: string }
+    // In the mock, any email works and "wrong" is the one wrong password.
+    if (!email || !password || password === "wrong") return HttpResponse.json({ error: "invalid_credentials" }, { status: 401 })
+    if (mockAccount.security().twoFactor.enabled) {
+      if (!code) return HttpResponse.json({ error: "two_factor_required" }, { status: 401 })
+      if (!/^(\d{6}|[a-z0-9]{5}-[a-z0-9]{4})$/.test(code)) return HttpResponse.json({ error: "invalid_code" }, { status: 401 })
+    }
+    setSignedIn(true)
     return HttpResponse.json({ ...mockViewer, email })
   }),
 
   http.post("*/v1/auth/sign-out", async () => {
     await delay(150)
-    signedIn = false
+    setSignedIn(false)
     return new HttpResponse(null, { status: 204 })
   }),
 
   http.delete("*/v1/me", async () => {
     await delay(900)
-    signedIn = false
+    setSignedIn(false)
     return new HttpResponse(null, { status: 204 })
   }),
 
@@ -163,7 +187,7 @@ export const handlers: HttpHandler[] = [
   // ── New deployment flow ──────────────────────────────────────────────────────
   http.get("*/v1/git/connection", async () => {
     await delay(200)
-    return HttpResponse.json({ provider: "github", connected: true, account: "ada" })
+    return HttpResponse.json({ provider: "github", connected: mockAccount.gitConnected(), account: mockAccount.gitConnected() ? "ada-obi" : null })
   }),
 
   http.get("*/v1/git/repositories", async ({ request }) => {
@@ -594,5 +618,109 @@ handlers.push(
     if (!/^https?:\/\//.test(url)) return HttpResponse.json({ status: null, durationMs: 0, error: "Use a full address starting with https://" })
     if (/localhost|127\.0\.0\.1/.test(url)) return HttpResponse.json({ status: null, durationMs: 0, error: "Deplogram can't reach localhost — use a public address or a tunnel." })
     return HttpResponse.json({ status: 200, durationMs: 180 + Math.floor(Math.random() * 300), error: null })
+  })
+)
+
+// ── APIs: usage, requests, try it, keys ─────────────────────────────────────────
+
+handlers.push(
+  http.get("*/v1/apis/usage", async () => {
+    await delay(250)
+    return HttpResponse.json(mockApis.usage())
+  }),
+  http.get("*/v1/apis/requests", async ({ request }) => {
+    await delay(180)
+    const api = new URL(request.url).searchParams.get("api") as ApiId | null
+    return HttpResponse.json({ items: mockApis.requests(api ?? undefined) })
+  }),
+  http.post("*/v1/apis/try", async ({ request }) => {
+    const input = (await request.json()) as TryRequest
+    return HttpResponse.json(await mockApis.try(input))
+  }),
+  http.get("*/v1/api-keys", async () => {
+    await delay(200)
+    return HttpResponse.json({ items: mockApis.keys() })
+  }),
+  http.post("*/v1/api-keys", async ({ request }) => {
+    await delay(500)
+    const input = (await request.json()) as NewApiKey
+    if (!input.name?.trim()) return HttpResponse.json({ error: { message: "Give the key a name." } }, { status: 422 })
+    return HttpResponse.json(mockApis.createKey(input), { status: 201 })
+  }),
+  http.delete("*/v1/api-keys/:id", async ({ params }) => {
+    await delay(400)
+    return mockApis.revokeKey(String(params.id)) ? new HttpResponse(null, { status: 204 }) : HttpResponse.json({ error: { message: "That key doesn't exist." } }, { status: 404 })
+  })
+)
+
+// ── Settings: security, notifications, Git ─────────────────────────────────────
+
+const fieldError = (field: string, message: string) => HttpResponse.json({ error: { message: "Check the highlighted field.", fields: { [field]: message } } }, { status: 422 })
+
+handlers.push(
+  http.get("*/v1/me/security", async () => {
+    await delay(250)
+    return HttpResponse.json(mockAccount.security())
+  }),
+  http.post("*/v1/me/password", async ({ request }) => {
+    await delay(700)
+    const { current } = (await request.json()) as { current: string; next: string }
+    // In the mock, "wrong" is the one wrong current password.
+    return mockAccount.changePassword(current) ? new HttpResponse(null, { status: 204 }) : fieldError("current", "That's not your current password.")
+  }),
+  http.post("*/v1/me/two-factor/setup", async () => {
+    await delay(400)
+    return HttpResponse.json(mockAccount.startTwoFactor())
+  }),
+  http.post("*/v1/me/two-factor/enable", async ({ request }) => {
+    await delay(600)
+    const { code } = (await request.json()) as { code: string }
+    const recoveryCodes = mockAccount.enableTwoFactor(code)
+    return recoveryCodes ? HttpResponse.json({ recoveryCodes }) : fieldError("code", "That code didn't match. Codes change every 30 seconds — try the newest one.")
+  }),
+  http.post("*/v1/me/two-factor/disable", async ({ request }) => {
+    await delay(600)
+    const { code } = (await request.json()) as { code: string }
+    return mockAccount.disableTwoFactor(code) ? new HttpResponse(null, { status: 204 }) : fieldError("code", "Enter a code from your app, or a recovery code.")
+  }),
+  http.post("*/v1/me/two-factor/recovery-codes", async () => {
+    await delay(500)
+    return HttpResponse.json({ recoveryCodes: mockAccount.newRecoveryCodes() })
+  }),
+  http.get("*/v1/me/sessions", async () => {
+    await delay(250)
+    return HttpResponse.json({ items: mockAccount.sessions() })
+  }),
+  http.delete("*/v1/me/sessions/:id", async ({ params }) => {
+    await delay(400)
+    return mockAccount.endSession(String(params.id)) ? new HttpResponse(null, { status: 204 }) : HttpResponse.json({ error: { message: "That session has already ended." } }, { status: 404 })
+  }),
+  http.delete("*/v1/me/sessions", async () => {
+    await delay(500)
+    mockAccount.endOtherSessions()
+    return new HttpResponse(null, { status: 204 })
+  }),
+  http.get("*/v1/me/notifications", async () => {
+    await delay(250)
+    return HttpResponse.json(mockAccount.notifications())
+  }),
+  http.patch("*/v1/me/notifications", async ({ request }) => {
+    await delay(350)
+    return HttpResponse.json(mockAccount.updateNotifications((await request.json()) as NotificationUpdate))
+  }),
+  http.get("*/v1/git/installations", async () => {
+    await delay(300)
+    return HttpResponse.json({ items: mockAccount.installations() })
+  }),
+  http.post("*/v1/git/connection", async () => {
+    await delay(600)
+    // The real API returns GitHub's authorise URL; the mock connects straight away.
+    mockAccount.connectGit()
+    return HttpResponse.json({ url: "/dashboard/settings/git?connected=1" })
+  }),
+  http.delete("*/v1/git/connection", async () => {
+    await delay(500)
+    mockAccount.disconnectGit()
+    return new HttpResponse(null, { status: 204 })
   })
 )

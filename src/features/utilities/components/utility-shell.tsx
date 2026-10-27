@@ -3,9 +3,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { notify } from "@/components/feedback"
-import { Icon, type IconName } from "@/components/shared/icon"
-import { Button } from "@/components/ui/button"
+import { Icon } from "@/components/shared/icon"
 
 /**
  * The parts every utility is built from, so the six read as one set: panes (a well with a
@@ -13,57 +11,8 @@ import { Button } from "@/components/ui/button"
  * was found, a copy button, and the "runs in your browser" note.
  */
 
-/** A titled well: header bar with actions, then the content. */
-export function Pane({
-  title,
-  icon,
-  actions,
-  className,
-  bodyClassName,
-  children,
-}: {
-  title: React.ReactNode
-  icon?: IconName
-  actions?: React.ReactNode
-  className?: string
-  bodyClassName?: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className={cn("flex min-w-0 flex-col overflow-hidden rounded-xl border border-border/70 bg-card", className)}>
-      <header className="flex h-10 shrink-0 items-center gap-2 border-b border-border/60 pr-1.5 pl-3.5">
-        {icon && <Icon name={icon} size="xs" className="text-muted-foreground" />}
-        <h2 className="truncate text-xs font-medium text-muted-foreground">{title}</h2>
-        {actions && <div className="ml-auto flex items-center gap-0.5">{actions}</div>}
-      </header>
-      <div className={cn("min-h-0 grow", bodyClassName)}>{children}</div>
-    </section>
-  )
-}
-
-/** Copies `value`; says so. */
-export function CopyButton({ value, label = "Copy", disabled }: { value: string; label?: string; disabled?: boolean }) {
-  const [copied, setCopied] = React.useState(false)
-  return (
-    <Button
-      variant="ghost"
-      size="xs"
-      disabled={disabled || !value}
-      onClick={() =>
-        navigator.clipboard.writeText(value).then(
-          () => {
-            setCopied(true)
-            window.setTimeout(() => setCopied(false), 1400)
-          },
-          () => notify.error(new Error("Your browser blocked copying."), { title: "Couldn't copy" })
-        )
-      }
-    >
-      <Icon name={copied ? "check" : "copy"} className={cn(copied && "text-success")} />
-      {copied ? "Copied" : label}
-    </Button>
-  )
-}
+export { Pane } from "@/components/shared/pane"
+export { CopyButton } from "@/components/shared/copy-button"
 
 /** Under the panes: valid / invalid, and the facts found. */
 export function StatusLine({ tone, children, className }: { tone: "idle" | "ok" | "error" | "warn"; children: React.ReactNode; className?: string }) {

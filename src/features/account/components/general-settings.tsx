@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { toast } from "sonner"
 
 import { runtimes } from "@/content/runtimes"
@@ -10,7 +11,7 @@ import {
   useUpdateAccountSettings,
   type AccountSettings,
 } from "@/features/account/account"
-import { Form, FormActions, FormRootError, SelectField, SwitchField, TextField, UnsavedChangesGuard, useZodForm } from "@/components/forms"
+import { Form, FormActions, FormRootError, SelectField, TextField, UnsavedChangesGuard, useZodForm } from "@/components/forms"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -52,13 +53,13 @@ function GeneralSettingsForm({ settings }: { settings: AccountSettings }) {
             description="Pre-selected when you start a new deployment."
             options={runtimeOptions}
           />
-          <SwitchField
-            control={form.control}
-            name="deploymentEmails"
-            label="Deployment emails"
-            description="Get an email when a deployment fails or crashes."
-          />
-          <SwitchField control={form.control} name="productUpdates" label="Product updates" description="Occasional news about new features." />
+          <p className="text-sm text-muted-foreground">
+            Which emails you get —{" "}
+            <Link href="/dashboard/settings/notifications" className="text-foreground underline-offset-2 hover:underline">
+              Notifications
+            </Link>
+            .
+          </p>
         </div>
       </PageSection>
 

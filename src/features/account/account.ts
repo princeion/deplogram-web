@@ -20,19 +20,20 @@ export const accountSettingsSchema = z.object({
 
 export type AccountSettings = z.infer<typeof accountSettingsSchema>
 
-/** What the General settings form edits (email is managed by the sign-in provider). */
+/**
+ * What the General settings form edits (email is managed by the sign-in provider). Which emails
+ * you get lives in Settings › Notifications (features/account/notifications).
+ */
 export const generalSettingsFormSchema = z.object({
   name: z.string().trim().min(1, "Enter your name").max(64, "Keep it under 64 characters"),
   defaultRuntime: z.enum(runtimeIds, { message: "Pick a runtime" }),
-  deploymentEmails: z.boolean(),
-  productUpdates: z.boolean(),
 })
 
 export type GeneralSettingsForm = z.infer<typeof generalSettingsFormSchema>
 
 export const toGeneralSettingsForm = (settings: AccountSettings): GeneralSettingsForm => ({
   name: settings.name,
-  ...settings.preferences,
+  defaultRuntime: settings.preferences.defaultRuntime,
 })
 
 export const accountKeys = {
