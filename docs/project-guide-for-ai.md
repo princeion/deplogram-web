@@ -50,7 +50,7 @@ The repo has **two products**:
 |---|---|---|---|
 | **Marketing site** | `/`, `/deploy`, `/runtimes`, `/blog`, `/waitlist`… | `src/app/(base)/` | Public pages: hero, features, blog, waitlist. Smooth scroll (Lenis). |
 | **Your Galley** (the app) | `/dashboard/...` | `src/app/(app)/dashboard/` | The logged-in product: projects, deployments, logs, metrics, environment variables, usage, activity, settings. |
-| Auth pages | `/signin`, `/signout` | `src/app/signin/`, `src/app/signout/` | Outside both groups (see §8 for the current state). |
+| Auth pages | `/signin`, `/signout` | `src/app/(app)/signin/`, `src/app/(app)/signout/` | In the app group (so the mock API works) but outside `/dashboard` (no app frame). |
 
 Words: the workspace is always called **"Your Galley"**. Kitchen and food
 phrases are **only** used for a few marketing headlines. Everything else
@@ -141,14 +141,14 @@ src/
   app/
     (base)/            marketing pages (navbar + footer from MarketingShell)
     (app)/dashboard/   Your Galley — every app page; layout adds AppShell + mock API
-    signin/ signout/   auth pages (outside the groups)
+    (app)/signin/ (app)/signout/   auth pages (mock API, no app frame)
     globals.css        ALL design tokens and utilities
     layout.tsx         root: fonts, theme, providers
   components/
     ui/                shadcn primitives: button, input, dialog, dropdown-menu, select,
                        tabs, table, tooltip, sheet, switch, checkbox, field, label, alert,
                        badge, card, skeleton, spinner, sidebar, command…  (reuse, don't copy)
-    shared/            logo, icon, status-dot, segmented, settings-table, theme-toggle,
+    shared/            logo, icon, status-dot, segmented, settings-table, pane, copy-button, theme-toggle,
                        container, section-wrapper, eyebrow, badge-pill, node-graph, motion/*
     app-shell/         the app frame: app-shell, page (Page/PageHeader/PageSection),
                        empty-state, error-state, app-loader, page-skeleton, sidebar-nav
@@ -160,7 +160,7 @@ src/
     command-palette/   ⌘K palette
     marketing/         marketing sections: navbar, footer, hero, section-header, faq…
   features/<area>/     data hooks (<area>.ts) + that area's components/
-                       auth · account · projects · deployments · deploy · activity · usage · overview · codepad · storage
+                       auth · account · projects · deployments · deploy · activity · usage · overview · codepad · storage · utilities · apis
   lib/                 api-client (apiFetch), format (dates, money, bytes), site config,
                        navigation registry, motion constants, utils (cn)
   content/             marketing copy as typed data (home.ts, faq.ts, nav.ts, runtimes.ts…)
@@ -276,7 +276,7 @@ import { DeploymentStatus } from "@/features/deployments/components/deployment-s
 
 ### Others that already exist
 
-`CodeEditor` (Monaco, `@/components/code-editor/code-editor`) · `FolderShape` (folder-shaped card) · `useLocalPreference` (remember a choice per device, `@/hooks/use-local-preference`) · `Segmented` (tabs with counts) · `SettingsTable` / `SettingRow` ·
+`Pane` (a titled well with header actions, `@/components/shared/pane`) · `CopyButton` (`@/components/shared/copy-button`) · `CodeEditor` (Monaco, `@/components/code-editor/code-editor`; `readOnly minimal` for snippets) · `FolderShape` (folder-shaped card) · `useLocalPreference` (remember a choice per device, `@/hooks/use-local-preference`) · `Segmented` (tabs with counts) · `SettingsTable` / `SettingRow` ·
 `Callout` (`@/components/feedback`) · `useConfirm` (confirm dialogs) ·
 `DataTable` · `LogViewer` · `Stat`, `AreaTimeSeries`, `BarTimeSeries`,
 `UsageMeter` (`@/components/charts`) · `StatusDot` · `ThemeToggle` ·
@@ -357,32 +357,36 @@ They never call `fetch` directly.
 | Hook | Does |
 |---|---|
 | `useViewer()` | The signed-in user `{ id, name, email, image }`, or `null` |
-| `useSignIn()` | `signIn.mutate({ email, password })` → `POST /v1/auth/sign-in` |
+| `useSignIn()` | `signIn.mutate({ email, password, code? })` → `POST /v1/auth/sign-in` |
+| `signInRefusal(error)` | Why a sign-in failed: `"two_factor_required"`, `"invalid_code"` or `"invalid_credentials"` |
 | `useSignOut()` | Signs out and clears cached data |
 
 The backend owns the session (a cookie). The sign-in page reads
 `?callbackUrl=` and goes there afterwards (the app links to
 `/signin?callbackUrl=/dashboard`).
 
-**Current state of auth pages (October 2026):**
+**Auth pages (done, October 2026):**
 
-- `/signin` is wired to `useSignIn()` but unstyled. Its TODO is "design this page".
-- `/login` and `/signup` (from `src/components/auth/*`) have a design but
-  **fake handlers** ("TODO: plug in your auth provider"), a **hand-drawn logo**,
-  **hardcoded colours** and hand-written SVG icons. They also duplicate
-  `/signin`. Keep one sign-in route, build it from §6 and §7, and wire it to
-  `useSignIn()`.
+- `/signin` (`src/features/auth/components/sign-in.tsx`): email and password,
+  then a code step when two-factor is on (authenticator code or recovery code).
+  Only same-site `callbackUrl`s are followed.
+- `/signout` (`src/features/auth/components/sign-out.tsx`).
+- There is no sign-up: Deplogram is in early access, so new people go to
+  `/waitlist`. The old `/login`, `/signup` and `src/components/auth/*` were
+  removed — don't bring them back.
 - Google and GitHub sign-in need backend endpoints that don't exist yet. Ask
   before adding buttons that do nothing.
+- Password, two-factor and signed-in devices live in Settings › Security
+  (`src/features/account/security.ts`).
 
 ### Mock API (development)
 
 With `NEXT_PUBLIC_API_MOCKING=enabled`, MSW answers API calls in the browser
 (`src/mocks/handlers.ts`, data in `src/mocks/data/`). **It only runs inside
-`src/app/(app)/`** (the `MswProvider` in `src/app/(app)/layout.tsx`). Pages
-outside it, such as `/signin`, don't get mocks, so wrap them in
-`MswProvider` (or move them under a group that has it) to test sign-in
-without a backend. A new endpoint needs a handler in `handlers.ts`.
+`src/app/(app)/`** (the `MswProvider` in `src/app/(app)/layout.tsx`), which
+is why `/signin` and `/signout` live there. In the mock, any email signs in and
+`wrong` is the one wrong password; signing out lasts for the browser tab. A new
+endpoint needs a handler in `handlers.ts`.
 
 ---
 
@@ -444,7 +448,7 @@ From the first `/login` attempt, written by an AI without this guide:
    |---|---|
    | A new app page | `src/components/app-shell/page.tsx`, a similar existing page, the feature's `<area>.ts` |
    | A form | `src/components/forms/fields.tsx`, `src/features/account/components/general-settings.tsx` |
-   | Auth pages | `src/app/signin/page.tsx`, `src/features/auth/session.ts`, `src/components/forms/fields.tsx` |
+   | Auth pages | `src/features/auth/components/sign-in.tsx`, `src/features/auth/session.ts` |
    | A marketing section | `src/components/marketing/section-header.tsx`, a similar section, `docs/design-system.md` |
    | Styling questions | the relevant part of `src/app/globals.css` |
    | Anything with data | the feature's `<area>.ts` and `src/mocks/handlers.ts` |
