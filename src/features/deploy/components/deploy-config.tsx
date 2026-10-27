@@ -5,6 +5,7 @@ import { useFormContext, useFormState, useWatch } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
 import { formatRelativeTime } from "@/lib/format"
+import { siteConfig } from "@/lib/site"
 import { runtimes } from "@/content/runtimes"
 import { staticRuntimes, useNameAvailability, type Branch, type Detection, type Repository } from "@/features/deploy/deploy"
 import { projectNameSchema, type NewDeploymentValues } from "@/features/deploy/components/schema"
@@ -142,7 +143,7 @@ function ConfigSettings() {
       <SettingRow label="Project name" htmlFor="cfg-name" error={errors.name?.message} aside={<NameStatus />}>
         <span className="flex min-w-0 flex-1 items-center">
           <input id="cfg-name" {...register("name")} aria-invalid={Boolean(errors.name)} autoComplete="off" spellCheck={false} placeholder="my-project" className={cn(inlineInput, "rounded-r-none")} />
-          <span className="surface-band flex h-8 items-center rounded-r-md px-2 font-mono text-[0.8125rem] text-muted-foreground">.dpl.app</span>
+          <span className="surface-band flex h-8 items-center rounded-r-md px-2 font-mono text-[0.8125rem] text-muted-foreground">.{siteConfig.deployDomain}</span>
         </span>
       </SettingRow>
       <SettingRow label="Build" htmlFor="cfg-build" error={errors.buildCommand?.message}>
@@ -211,7 +212,7 @@ function DeployBar({ submitting }: { submitting: boolean }) {
         <span className="min-w-0 flex-1 truncate font-mono text-sm">
           <span className="text-muted-foreground">https://</span>
           {name || <span className="text-muted-foreground/60">your-project</span>}
-          <span className="text-muted-foreground">.dpl.app</span>
+          <span className="text-muted-foreground">.{siteConfig.deployDomain}</span>
         </span>
         {live && (
           <span className="font-mono text-[0.6875rem] text-muted-foreground tabular-nums" title="Live deployments on your plan, after this one">

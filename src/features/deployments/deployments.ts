@@ -2,6 +2,7 @@ import { keepPreviousData, queryOptions, useMutation, useQuery, useQueryClient }
 import { z } from "zod"
 
 import { apiFetch } from "@/lib/api-client"
+import { toHost } from "@/lib/format"
 import { deploymentStateSchema, projectKeys } from "@/features/projects/projects"
 
 export const deploymentTriggerSchema = z.enum(["git", "manual", "redeploy", "rollback"])
@@ -28,7 +29,7 @@ export const deploymentSchema = z.object({
   createdAt: z.string(),
   /** Seconds from QUEUED to RUNNING or to the failure; null while in progress. */
   durationSeconds: z.number().nullable(),
-  url: z.string().nullable(),
+  url: z.string().nullable().transform((url) => url && toHost(url)),
   /**
    * The runtime configuration this deployment was built and started with (brief: version, build
    * command, start command, port). A snapshot — later settings changes don't rewrite it.

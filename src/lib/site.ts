@@ -27,8 +27,8 @@ export const siteConfig = {
     "PaaS Africa",
   ],
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://deplogram.app",
-  /** Example deployment address shown in product mocks, e.g. myapp.dpl.app. */
-  deployDomain: "dpl.app",
+  /** Where projects are served — `<name>.deplogram.app`, as the backend issues them. Also used in product mocks. */
+  deployDomain: "deplogram.app",
   /** Every "get started" CTA goes here until the product opens. */
   waitlistUrl: "/waitlist",
   // TODO: replace with real inboxes before launch.

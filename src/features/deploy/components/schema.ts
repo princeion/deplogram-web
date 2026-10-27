@@ -3,7 +3,7 @@ import { z } from "zod"
 import { envVarsSchema } from "@/components/forms"
 import { staticRuntimes } from "@/features/deploy/deploy"
 
-/** Project names become hosts (`name.dpl.app`): lowercase, digits, hyphens; 3–40 characters. */
+/** Project names become hosts (`name.deplogram.app`): lowercase, digits, hyphens; 3–40 characters. */
 export const projectNameSchema = z
   .string()
   .trim()

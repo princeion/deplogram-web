@@ -10,6 +10,11 @@ export function formatDate(iso: string): string {
   return dateFormatter.format(new Date(`${iso}T00:00:00Z`))
 }
 
+/** "https://storefront.deplogram.app/" → "storefront.deplogram.app". The backend sends full URLs; the UI shows hosts. */
+export function toHost(url: string): string {
+  return url.replace(/^https?:\/\//, "").replace(/\/$/, "")
+}
+
 export function slugify(value: string): string {
   return value
     .toLowerCase()

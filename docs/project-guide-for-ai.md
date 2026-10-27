@@ -381,8 +381,23 @@ The backend owns the session (a cookie). The sign-in page reads
 
 ### Mock API (development)
 
-With `NEXT_PUBLIC_API_MOCKING=enabled`, MSW answers API calls in the browser
-(`src/mocks/handlers.ts`, data in `src/mocks/data/`). **It only runs inside
+The real backend is at `https://deplogram-backend.vercel.app` (Swagger UI at
+`/api/docs`, raw spec at `/api/docs-json`). It implements the same contract the
+frontend's `src/features/*/*.ts` files describe.
+
+`NEXT_PUBLIC_API_MOCKING` picks how much MSW answers in the browser
+(`src/mocks/handlers.ts`, data in `src/mocks/data/`):
+
+| Value | What happens |
+|---|---|
+| `enabled` | Everything is mocked; no backend needed. |
+| `partial` | Endpoints in `src/mocks/live-endpoints.ts` go to `NEXT_PUBLIC_API_URL`; the rest (CodePad, Storage, webhooks, APIs pages, security, notifications) stay mocked. When the backend ships an endpoint, add it to that list. |
+| unset | Nothing is mocked. |
+
+The backend sends project URLs in full (`https://name.deplogram.app`); the
+schemas turn them into hosts with `toHost` (`@/lib/format`). Projects are
+served at `<name>.${siteConfig.deployDomain}` — use `siteConfig`, never a
+hardcoded domain. **It only runs inside
 `src/app/(app)/`** (the `MswProvider` in `src/app/(app)/layout.tsx`), which
 is why `/signin` and `/signout` live there. In the mock, any email signs in and
 `wrong` is the one wrong password; signing out lasts for the browser tab. A new

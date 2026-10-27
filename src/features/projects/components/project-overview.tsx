@@ -5,6 +5,7 @@ import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 import { formatCompact, formatDuration, formatPercent, formatRelativeTime } from "@/lib/format"
+import { siteConfig } from "@/lib/site"
 import { useProject, useProjectMetrics, type Project } from "@/features/projects/projects"
 import { useDeployment, useDeployments, type Deployment } from "@/features/deployments/deployments"
 import { deploymentStatusMeta } from "@/features/deployments/components/deployment-status"
@@ -134,7 +135,7 @@ function Stage({ project }: { project: Project }) {
                 <Icon name="arrow-up-right" size="sm" className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </a>
             ) : (
-              <p className="font-mono text-sm text-muted-foreground">Not live yet — https://{project.name}.dpl.app</p>
+              <p className="font-mono text-sm text-muted-foreground">Not live yet — https://{project.name}.{siteConfig.deployDomain}</p>
             )}
           </div>
           <div className="flex flex-wrap gap-1.5">

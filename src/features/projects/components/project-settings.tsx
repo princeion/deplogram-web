@@ -7,6 +7,7 @@ import { z } from "zod"
 
 import { cn } from "@/lib/utils"
 import { formatRelativeTime } from "@/lib/format"
+import { siteConfig } from "@/lib/site"
 import { useDeleteProject, useProject, useUpdateProject, type Project, type ProjectUpdate } from "@/features/projects/projects"
 import { useBranches, useNameAvailability, useRepositories } from "@/features/deploy/deploy"
 import { projectNameSchema } from "@/features/deploy/components/schema"
@@ -165,7 +166,7 @@ function SettingsForm({ project }: { project: Project }) {
           <SettingRow label="Project name" htmlFor="set-name" error={formState.errors.name?.message} aside={<NameStatus control={control} current={project.name} />}>
             <span className="flex min-w-0 flex-1 items-center">
               <input id="set-name" {...register("name")} aria-invalid={Boolean(formState.errors.name)} autoComplete="off" spellCheck={false} className={cn(settingInputClass, "rounded-r-none")} />
-              <span className="surface-band flex h-8 items-center rounded-r-md px-2 font-mono text-[0.8125rem] text-muted-foreground">.dpl.app</span>
+              <span className="surface-band flex h-8 items-center rounded-r-md px-2 font-mono text-[0.8125rem] text-muted-foreground">.{siteConfig.deployDomain}</span>
             </span>
           </SettingRow>
           <SettingRow label="Repository">

@@ -254,7 +254,7 @@ export function uniqueName(name: string, taken: ReadonlySet<string>) {
 
 // ── Uploading ───────────────────────────────────────────────────────────────────────
 
-const MOCKING = process.env.NEXT_PUBLIC_API_MOCKING === "enabled"
+const MOCKING = process.env.NEXT_PUBLIC_API_MOCKING === "enabled" || process.env.NEXT_PUBLIC_API_MOCKING === "partial"
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? ""
 
 /**

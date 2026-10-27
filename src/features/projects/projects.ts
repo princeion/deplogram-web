@@ -2,6 +2,7 @@ import { keepPreviousData, queryOptions, useMutation, useQuery, useQueryClient }
 import { z } from "zod"
 
 import { apiFetch } from "@/lib/api-client"
+import { toHost } from "@/lib/format"
 
 /** Brief §5: lifecycle states plus explicit failure states. */
 export const deploymentStateSchema = z.enum([
@@ -26,7 +27,7 @@ export const projectSummarySchema = z.object({
   /** State of the latest deployment. */
   state: deploymentStateSchema,
   /** Deployment URL host while RUNNING, else null. */
-  url: z.string().nullable(),
+  url: z.string().nullable().transform((url) => url && toHost(url)),
   /** "owner/name" of the connected repository. */
   repository: z.string(),
   /** The branch it deploys from. */

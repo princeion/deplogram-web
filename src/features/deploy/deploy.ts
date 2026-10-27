@@ -2,6 +2,7 @@ import { keepPreviousData, queryOptions, useMutation, useQuery, useQueryClient }
 import { z } from "zod"
 
 import { apiFetch } from "@/lib/api-client"
+import { toHost } from "@/lib/format"
 import { runtimes } from "@/content/runtimes"
 import { deploymentKeys, deploymentQuery, deploymentSchema } from "@/features/deployments/deployments"
 import { projectKeys, projectSummarySchema } from "@/features/projects/projects"
@@ -56,8 +57,8 @@ export type Detection = z.infer<typeof detectionSchema>
 
 export const nameAvailabilitySchema = z.object({
   available: z.boolean(),
-  /** The project's URL if the name is used. */
-  url: z.string(),
+  /** The project's address for this name (a host; the backend may send a full URL). */
+  url: z.string().transform(toHost),
   suggestion: z.string().nullable(),
 })
 

@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query"
 
 import { cn } from "@/lib/utils"
 import { ApiError } from "@/lib/api-client"
+import { siteConfig } from "@/lib/site"
 import { runtimes } from "@/content/runtimes"
 import {
   padKeys,
@@ -176,7 +177,7 @@ function Workspace({ pad }: { pad: Pad }) {
         : "Builds what's saved now. The live version keeps serving until the new one is running.",
       details: (
         <span className="grid gap-1">
-          <span className="font-mono">https://{pad.name}.dpl.app</span>
+          <span className="font-mono">https://{pad.name}.{siteConfig.deployDomain}</span>
           <span className="text-xs text-muted-foreground">
             {runtime?.name ?? pad.runtime} · {pad.files.length} {pad.files.length === 1 ? "file" : "files"}
           </span>

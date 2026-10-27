@@ -4,7 +4,9 @@ import * as React from "react"
 
 import { AppLoader } from "@/components/app-shell/app-loader"
 
-const mockingEnabled = process.env.NEXT_PUBLIC_API_MOCKING === "enabled"
+// "enabled" mocks everything; "partial" mocks only what the real backend lacks (src/mocks/live-endpoints.ts).
+const mockingMode = process.env.NEXT_PUBLIC_API_MOCKING
+const mockingEnabled = mockingMode === "enabled" || mockingMode === "partial"
 
 let workerStart: Promise<unknown> | undefined
 
@@ -30,7 +32,7 @@ export function MswProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     // NEXT_PUBLIC_* values are baked in at build time: a host (Render, Vercel) must have them set
     // before it builds, or the app calls its own origin and every /v1 request 404s.
-    if (!mockingEnabled && !process.env.NEXT_PUBLIC_API_URL) {
+    if (mockingMode !== "enabled" && !process.env.NEXT_PUBLIC_API_URL) {
       console.warn(
         "[deplogram] No API configured: requests go to this site's own /v1 and will 404. Set NEXT_PUBLIC_API_URL to the backend, or NEXT_PUBLIC_API_MOCKING=enabled for the mock API — then rebuild."
       )
