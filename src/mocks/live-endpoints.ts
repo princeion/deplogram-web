@@ -2,7 +2,7 @@
  * Endpoints the real backend serves (from its OpenAPI spec at
  * https://deplogram-backend.vercel.app/api/docs-json, checked 27 Oct 2026). With
  * NEXT_PUBLIC_API_MOCKING=partial, these go to the backend and every other /v1 endpoint stays
- * mocked — so areas the backend hasn't built yet (CodePad, Storage, webhooks, the APIs pages,
+ * mocked — so areas the backend hasn't built yet (CodePad, Storage, the APIs pages,
  * security, notifications) keep working. When the backend ships an endpoint, add it here.
  *
  * Paths use `:param` for path parameters; the name doesn't matter.
@@ -42,6 +42,12 @@ export const liveEndpoints = [
   "POST /utils/json/minify",
   "POST /utils/base64/encode",
   "POST /utils/base64/decode",
+  "GET /v1/webhooks/endpoint",
+  "POST /v1/webhooks/endpoint",
+  "GET /v1/webhooks/requests",
+  "DELETE /v1/webhooks/requests",
+  "POST /v1/webhooks/test",
+  "POST /v1/webhooks/requests/:id/replay",
 ] as const
 
 // A handler's "*/v1/projects/:projectId" → "GET /v1/projects/:", so param names and the origin wildcard don't matter.
