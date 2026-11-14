@@ -7,9 +7,9 @@
 export const homeCopy = {
   hero: {
     announcement: {
-      label: "Deplogram is in development — early access opens in waves",
-      cta: "Join the waitlist",
-      href: "/waitlist",
+      label: "Deplogram is open — create an account",
+      cta: "Join the space",
+      href: "/signup",
     },
     headline: "Build, deploy and run your apps on one lightweight developer cloud.",
     description:
@@ -125,6 +125,6 @@ export const homeCopy = {
   cta: {
     title: "Get early access to Deplogram.",
     description:
-      "Early access opens in waves. Join the waitlist and we'll email you when your invite is ready.",
+      "Create an account and start deploying. Your workspace, code editor, storage, utilities and APIs are ready when you are.",
   },
 } as const;

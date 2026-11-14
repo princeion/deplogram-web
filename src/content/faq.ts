@@ -8,7 +8,7 @@ export const faq: readonly FaqItem[] = [
   {
     question: "Can I use Deplogram today?",
     answer:
-      "Not yet. Deplogram is in active development and will open in waves. Join the waitlist and we'll email you when your invite is ready.",
+      "Yes — create an account and start deploying. Your workspace, code editor, storage, utilities and APIs are ready when you are.",
   },
   {
     question: "What can I deploy?",

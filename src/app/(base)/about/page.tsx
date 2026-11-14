@@ -19,7 +19,7 @@ export default function AboutPage() {
   const { hero, story, quote } = aboutCopy
   return (
     <>
-      <SimpleHero title={hero.title} primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "Contact us", href: "/contact" }} />
+      <SimpleHero title={hero.title} primary={{ label: "Join the space", href: "/signup" }} secondary={{ label: "Contact us", href: "/contact" }} />
       <StoryBlock eyebrow="Our story" title={story.title} paragraphs={story.paragraphs} mission={quote} />
       <SectionWrapper>
         <Container>

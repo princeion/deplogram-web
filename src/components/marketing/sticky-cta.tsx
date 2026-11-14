@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react"
 import { useLenis } from "lenis/react"
@@ -11,6 +10,7 @@ import { entrance } from "@/lib/motion"
 import { siteConfig } from "@/lib/site"
 import { buttonVariants } from "@/components/ui/button"
 import { Icon } from "@/components/shared/icon"
+import { JoinSpace } from "@/components/marketing/join-space"
 
 const SHOW_AFTER_PX = 720
 
@@ -40,10 +40,7 @@ export function StickyCta() {
           transition={entrance}
           className="fixed right-3 bottom-3 z-40 flex items-center gap-2 sm:right-5 sm:bottom-5"
         >
-          <Link href={siteConfig.waitlistUrl} className={cn(buttonVariants({ size: "lg" }))}>
-            Join the waitlist
-            <Icon name="arrow-right" />
-          </Link>
+          <JoinSpace className={cn(buttonVariants({ size: "lg" }))} />
           <button
             type="button"
             onClick={toTop}

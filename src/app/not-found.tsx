@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { buttonVariants } from "@/components/ui/button"
 import { MarketingShell } from "@/components/marketing/marketing-shell"
 import { StatusMessage } from "@/components/shared/status-message"
+import { JoinSpace } from "@/components/marketing/join-space"
 
 export const metadata: Metadata = {
   title: "Page not found",
@@ -21,9 +22,7 @@ export default function NotFound() {
         <Link href="/" className={buttonVariants({ variant: "inverted", size: "lg" })}>
           Back to home
         </Link>
-        <Link href="/waitlist" className={buttonVariants({ variant: "outline", size: "lg" })}>
-          Join the waitlist
-        </Link>
+        <JoinSpace className={buttonVariants({ variant: "outline", size: "lg" })} />
       </StatusMessage>
     </MarketingShell>
   )

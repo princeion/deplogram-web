@@ -25,7 +25,7 @@ export const metadata = createMetadata({
 export default function RuntimesPage() {
   return (
     <>
-      <SimpleHero title="Your stack, your choice." primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "How deployment works", href: "/deploy" }} />
+      <SimpleHero title="Your stack, your choice." primary={{ label: "Join the space", href: "/signup" }} secondary={{ label: "How deployment works", href: "/deploy" }} />
 
       <SectionWrapper spacing="compact" className="pt-0">
         <Container>

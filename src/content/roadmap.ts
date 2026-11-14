@@ -45,8 +45,8 @@ export const roadmap: readonly RoadmapPhase[] = [
     name: "Early access",
     title: "Private early access",
     status: "next",
-    description: "Invites go to the waitlist in waves, so each group starts on a stable platform.",
-    items: ["Invites from the waitlist, in waves", "Usage limits in place", "Direct feedback from early users"],
+    description: "Accounts are open — create one and start deploying on a stable platform.",
+    items: ["Create an account and deploy", "Usage limits in place", "Direct feedback from early users"],
   },
   {
     phase: "04",

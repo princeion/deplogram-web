@@ -29,6 +29,7 @@ import { Container } from "@/components/shared/container";
 import { Icon } from "@/components/shared/icon";
 import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { JoinSpace } from "@/components/marketing/join-space";
 
 function isActive(pathname: string, href: string) {
   if (href.includes("#")) return false;
@@ -125,15 +126,12 @@ export function Navbar() {
           >
             Contact
           </Link>
-          <Link
-            href={siteConfig.waitlistUrl}
+          <JoinSpace
             className={cn(
               buttonVariants({ variant: "inverted", size: "sm" }),
               "hidden sm:inline-flex",
             )}
-          >
-            Join the waitlist
-          </Link>
+          />
 
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger
@@ -196,16 +194,12 @@ export function Navbar() {
                   })}
                 </div>
                 <div className="mt-auto grid gap-2">
-                  <Link
-                    href={siteConfig.waitlistUrl}
-                    onClick={() => setMobileOpen(false)}
+                  <JoinSpace
                     className={buttonVariants({
                       variant: "inverted",
                       size: "lg",
                     })}
-                  >
-                    Join the waitlist
-                  </Link>
+                  />
                   <Link
                     href="/contact"
                     onClick={() => setMobileOpen(false)}

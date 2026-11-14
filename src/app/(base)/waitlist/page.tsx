@@ -14,8 +14,8 @@ import { SectionHeader } from "@/components/marketing/section-header"
 import type { FeatureItem } from "@/content/types"
 
 export const metadata = createMetadata({
-  title: "Join the waitlist for early access",
-  description: "Deplogram opens in waves. Join the waitlist and we'll email you when your early-access invite is ready.",
+  title: "Join the space",
+  description: "Create your Deplogram account and start deploying.",
   path: "/waitlist",
 })
 
@@ -31,9 +31,9 @@ export default function WaitlistPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Early access"
-        title="Join the *waitlist.*"
-        description="Deplogram is opening in waves. Join the waitlist and we'll email you when your early-access invite is ready."
+        eyebrow="Create your account"
+        title="Join the *space.*"
+        description="Create your Deplogram account and start deploying — workspace, code editor, storage, utilities and APIs."
       />
 
       <SectionWrapper spacing="compact" className="pb-20 sm:pb-24">

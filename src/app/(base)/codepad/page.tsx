@@ -33,7 +33,7 @@ const actionDescriptions: Record<string, string> = {
 export default function CodePadPage() {
   return (
     <>
-      <SimpleHero title={homeCopy.codepad.title} primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "How deployment works", href: "/deploy" }} />
+      <SimpleHero title={homeCopy.codepad.title} primary={{ label: "Join the space", href: "/signup" }} secondary={{ label: "How deployment works", href: "/deploy" }} />
 
       <SectionWrapper spacing="compact">
         <Container>

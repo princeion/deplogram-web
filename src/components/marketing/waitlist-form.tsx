@@ -230,7 +230,7 @@ export function WaitlistForm({ className }: { className?: string }) {
               Saving
             </>
           ) : (
-            "Join the waitlist"
+            "Join the space"
           )}
         </Button>
       </div>

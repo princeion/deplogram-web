@@ -22,7 +22,7 @@ export const metadata = createMetadata({
 export default function RoadmapPage() {
   return (
     <>
-      <SimpleHero title={homeCopy.roadmap.title} primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "Contact us", href: "/contact" }} />
+      <SimpleHero title={homeCopy.roadmap.title} primary={{ label: "Join the space", href: "/signup" }} secondary={{ label: "Contact us", href: "/contact" }} />
 
       <SectionWrapper spacing="compact" className="pt-0">
         <Container>

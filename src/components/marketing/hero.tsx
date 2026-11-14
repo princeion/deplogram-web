@@ -10,6 +10,7 @@ import { FadeInUp } from "@/components/shared/motion/fade-in-up";
 import { TextReveal } from "@/components/shared/motion/text-reveal";
 import { GradientStage } from "@/components/marketing/gradient-stage";
 import { ScreenSwitch } from "@/components/shared/screen-switch";
+import { JoinSpace } from "@/components/marketing/join-space";
 
 type HeroProps = {
   announcement: { label: string; cta: string; href: string };
@@ -52,15 +53,15 @@ export function Hero({
       <Container className="relative flex flex-col items-center pt-32 pb-12 text-center sm:pt-40">
         <FadeInUp>
           <Link
-            href={announcement.href}
+            href="/signup"
             className="group inline-flex items-center gap-2.5 rounded-full border border-border/70 bg-card/60 py-1 pr-3 pl-1 text-sm text-muted-foreground backdrop-blur transition-colors hover:border-border hover:text-foreground"
           >
             <span className="rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium text-background">
               Early access
             </span>
-            <span className="hidden sm:inline">{announcement.label}</span>
+            <span className="hidden sm:inline">Create an account</span>
             <span className="inline-flex items-center gap-1 font-medium text-foreground sm:hidden">
-              {announcement.cta}
+              Sign up
             </span>
             <Icon
               name="chevron-right"
@@ -88,19 +89,12 @@ export function Hero({
           delay={0.45}
           className="mt-9 flex flex-wrap items-center justify-center gap-3"
         >
-          <Link
-            href={siteConfig.waitlistUrl}
+          <JoinSpace
             className={cn(
               buttonVariants({ variant: "inverted", size: "lg" }),
               "group h-12 px-6 text-base",
             )}
-          >
-            Join the waitlist
-            <Icon
-              name="arrow-up-right"
-              className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-            />
-          </Link>
+          />
           <Link
             href="/deploy"
             className={cn(

@@ -65,6 +65,20 @@ export function useSignIn() {
   })
 }
 
+/**
+ * POST /v1/auth/sign-up { email, password, name? } → Viewer. Creates a new account and signs them in.
+ * May return 409 for email already taken, or 422 for weak password.
+ */
+export type SignUpInput = { email: string; password: string; name?: string }
+
+export function useSignUp() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: SignUpInput) => apiFetch("/v1/auth/sign-up", { method: "POST", json: input, schema: viewerSchema }),
+    onSuccess: (viewer) => queryClient.setQueryData(sessionKeys.viewer, viewer),
+  })
+}
+
 export function useSignOut() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -74,5 +88,23 @@ export function useSignOut() {
       queryClient.clear()
       queryClient.setQueryData(sessionKeys.viewer, null)
     },
+  })
+}
+
+/** POST /auth/otp/send { email } → sends a 6-digit code to the email. */
+export type SendOtpInput = { email: string }
+export function useSendOtp() {
+  return useMutation({
+    mutationFn: (input: SendOtpInput) => apiFetch("/auth/otp/send", { method: "POST", json: input, schema: z.null() }),
+  })
+}
+
+/** POST /auth/otp/verify { email, code } → verifies the 6-digit code. */
+export type VerifyOtpInput = { email: string; code: string }
+export type VerifyOtpOutput = { verified: boolean; email: string }
+export function useVerifyOtp() {
+  return useMutation({
+    mutationFn: (input: VerifyOtpInput) =>
+      apiFetch("/auth/otp/verify", { method: "POST", json: input, schema: z.object({ verified: z.boolean(), email: z.string() }) }),
   })
 }

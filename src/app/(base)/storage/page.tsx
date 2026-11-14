@@ -38,7 +38,7 @@ const mechanics: readonly FeatureItem[] = [
 export default function StoragePage() {
   return (
     <>
-      <SimpleHero title={homeCopy.storage.title} primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "How deployment works", href: "/deploy" }} />
+      <SimpleHero title={homeCopy.storage.title} primary={{ label: "Join the space", href: "/signup" }} secondary={{ label: "How deployment works", href: "/deploy" }} />
 
       <SectionWrapper spacing="compact">
         <Container className="grid items-center gap-12 lg:grid-cols-[1.5fr_1fr] lg:gap-16">

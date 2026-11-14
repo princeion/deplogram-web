@@ -12,7 +12,7 @@ export const aboutCopy = {
     paragraphs: [
       "Getting a project into production often means learning a large cloud platform first — consoles, configuration and a catalogue of services most projects never use.",
       "Deplogram takes a narrower approach. Deployment is the core product: connect a repository, choose one of eight supported runtimes, configure only what the deployment needs and watch it go live. Around it sits a compact set of tools — a workspace, an editor, storage, six utilities and four APIs.",
-      "The platform is in active development and will open to the waitlist in waves, so each group of users starts on stable infrastructure.",
+      "The platform is open — create an account and start deploying on stable infrastructure.",
     ],
   },
   quote: "A simple experience on the surface, backed by reliable deployment infrastructure underneath.",

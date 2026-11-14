@@ -7,7 +7,7 @@ import { Icon } from "@/components/shared/icon";
 import { FadeInUp } from "@/components/shared/motion/fade-in-up";
 import { TextReveal } from "@/components/shared/motion/text-reveal";
 
-type HeroAction = { label: string; href: string };
+type HeroAction = { label: string; href?: string; onClick?: () => void };
 
 type SimpleHeroProps = {
   /** Headline; `*highlight*` markers are ignored here — this hero stays plain. */
@@ -31,22 +31,38 @@ export function SimpleHero({ title, primary, secondary }: SimpleHeroProps) {
           delay={0.3}
           className="mt-10 flex flex-wrap items-center justify-center gap-3"
         >
-          <Link
-            href={primary.href}
-            className={cn(
-              buttonVariants({ variant: "inverted", size: "lg" }),
-              "group h-11 px-6 text-base",
-            )}
-          >
-            {primary.label}
-            <Icon
-              name="arrow-up-right"
-              className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-            />
-          </Link>
+          {primary.href ? (
+            <Link
+              href={primary.href!}
+              className={cn(
+                buttonVariants({ variant: "inverted", size: "lg" }),
+                "group h-11 px-6 text-base",
+              )}
+            >
+              {primary.label}
+              <Icon
+                name="arrow-up-right"
+                className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+              />
+            </Link>
+          ) : (
+            <button
+              onClick={primary.onClick}
+              className={cn(
+                buttonVariants({ variant: "inverted", size: "lg" }),
+                "group h-11 px-6 text-base",
+              )}
+            >
+              {primary.label}
+              <Icon
+                name="arrow-up-right"
+                className="transition-transform duration-300 ease-out-expo group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+              />
+            </button>
+          )}
           {secondary && (
             <Link
-              href={secondary.href}
+              href={secondary.href!}
               className={cn(
                 buttonVariants({ variant: "secondary", size: "lg" }),
                 "h-11 px-6 text-base",

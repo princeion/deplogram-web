@@ -46,8 +46,8 @@ export const posts: readonly BlogPost[] = [
       },
       {
         type: "callout",
-        title: "Opening in waves",
-        text: "Deplogram is in development. Join the waitlist and we'll email you when your invite is ready.",
+        title: "Open now",
+        text: "Create an account and start deploying — your workspace, editor, storage, utilities and APIs are ready.",
       },
     ],
   },

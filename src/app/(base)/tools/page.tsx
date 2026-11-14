@@ -25,7 +25,7 @@ export const metadata = createMetadata({
 export default function ToolsPage() {
   return (
     <>
-      <SimpleHero title={homeCopy.tools.title} primary={{ label: "Join the waitlist", href: "/waitlist" }} secondary={{ label: "Try the utilities", href: "#utilities" }} />
+      <SimpleHero title={homeCopy.tools.title} primary={{ label: "Join the space", href: "/signup" }} secondary={{ label: "Try the utilities", href: "#utilities" }} />
 
       <SectionWrapper spacing="compact" className="pt-0">
         <Container>

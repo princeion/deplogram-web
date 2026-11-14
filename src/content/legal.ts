@@ -21,10 +21,10 @@ export const privacyPolicy: LegalDocument = {
   updated: "2026-10-12",
   blocks: [
     placeholderNotice,
-    { type: "h2", text: "The waitlist" },
+    { type: "h2", text: "Your account" },
     {
       type: "p",
-      text: "If you join the waitlist we keep your email address and any optional details you give us (such as your name, role and the runtimes you use), and use them only to send your early-access invite and to understand who Deplogram is for. Ask us and we will remove you.",
+      text: "When you create an account we keep your email address and any optional details you give us, and use them to operate your workspace and send account-related messages. Ask us and we will remove you.",
     },
     { type: "h2", text: "Information we collect" },
     {

@@ -195,9 +195,9 @@ export function SignIn() {
 
           {step === "password" && (
             <p className="text-sm text-muted-foreground">
-              No account yet? Deplogram is in early access —{" "}
-              <Link href="/waitlist" className="text-foreground underline-offset-2 hover:underline">
-                join the waitlist
+              No account yet?{" "}
+              <Link href="/signup" className="text-foreground underline-offset-2 hover:underline">
+                Create one
               </Link>
               .
             </p>

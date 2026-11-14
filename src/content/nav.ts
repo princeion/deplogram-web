@@ -58,7 +58,7 @@ export const footerNav: readonly NavGroup[] = [
   {
     title: "Early access",
     links: [
-      { label: "Join the waitlist", href: "/waitlist" },
+      { label: "Join the space", href: "/signup" },
       { label: "Roadmap", href: "/roadmap" },
     ],
   },
