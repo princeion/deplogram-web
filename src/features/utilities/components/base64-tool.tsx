@@ -10,6 +10,7 @@ import { Icon } from "@/components/shared/icon"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { byteLength, CodeArea, CopyButton, Fact, Pane, StatusLine } from "@/features/utilities/components/utility-shell"
+import { useApiBase64 } from "@/features/utilities/api"
 
 const SAMPLES = { encode: "Deplogram — deploy across eight runtimes. ✓", decode: "RGVwbG9ncmFtIOKAlCBkZXBsb3kgYWNyb3NzIGVpZ2h0IHJ1bnRpbWVzLiDinJM=" }
 
@@ -20,6 +21,13 @@ export function Base64Tool() {
   const [urlSafe, setUrlSafe] = React.useState(false)
   const [file, setFile] = React.useState<{ name: string; type: string; size: number; base64: string } | null>(null)
   const fileRef = React.useRef<HTMLInputElement>(null)
+
+  // Debounced input (400ms) for backend queries
+  const [debouncedInput, setDebouncedInput] = React.useState(input)
+  React.useEffect(() => {
+    const id = window.setTimeout(() => setDebouncedInput(input), 400)
+    return () => window.clearTimeout(id)
+  }, [input])
 
   const result = React.useMemo(() => {
     if (file) return { state: "ok" as const, output: file.base64, binary: false, bytes: null as Uint8Array | null }
@@ -33,10 +41,16 @@ export function Base64Tool() {
     }
   }, [input, mode, urlSafe, file])
 
+  const canUseApi = !file && !urlSafe && result.state === "ok" && debouncedInput.length > 0
+  const { data: apiOutput, isError } = useApiBase64(mode, debouncedInput, canUseApi)
+
+  const localOutput = result.state === "ok" && !result.binary ? result.output : ""
+  const output = canUseApi && apiOutput && !isError ? apiOutput : localOutput
+
   const switchMode = (next: "encode" | "decode") => {
     setFile(null)
     // Carry the result over, so encode → decode round-trips what you just made.
-    if (result.state === "ok" && !result.binary && result.output) setInput(result.output)
+    if (result.state === "ok" && !result.binary && output) setInput(output)
     setMode(next)
   }
 
@@ -57,7 +71,6 @@ export function Base64Tool() {
     URL.revokeObjectURL(url)
   }
 
-  const output = result.state === "ok" && !result.binary ? result.output : ""
   const dataUrl = file ? `data:${file.type};base64,${file.base64}` : ""
 
   return (
@@ -169,7 +182,7 @@ export function Base64Tool() {
         <StatusLine tone="ok">
           {file ? "File encoded" : mode === "encode" ? (urlSafe ? "Encoded (URL-safe)" : "Encoded") : result.binary ? "Decoded — binary" : "Decoded"}
           <Fact label="in">{file ? formatBytes(file.size) : formatBytes(byteLength(input))}</Fact>
-          <Fact label="out">{formatBytes(result.binary ? (result.bytes?.length ?? 0) : byteLength(result.output))}</Fact>
+          <Fact label="out">{formatBytes(result.binary ? (result.bytes?.length ?? 0) : byteLength(output))}</Fact>
         </StatusLine>
       )}
     </div>

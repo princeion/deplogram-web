@@ -40,6 +40,8 @@ export const liveEndpoints = [
   "GET /v1/git/repositories/:id/detect",
   "POST /utils/json/formatter",
   "POST /utils/json/minify",
+  "POST /utils/base64/encode",
+  "POST /utils/base64/decode",
 ] as const
 
 // A handler's "*/v1/projects/:projectId" → "GET /v1/projects/:", so param names and the origin wildcard don't matter.
