@@ -9,6 +9,7 @@ import { Icon } from "@/components/shared/icon"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { byteLength, CopyButton, Fact, Pane, StatusLine } from "@/features/utilities/components/utility-shell"
+import { useApiJson } from "@/features/utilities/api"
 
 const SAMPLE = `{"project":"orders-api","runtime":"node","state":"RUNNING","port":8080,"env":{"NODE_ENV":"production","LOG_LEVEL":"info"},"regions":["lagos","london"],"replicas":2,"healthy":true}`
 
@@ -56,6 +57,13 @@ export function JsonFormatter() {
   const [indent, setIndent] = React.useState<Indent>("2")
   const [sorted, setSorted] = React.useState(false)
 
+  // Debounced input (400ms) for backend queries
+  const [debouncedInput, setDebouncedInput] = React.useState(input)
+  React.useEffect(() => {
+    const id = window.setTimeout(() => setDebouncedInput(input), 400)
+    return () => window.clearTimeout(id)
+  }, [input])
+
   const result = React.useMemo(() => {
     if (!input.trim()) return { state: "idle" as const }
     try {
@@ -68,7 +76,12 @@ export function JsonFormatter() {
     }
   }, [input, mode, indent, sorted])
 
-  const output = result.state === "ok" ? result.output : ""
+  const canUseApi = result.state === "ok" && (mode === "minify" || (mode === "format" && indent === "2" && !sorted))
+  const endpoint = mode === "minify" ? "/utils/json/minify" : "/utils/json/formatter"
+  const { data: apiOutput, isError } = useApiJson(endpoint, debouncedInput, canUseApi)
+
+  const localOutput = result.state === "ok" ? result.output : ""
+  const output = canUseApi && apiOutput && !isError ? apiOutput : localOutput
 
   return (
     <div className="grid gap-3">
