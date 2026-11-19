@@ -4,9 +4,12 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 import { useGitConnection, useRepositories, type Repository } from "@/features/deploy/deploy"
+import { useConnectGitHub } from "@/features/account/git"
 import { Icon } from "@/components/shared/icon"
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ErrorState } from "@/components/app-shell/error-state"
+import { notify } from "@/components/feedback"
 
 type Tab = "all" | "new" | "deployed"
 
@@ -68,6 +71,7 @@ export function RepoList({ selectedId, onSelect, className }: { selectedId?: str
   }, [query])
 
   const connection = useGitConnection()
+  const connect = useConnectGitHub()
   const repos = useRepositories(q)
   const all = repos.data ?? []
   const counts = { all: all.length, new: all.filter((r) => !r.projectId).length, deployed: all.filter((r) => r.projectId).length }
@@ -84,73 +88,99 @@ export function RepoList({ selectedId, onSelect, className }: { selectedId?: str
 
   return (
     <div className={cn("flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card", className)}>
-      <div className="grid gap-3 border-b border-border/60 p-3">
-        <div className="flex items-center justify-between gap-2 px-1">
-          <span className="flex items-center gap-2 text-sm font-medium">
-            <Icon name="github" size="sm" />
-            Repositories
-          </span>
-          {connection.data?.connected && (
-            <span className="flex items-center gap-1.5 font-mono text-[0.6875rem] text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-success" />
-              {connection.data.account}
-            </span>
-          )}
+      {!connection.isPending && !connection.data?.connected ? (
+        <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
+          <div className="surface-sunken flex size-12 items-center justify-center rounded-xl text-foreground">
+            <Icon name="github" size="md" />
+          </div>
+          <h3 className="mt-4 text-base font-medium">Connect your GitHub account</h3>
+          <p className="mt-1.5 max-w-xs text-xs text-muted-foreground">
+            Link your GitHub account to import repositories, detect frameworks automatically, and deploy on push.
+          </p>
+          <Button
+            size="sm"
+            className="mt-5"
+            loading={connect.isPending}
+            onClick={() =>
+              connect.mutate(undefined, {
+                onError: (error) => notify.error(error, { title: "Couldn't reach GitHub" }),
+              })
+            }
+          >
+            <Icon name="github" /> Connect GitHub
+          </Button>
         </div>
-
-        {/* Segmented filter with counts. */}
-        <div role="tablist" aria-label="Filter repositories" className="surface-sunken grid grid-cols-3 gap-0.5 rounded-lg p-0.5 text-xs">
-          {(
-            [
-              ["all", "All"],
-              ["new", "New"],
-              ["deployed", "Deployed"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={tab === id}
-              onClick={() => setTab(id)}
-              className={cn(
-                "rounded-md px-2 py-1.5 transition-colors",
-                tab === id ? "surface-raised text-foreground" : "border border-transparent text-muted-foreground hover:text-foreground"
+      ) : (
+        <>
+          <div className="grid gap-3 border-b border-border/60 p-3">
+            <div className="flex items-center justify-between gap-2 px-1">
+              <span className="flex items-center gap-2 text-sm font-medium">
+                <Icon name="github" size="sm" />
+                Repositories
+              </span>
+              {connection.data?.connected && (
+                <span className="flex items-center gap-1.5 font-mono text-[0.6875rem] text-muted-foreground">
+                  <span className="size-1.5 rounded-full bg-success" />
+                  {connection.data.account}
+                </span>
               )}
-            >
-              {label} <span className="text-muted-foreground tabular-nums">· {repos.isPending ? "–" : counts[id]}</span>
-            </button>
-          ))}
-        </div>
-
-        <label className="relative flex items-center">
-          <Icon name="search" size="xs" className="pointer-events-none absolute left-2.5 text-muted-foreground" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search"
-            aria-label="Search repositories"
-            className="surface-sunken h-8 w-full rounded-md pr-2 pl-8 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
-          />
-        </label>
-      </div>
-
-      <div ref={listRef} role="listbox" aria-label="Repositories" onKeyDown={onKeyDown} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.5">
-        {repos.isPending ? (
-          Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="grid gap-2 px-3 py-2.5">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="ml-5 h-3.5 w-24" />
             </div>
-          ))
-        ) : repos.error ? (
-          <ErrorState size="compact" title="Repositories didn't load." onRetry={() => repos.refetch()} />
-        ) : shown.length === 0 ? (
-          <p className="px-3 py-8 text-center text-sm text-muted-foreground">{q ? `Nothing matches “${q}”.` : "Nothing here."}</p>
-        ) : (
-          shown.map((repo) => <Row key={repo.id} repo={repo} selected={repo.id === selectedId} onSelect={() => onSelect(repo)} />)
-        )}
-      </div>
+
+            {/* Segmented filter with counts. */}
+            <div role="tablist" aria-label="Filter repositories" className="surface-sunken grid grid-cols-3 gap-0.5 rounded-lg p-0.5 text-xs">
+              {(
+                [
+                  ["all", "All"],
+                  ["new", "New"],
+                  ["deployed", "Deployed"],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === id}
+                  onClick={() => setTab(id)}
+                  className={cn(
+                    "rounded-md px-2 py-1.5 transition-colors",
+                    tab === id ? "surface-raised text-foreground" : "border border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {label} <span className="text-muted-foreground tabular-nums">· {repos.isPending ? "–" : counts[id]}</span>
+                </button>
+              ))}
+            </div>
+
+            <label className="relative flex items-center">
+              <Icon name="search" size="xs" className="pointer-events-none absolute left-2.5 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search"
+                aria-label="Search repositories"
+                className="surface-sunken h-8 w-full rounded-md pr-2 pl-8 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+              />
+            </label>
+          </div>
+
+          <div ref={listRef} role="listbox" aria-label="Repositories" onKeyDown={onKeyDown} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.5">
+            {repos.isPending || connection.isPending ? (
+              Array.from({ length: 6 }, (_, i) => (
+                <div key={i} className="grid gap-2 px-3 py-2.5">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="ml-5 h-3.5 w-24" />
+                </div>
+              ))
+            ) : repos.error ? (
+              <ErrorState size="compact" title="Repositories didn't load." onRetry={() => repos.refetch()} />
+            ) : shown.length === 0 ? (
+              <p className="px-3 py-8 text-center text-sm text-muted-foreground">{q ? `Nothing matches “${q}”.` : "Nothing here."}</p>
+            ) : (
+              shown.map((repo) => <Row key={repo.id} repo={repo} selected={repo.id === selectedId} onSelect={() => onSelect(repo)} />)
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }

@@ -112,6 +112,30 @@ export const liveEndpoints = [
   "POST /v1/webhooks/test",
   "POST /v1/webhooks/requests/:id/replay",
 
+  // Email
+  "POST /email/send",
+
+  // Utilities (under /utils, not /v1)
+  "POST /utils/json/formatter",
+  "POST /utils/json/validate",
+  "POST /utils/json/minify",
+  "POST /utils/jwt/decode",
+  "POST /utils/jwt/expiry",
+  "POST /utils/jwt/validate",
+  "POST /utils/base64/encode",
+  "POST /utils/base64/decode",
+  "POST /utils/regex/test",
+  "POST /utils/regex/validate",
+  "POST /utils/cron/parse",
+  "POST /utils/cron/readable",
+  "POST /utils/webhook/test",
+  "POST /utils/webhook/received",
+  "POST /utils/webhook/clear",
+  "POST /utils/image/transform",
+  "POST /utils/image/compress",
+  "POST /utils/image/convert",
+  "POST /utils/qr/generate",
+
   // Health
   "GET /v1/health",
 ] as const

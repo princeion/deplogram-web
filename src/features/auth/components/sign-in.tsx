@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 
 import { signInRefusal, useSignIn, useViewer } from "@/features/auth/session"
-import { errorMessage } from "@/components/feedback"
+import { notify } from "@/components/feedback"
 import { Icon } from "@/components/shared/icon"
 import { Logo } from "@/components/shared/logo"
 import { StatusDot } from "@/components/shared/status-dot"
@@ -35,7 +35,7 @@ export function SignIn() {
   const [revealed, setRevealed] = React.useState(false)
   const [code, setCode] = React.useState("")
   const [recovery, setRecovery] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [fieldError, setFieldError] = React.useState<string | null>(null)
 
   // Already signed in (a bookmarked /signin): go straight on.
   React.useEffect(() => {
@@ -44,7 +44,7 @@ export function SignIn() {
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault()
-    setError(null)
+    setFieldError(null)
     signIn.mutate(
       { email: email.trim(), password, ...(step === "code" && { code: code.trim() }) },
       {
@@ -52,9 +52,15 @@ export function SignIn() {
         onError: (caught) => {
           const refusal = signInRefusal(caught)
           if (refusal === "two_factor_required") return setStep("code")
-          if (refusal === "invalid_code") return setError(recovery ? "That recovery code didn't work — it may have been used." : "That code didn't match. Try the newest one in your app.")
-          if (refusal === "invalid_credentials") return setError("That email and password don't match an account.")
-          setError(errorMessage(caught))
+          if (refusal === "invalid_code")
+            return setFieldError(
+              recovery
+                ? "This recovery code is invalid or has already been used."
+                : "Incorrect verification code. Please enter the latest code from your authenticator app."
+            )
+          if (refusal === "invalid_credentials")
+            return setFieldError("The email or password you entered is incorrect. Please try again or reset your password.")
+          notify.error(caught, { title: "Unable to sign in" })
         },
       }
     )
@@ -151,7 +157,7 @@ export function SignIn() {
                   onClick={() => {
                     setRecovery((r) => !r)
                     setCode("")
-                    setError(null)
+                    setFieldError(null)
                   }}
                   className="w-fit text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                 >
@@ -160,10 +166,10 @@ export function SignIn() {
               </div>
             )}
 
-            {error && (
-              <p role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-                <Icon name="circle-x" size="xs" className="mt-0.5" /> {error}
-              </p>
+            {fieldError && (
+              <div role="alert" className="flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/5 px-3.5 py-3 text-[0.8125rem] leading-snug text-destructive">
+                <Icon name="circle-alert" size="xs" className="mt-0.5 shrink-0" /> {fieldError}
+              </div>
             )}
 
             <Button
@@ -183,7 +189,7 @@ export function SignIn() {
                   setStep("password")
                   setCode("")
                   setRecovery(false)
-                  setError(null)
+                  setFieldError(null)
                 }}
                 className="justify-self-center text-sm text-muted-foreground hover:text-foreground"
               >

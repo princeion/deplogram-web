@@ -4,8 +4,8 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 
-import { useVerifyOtp, useViewer } from "@/features/auth/session"
-import { errorMessage } from "@/components/feedback"
+import { useVerifyOtp } from "@/features/auth/session"
+import { notify } from "@/components/feedback"
 import { Icon } from "@/components/shared/icon"
 import { Logo } from "@/components/shared/logo"
 import { Button } from "@/components/ui/button"
@@ -19,34 +19,28 @@ export function VerifyEmail() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get("email") ?? ""
-  const viewer = useViewer()
   const verifyOtp = useVerifyOtp()
 
   const [code, setCode] = React.useState("")
-  const [error, setError] = React.useState<string | null>(null)
-
-  // Already signed in: go straight to dashboard.
-  React.useEffect(() => {
-    if (viewer.data) router.replace("/dashboard")
-  }, [viewer.data, router])
+  const [fieldError, setFieldError] = React.useState<string | null>(null)
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault()
-    setError(null)
+    setFieldError(null)
 
     if (!email) {
-      return setError("No email in session — please sign up again.")
+      return setFieldError("No email address found. Please sign up again to receive a new code.")
     }
 
     if (!/^\d{6}$/.test(code)) {
-      return setError("Enter the 6-digit code.")
+      return setFieldError("Please enter the 6-digit verification code.")
     }
 
     verifyOtp.mutate(
       { email, code: code.trim() },
       {
         onSuccess: () => router.replace("/dashboard"),
-        onError: (caught) => setError(errorMessage(caught)),
+        onError: (caught) => notify.error(caught, { title: "Verification failed" }),
       }
     )
   }
@@ -93,10 +87,10 @@ export function VerifyEmail() {
               />
             </div>
 
-            {error && (
-              <p role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-                <Icon name="circle-x" size="xs" className="mt-0.5" /> {error}
-              </p>
+            {fieldError && (
+              <div role="alert" className="flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/5 px-3.5 py-3 text-[0.8125rem] leading-snug text-destructive">
+                <Icon name="circle-alert" size="xs" className="mt-0.5 shrink-0" /> {fieldError}
+              </div>
             )}
 
             <Button type="submit" size="lg" className="mt-1 w-full" loading={verifyOtp.isPending} disabled={code.length !== 6 || !email.trim()}>

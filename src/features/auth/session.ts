@@ -13,6 +13,9 @@ export const viewerSchema = z.object({
   name: z.string().nullable(),
   email: z.string(),
   image: z.string().nullable(),
+  role: z.enum(["owner", "admin", "member", "viewer"]).default("member"),
+  emailVerified: z.boolean().default(false),
+  createdAt: z.string().nullable().default(null),
 })
 
 export type Viewer = z.infer<typeof viewerSchema>
@@ -66,10 +69,10 @@ export function useSignIn() {
 }
 
 /**
- * POST /v1/auth/sign-up { email, password, name? } → Viewer. Creates a new account and signs them in.
+ * POST /v1/auth/sign-up { email, password, name } → Viewer. Creates a new account and signs them in.
  * May return 409 for email already taken, or 422 for weak password.
  */
-export type SignUpInput = { email: string; password: string; name?: string }
+export type SignUpInput = { email: string; password: string; name: string }
 
 export function useSignUp() {
   const queryClient = useQueryClient()

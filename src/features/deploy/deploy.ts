@@ -20,9 +20,17 @@ import { projectKeys, projectSummarySchema } from "@/features/projects/projects"
 export const runtimeIds = runtimes.map((r) => r.id) as [string, ...string[]]
 
 export const gitConnectionSchema = z.object({
-  provider: z.literal("github"),
+  provider: z.string().default("github"),
   connected: z.boolean(),
-  account: z.string().nullable(),
+  account: z
+    .union([z.string(), z.object({ login: z.string().optional(), name: z.string().optional() })])
+    .nullable()
+    .optional()
+    .transform((val) => {
+      if (!val) return null
+      if (typeof val === "string") return val
+      return val.login || val.name || null
+    }),
 })
 
 export const repositorySchema = z.object({

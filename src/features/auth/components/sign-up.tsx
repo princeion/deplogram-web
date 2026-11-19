@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 import { useSignUp, useSendOtp, useViewer } from "@/features/auth/session"
-import { errorMessage } from "@/components/feedback"
+import { notify } from "@/components/feedback"
 import { Icon } from "@/components/shared/icon"
 import { Logo } from "@/components/shared/logo"
 import { StatusDot } from "@/components/shared/status-dot"
@@ -29,33 +29,39 @@ export function SignUp() {
   const [confirmPassword, setConfirmPassword] = React.useState("")
   const [revealed, setRevealed] = React.useState(false)
   const [confirmRevealed, setConfirmRevealed] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [fieldError, setFieldError] = React.useState<string | null>(null)
+  const [awaitingVerification, setAwaitingVerification] = React.useState(false)
 
-  // Already signed in (a bookmarked /signup): go straight to dashboard.
+  // A newly created account has a session before its email is verified. Do not let that
+  // session send the user to the dashboard while the verification handoff is in progress.
   React.useEffect(() => {
-    if (viewer.data) router.replace("/dashboard")
-  }, [viewer.data, router])
+    if (viewer.data && !awaitingVerification) router.replace("/dashboard")
+  }, [awaitingVerification, viewer.data, router])
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault()
-    setError(null)
+    setFieldError(null)
 
     if (password !== confirmPassword) {
-      return setError("The passwords don't match.")
+      return setFieldError("Passwords do not match. Please re-enter your password.")
     }
 
     if (password.length < 10) {
-      return setError("Use at least 10 characters for your password.")
+      return setFieldError("Password must be at least 10 characters long.")
     }
 
+    setAwaitingVerification(true)
     signUp.mutate(
-      { email: email.trim(), password, name: name.trim() || undefined },
+      { email: email.trim(), password, name: name.trim() },
       {
         onSuccess: () => {
           // Account created — send a verification code and go to the OTP page.
           sendOtp.mutate({ email: email.trim() }, { onSuccess: () => router.replace(`/verify-email?email=${encodeURIComponent(email.trim())}`) })
         },
-        onError: (caught) => setError(errorMessage(caught)),
+        onError: (caught) => {
+          setAwaitingVerification(false)
+          notify.error(caught, { title: "Unable to create account" })
+        },
       }
     )
   }
@@ -79,7 +85,7 @@ export function SignUp() {
           <form onSubmit={submit} noValidate className="grid gap-4">
             <div className="grid gap-1.5">
               <label htmlFor="signup-name" className="text-sm font-medium">
-                Name <span className="text-muted-foreground">(optional)</span>
+                Name
               </label>
               <Input
                 id="signup-name"
@@ -87,6 +93,7 @@ export function SignUp() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoComplete="name"
+                required
                 placeholder="Your name"
                 className="h-10"
               />
@@ -153,13 +160,13 @@ export function SignUp() {
               </InputGroup>
             </div>
 
-            {error && (
-              <p role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-                <Icon name="circle-x" size="xs" className="mt-0.5" /> {error}
-              </p>
+            {fieldError && (
+              <div role="alert" className="flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/5 px-3.5 py-3 text-[0.8125rem] leading-snug text-destructive">
+                <Icon name="circle-alert" size="xs" className="mt-0.5 shrink-0" /> {fieldError}
+              </div>
             )}
 
-            <Button type="submit" size="lg" className="mt-1 w-full" loading={signUp.isPending} disabled={!email.trim() || !password || password !== confirmPassword}>
+            <Button type="submit" size="lg" className="mt-1 w-full" loading={signUp.isPending} disabled={!name.trim() || !email.trim() || !password || password !== confirmPassword}>
               Create account
             </Button>
 

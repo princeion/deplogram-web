@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils"
 import { formatBytes, formatCompact, formatNumber, formatRelativeTime } from "@/lib/format"
 import { runtimes } from "@/content/runtimes"
 import { useViewer } from "@/features/auth/session"
+import { useGitConnection } from "@/features/deploy/deploy"
+import { useConnectGitHub } from "@/features/account/git"
 import { useProjects, useWorkspaceTraffic, type ProjectSummary } from "@/features/projects/projects"
 import { useUsage } from "@/features/usage/usage"
 import { useRecentActivity } from "@/features/activity/activity"
@@ -17,10 +19,11 @@ import { TrafficMap } from "@/features/overview/components/traffic-map"
 import type { WorldMapData } from "@/features/overview/world-map"
 import { Icon, type IconName } from "@/components/shared/icon"
 import { StatusDot } from "@/components/shared/status-dot"
-import { buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { UsageMeter } from "@/components/charts"
 import { EmptyState } from "@/components/app-shell/empty-state"
+import { notify } from "@/components/feedback"
 
 const working = ["QUEUED", "BUILDING", "BUILT", "DEPLOYING"]
 const failed = ["BUILD_FAILED", "DEPLOY_FAILED", "CRASHED"]
@@ -320,6 +323,42 @@ function Projects({ projects }: { projects?: ProjectSummary[] }) {
   )
 }
 
+function GitConnectBanner() {
+  const connection = useGitConnection()
+  const connect = useConnectGitHub()
+  if (connection.isPending || connection.data?.connected) return null
+
+  return (
+    <div className="surface-raised flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border/80 p-4 sm:px-5">
+      <div className="flex items-center gap-3.5">
+        <div className="surface-sunken flex size-10 items-center justify-center rounded-xl text-foreground">
+          <Icon name="github" size="sm" />
+        </div>
+        <div className="grid gap-0.5">
+          <p className="text-sm font-medium">Connect your GitHub account</p>
+          <p className="text-xs text-muted-foreground">Link your repositories to import code, build applications, and deploy automatically on git push.</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2.5">
+        <Link href="/dashboard/settings/git" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+          Settings
+        </Link>
+        <Button
+          size="sm"
+          loading={connect.isPending}
+          onClick={() =>
+            connect.mutate(undefined, {
+              onError: (error) => notify.error(error, { title: "Couldn't reach GitHub" }),
+            })
+          }
+        >
+          <Icon name="github" /> Connect GitHub
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 /**
  * The Galley at a glance: a welcome, the workspace in four figures, live traffic across every
  * project (on a map and as a signal), what needs attention, recent activity, and each project
@@ -330,6 +369,7 @@ export function GalleyOverview({ map }: { map: WorldMapData }) {
   return (
     <div className="grid gap-5">
       <Greeting projects={projects} />
+      <GitConnectBanner />
       <Figures projects={projects} />
       <Projects projects={projects} />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">

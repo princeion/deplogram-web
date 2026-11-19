@@ -55,6 +55,7 @@ const workspace: NavScope = {
       id: "manage",
       label: "Manage",
       items: [
+        { id: "git", label: "Git connections", href: "/dashboard/settings/git", icon: "github", keywords: ["github", "git", "repositories", "connect"] },
         { id: "usage", label: "Usage & limits", href: "/dashboard/usage", icon: "gauge", keywords: ["plan", "quota", "active deployments", "upgrade"] },
         { id: "team", label: "Team", href: "/dashboard/team", icon: "users", soon: true, keywords: ["members", "invite", "roles"] },
         { id: "settings", label: "Settings", href: "/dashboard/settings", icon: "settings", keywords: ["account", "profile", "preferences"] },
